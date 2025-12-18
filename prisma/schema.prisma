@@ -1,0 +1,86 @@
+// This is a basic example of a Prisma schema file.
+// To learn more about how to define relationships and models, visit:
+// https://www.prisma.io/docs/guides/database/schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  email        String   @unique
+  password     String   
+  firstName    String
+  lastName     String
+  role         Role     @default(USER)
+  isActive     Boolean  @default(true)
+
+  // Relations
+  biometricRecords BiometricRecord[]
+  
+  @@map("users")
+}
+
+model BiometricRecord {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userId          String
+  biometricType   BiometricType
+  biometricData   String   // This will store encrypted biometric data
+  templateFormat  String   // Format of the biometric template
+  confidenceScore Float?   // Confidence level of the match
+  metadata        Json?    // Additional metadata about the biometric
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id])
+  
+  @@map("biometric_records")
+}
+
+model BiometricExport {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  exportedById    String
+  exportFormat    ExportFormat
+  exportData      String   // Encrypted export data
+  fileName        String
+  fileSize        Int?     // Size in bytes
+  isDownloaded    Boolean  @default(false)
+  downloadCount   Int      @default(0)
+  
+  // Relations
+  user            User     @relation(fields: [exportedById], references: [id])
+  
+  @@map("biometric_exports")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum BiometricType {
+  FINGERPRINT
+  FACE_RECOGNITION
+  IRIS_SCAN
+  RETINA_SCAN
+  VOICE_RECOGNITION
+  HAND_GEOMETRY
+  SIGNATURE
+}
+
+enum ExportFormat {
+  XML
+  JSON
+  ISO_19794 // Standard for biometric data interchange
+  CUSTOM
+}

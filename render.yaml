@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: tasued-biometric-system
+    env: docker
+    region: oregon  # Use oregon for US deployment
+    plan: free      # Free tier for students
+    branch: main
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tasued-biometric-db
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: https://tasued-biometric-system.onrender.com
+      - key: CORS_ORIGIN
+        value: https://tasued-biometric-system.onrender.com
+      - key: BCRYPT_SALT_ROUNDS
+        value: "12"
+
+databases:
+  - type: postgres
+    name: tasued-biometric-db
+    plan: free    # Free Postgres database
+    region: oregon
+    databaseName: tasued_biometric_system
+    user: tasued_user
