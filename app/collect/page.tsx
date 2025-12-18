@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Camera, CameraOff, RotateCcw, Check, Fingerprint, User, MapPin, Thermometer, FileText, ArrowLeft, ArrowRight, XCircle, AlertCircle, CheckCircle, Eye, Mic } from 'lucide-react';
+import Image from 'next/image';
 import Header from '@/components/Header';
 
 const BiometricCollectionPage = () => {
@@ -40,7 +41,7 @@ const BiometricCollectionPage = () => {
         canvasRef.current.width = videoRef.current.videoWidth;
         canvasRef.current.height = videoRef.current.videoHeight;
         context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-        
+
         const imageData = canvasRef.current.toDataURL('image/png');
         setCapturedData(imageData);
         setPreviewUrl(imageData);
@@ -59,7 +60,7 @@ const BiometricCollectionPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // In a real implementation, this would send the data to the backend
     console.log({
       biometricType,
@@ -67,7 +68,7 @@ const BiometricCollectionPage = () => {
       confidenceScore,
       metadata
     });
-    
+
     // Simulate API call
     setTimeout(() => {
       alert('Biometric data collected and stored successfully!');
@@ -112,7 +113,7 @@ const BiometricCollectionPage = () => {
                 Securely collect and store biometric data for identification and verification
               </p>
             </div>
-            
+
             <div className="px-4 py-5 sm:p-6">
               {/* Step Progress Indicator */}
               <div className="mb-8">
@@ -120,11 +121,10 @@ const BiometricCollectionPage = () => {
                   <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2 -z-10"></div>
                   {[1, 2, 3].map((step) => (
                     <div key={step} className="relative z-10">
-                      <div className={`rounded-full w-10 h-10 flex items-center justify-center ${
-                        collectionStep >= step 
-                          ? 'bg-indigo-600 text-white' 
+                      <div className={`rounded-full w-10 h-10 flex items-center justify-center ${collectionStep >= step
+                          ? 'bg-indigo-600 text-white'
                           : 'bg-gray-200 text-gray-500'
-                      }`}>
+                        }`}>
                         {step}
                       </div>
                       <div className="text-xs mt-2 text-center">
@@ -142,7 +142,7 @@ const BiometricCollectionPage = () => {
                 <div className="space-y-6">
                   <h3 className="text-lg font-medium text-gray-900">Select Biometric Type</h3>
                   <p className="text-sm text-gray-500">Choose the type of biometric data to collect</p>
-                  
+
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
                       { id: 'FINGERPRINT', name: 'Fingerprint' },
@@ -155,11 +155,10 @@ const BiometricCollectionPage = () => {
                         <button
                           key={type.id}
                           onClick={() => setBiometricType(type.id)}
-                          className={`p-4 rounded-lg border ${
-                            biometricType === type.id
+                          className={`p-4 rounded-lg border ${biometricType === type.id
                               ? 'border-indigo-500 bg-indigo-50'
                               : 'border-gray-300 hover:border-gray-400'
-                          }`}
+                            }`}
                         >
                           <div className="text-center">
                             <div className="mx-auto bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 flex items-center justify-center mb-2">
@@ -171,7 +170,7 @@ const BiometricCollectionPage = () => {
                       );
                     })}
                   </div>
-                  
+
                   <div className="flex justify-end">
                     <button
                       onClick={() => setCollectionStep(2)}
@@ -189,27 +188,30 @@ const BiometricCollectionPage = () => {
                 <div className="space-y-6">
                   <h3 className="text-lg font-medium text-gray-900">Capture {biometricType.replace('_', ' ')}</h3>
                   <p className="text-sm text-gray-500">Position your biometric feature for optimal capture</p>
-                  
+
                   <div className="flex flex-col md:flex-row gap-6">
                     <div className="flex-1">
                       <div className="bg-black rounded-lg overflow-hidden aspect-square max-w-md mx-auto flex items-center justify-center">
                         {capturedData ? (
-                          <img 
-                            src={previewUrl || ''} 
-                            alt="Captured biometric" 
+                          <Image
+                            src={previewUrl || ''}
+                            alt="Captured biometric"
+                            width={500}
+                            height={500}
                             className="w-full h-full object-contain"
+                            unoptimized
                           />
                         ) : (
                           <>
-                            <video 
-                              ref={videoRef} 
-                              autoPlay 
-                              playsInline 
+                            <video
+                              ref={videoRef}
+                              autoPlay
+                              playsInline
                               muted
                               className="w-full h-full object-contain"
                             />
                             <canvas ref={canvasRef} className="hidden" />
-                            
+
                             {!previewUrl && (
                               <div className="absolute inset-0 flex items-center justify-center">
                                 <button
@@ -224,7 +226,7 @@ const BiometricCollectionPage = () => {
                           </>
                         )}
                       </div>
-                      
+
                       {!capturedData ? (
                         <div className="mt-4 flex justify-center">
                           <button
@@ -255,11 +257,11 @@ const BiometricCollectionPage = () => {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="flex-1">
                       <div className="bg-gray-50 p-6 rounded-lg">
                         <h4 className="text-lg font-medium text-gray-900 mb-4">Capture Quality</h4>
-                        
+
                         {capturedData && confidenceScore && (
                           <div className="mb-6">
                             <div className="flex justify-between mb-1">
@@ -267,8 +269,8 @@ const BiometricCollectionPage = () => {
                               <span className="text-sm font-medium text-gray-700">{confidenceScore}%</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2.5">
-                              <div 
-                                className="bg-indigo-600 h-2.5 rounded-full" 
+                              <div
+                                className="bg-indigo-600 h-2.5 rounded-full"
                                 style={{ width: `${confidenceScore}%` }}
                               ></div>
                             </div>
@@ -281,16 +283,16 @@ const BiometricCollectionPage = () => {
                                 <XCircle className="h-4 w-4 text-red-500 mr-1" />
                               )}
                               <span className="text-sm text-gray-500">
-                                {confidenceScore > 80 
-                                  ? 'High quality capture' 
-                                  : confidenceScore > 60 
-                                    ? 'Acceptable quality' 
+                                {confidenceScore > 80
+                                  ? 'High quality capture'
+                                  : confidenceScore > 60
+                                    ? 'Acceptable quality'
                                     : 'Low quality, consider retaking'}
                               </span>
                             </div>
                           </div>
                         )}
-                        
+
                         <h4 className="text-lg font-medium text-gray-900 mb-4">Metadata</h4>
                         <div className="space-y-4">
                           <div>
@@ -308,7 +310,7 @@ const BiometricCollectionPage = () => {
                               placeholder="Device model"
                             />
                           </div>
-                          
+
                           <div>
                             <label htmlFor="location" className="block text-sm font-medium text-gray-700 flex items-center">
                               <MapPin className="mr-2 h-4 w-4" />
@@ -324,7 +326,7 @@ const BiometricCollectionPage = () => {
                               placeholder="Capture location"
                             />
                           </div>
-                          
+
                           <div>
                             <label htmlFor="temperature" className="block text-sm font-medium text-gray-700 flex items-center">
                               <Thermometer className="mr-2 h-4 w-4" />
@@ -340,7 +342,7 @@ const BiometricCollectionPage = () => {
                               placeholder="Temperature in Celsius"
                             />
                           </div>
-                          
+
                           <div>
                             <label htmlFor="notes" className="block text-sm font-medium text-gray-700 flex items-center">
                               <FileText className="mr-2 h-4 w-4" />
@@ -360,7 +362,7 @@ const BiometricCollectionPage = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <button
                       onClick={() => {
@@ -381,22 +383,25 @@ const BiometricCollectionPage = () => {
                 <div className="space-y-6">
                   <h3 className="text-lg font-medium text-gray-900">Confirm and Store Biometric</h3>
                   <p className="text-sm text-gray-500">Review the captured data before finalizing storage</p>
-                  
+
                   <div className="bg-gray-50 rounded-lg p-6">
                     <div className="flex flex-col md:flex-row gap-6">
                       <div className="flex-1">
                         <div className="bg-black rounded-lg overflow-hidden aspect-square max-w-md mx-auto flex items-center justify-center">
-                          <img 
-                            src={previewUrl || ''} 
-                            alt="Captured biometric" 
+                          <Image
+                            src={previewUrl || ''}
+                            alt="Captured biometric"
+                            width={500}
+                            height={500}
                             className="w-full h-full object-contain"
+                            unoptimized
                           />
                         </div>
                       </div>
-                      
+
                       <div className="flex-1">
                         <h4 className="text-lg font-medium text-gray-900 mb-4">Details</h4>
-                        
+
                         <div className="grid grid-cols-2 gap-4 mb-6">
                           <div>
                             <p className="text-sm text-gray-500">Biometric Type</p>
@@ -405,43 +410,42 @@ const BiometricCollectionPage = () => {
                               {biometricType.replace('_', ' ')}
                             </p>
                           </div>
-                          
+
                           <div>
                             <p className="text-sm text-gray-500">Confidence Score</p>
                             <p className="font-medium flex items-center">
                               {confidenceScore}%
-                              <span className={`ml-2 px-2 py-0.5 rounded-full text-xs flex items-center ${
-                                confidenceScore && confidenceScore > 80 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : confidenceScore && confidenceScore > 60 
-                                    ? 'bg-yellow-100 text-yellow-800' 
+                              <span className={`ml-2 px-2 py-0.5 rounded-full text-xs flex items-center ${confidenceScore && confidenceScore > 80
+                                  ? 'bg-green-100 text-green-800'
+                                  : confidenceScore && confidenceScore > 60
+                                    ? 'bg-yellow-100 text-yellow-800'
                                     : 'bg-red-100 text-red-800'
-                              }`}>
-                                {confidenceScore && confidenceScore > 80 
-                                  ? <CheckCircle className="mr-1 h-3 w-3" /> 
-                                  : confidenceScore && confidenceScore > 60 
-                                    ? <AlertCircle className="mr-1 h-3 w-3" /> 
+                                }`}>
+                                {confidenceScore && confidenceScore > 80
+                                  ? <CheckCircle className="mr-1 h-3 w-3" />
+                                  : confidenceScore && confidenceScore > 60
+                                    ? <AlertCircle className="mr-1 h-3 w-3" />
                                     : <XCircle className="mr-1 h-3 w-3" />}
-                                {confidenceScore && confidenceScore > 80 
-                                  ? 'Good' 
-                                  : confidenceScore && confidenceScore > 60 
-                                    ? 'Average' 
+                                {confidenceScore && confidenceScore > 80
+                                  ? 'Good'
+                                  : confidenceScore && confidenceScore > 60
+                                    ? 'Average'
                                     : 'Poor'}
                               </span>
                             </p>
                           </div>
-                          
+
                           <div>
                             <p className="text-sm text-gray-500">Date Captured</p>
                             <p className="font-medium">{new Date().toLocaleString()}</p>
                           </div>
-                          
+
                           <div>
                             <p className="text-sm text-gray-500">Device</p>
                             <p className="font-medium">{metadata.device || 'N/A'}</p>
                           </div>
                         </div>
-                        
+
                         <form onSubmit={handleSubmit}>
                           <div className="mb-4">
                             <label htmlFor="userId" className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
@@ -455,7 +459,7 @@ const BiometricCollectionPage = () => {
                               placeholder="Enter user ID or email"
                             />
                           </div>
-                          
+
                           <div className="flex justify-between">
                             <button
                               type="button"
@@ -465,7 +469,7 @@ const BiometricCollectionPage = () => {
                               <ArrowLeft className="mr-2 h-4 w-4" />
                               Back: Adjust
                             </button>
-                            
+
                             <button
                               type="submit"
                               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none flex items-center"

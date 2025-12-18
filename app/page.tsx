@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link'
+import Image from 'next/image'
 import Header from '@/components/Header'
 import TeamSlider from '@/components/TeamSlider'
 import { Lock, Upload, Shield, BarChart3, Users, GraduationCap, FileText } from 'lucide-react'
@@ -67,9 +68,11 @@ export default function Home() {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center">
             <div className="md:w-1/3 mb-8 md:mb-0 flex justify-center">
-              <img
+              <Image
                 src="https://tasued.edu.ng/web/wp-content/uploads/2023/03/logo3.png"
                 alt="TASUED Logo"
+                width={160}
+                height={160}
                 className="h-40 w-40 object-contain"
               />
             </div>
@@ -148,11 +151,12 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {images.map((image, index) => (
-              <div key={index} className="overflow-hidden rounded-lg shadow-lg">
-                <img
+              <div key={index} className="overflow-hidden rounded-lg shadow-lg relative h-60">
+                <Image
                   src={image}
                   alt={`TASUED Campus ${index + 1}`}
-                  className="w-full h-60 object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
             ))}
@@ -218,11 +222,12 @@ export default function Home() {
               </dl>
             </div>
             <div className="mt-10 lg:mt-0">
-              <div className="relative">
-                <img
+              <div className="relative h-64 md:h-96">
+                <Image
                   src={images[1]}
                   alt="TASUED Academic Building"
-                  className="rounded-lg shadow-lg"
+                  fill
+                  className="rounded-lg shadow-lg object-cover"
                 />
               </div>
             </div>
@@ -267,9 +272,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="md:flex md:items-center md:justify-between">
             <div className="flex justify-center md:justify-start">
-              <img
+              <Image
                 src="https://tasued.edu.ng/web/wp-content/uploads/2023/03/logo3.png"
                 alt="TASUED Logo"
+                width={48}
+                height={48}
                 className="h-12 w-12"
               />
             </div>

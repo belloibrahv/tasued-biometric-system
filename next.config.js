@@ -7,6 +7,9 @@ const nextConfig = {
   experimental: {
     typedRoutes: false,
   },
+  images: {
+    domains: ['tasued.edu.ng'],
+  },
 }
 
 module.exports = nextConfig
