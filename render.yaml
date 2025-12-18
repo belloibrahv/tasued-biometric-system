@@ -5,6 +5,7 @@ services:
     region: oregon # Use oregon for US deployment
     plan: free # Free tier for students
     branch: main
+    autoDeploy: true
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL

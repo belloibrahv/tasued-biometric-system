@@ -34,6 +34,8 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 # Copy the built application
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./ 
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Copy migration script
+COPY --from=builder --chown=nextjs:nodejs /app/predeploy.sh ./predeploy.sh
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
@@ -42,4 +44,5 @@ EXPOSE 3000
 
 ENV PORT=3000
 
-CMD ["node", "server.js"]
+# Run migrations then start the server
+CMD ["/bin/sh", "-c", "./predeploy.sh && node server.js"]
