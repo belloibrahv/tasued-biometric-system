@@ -1,3 +1,4 @@
+// @ts-ignore
 import { User } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import db from '@/lib/db';
@@ -26,7 +27,7 @@ class UserService {
   static async createUser(input: CreateUserInput): Promise<User> {
     // Hash the password
     const hashedPassword = await bcrypt.hash(input.password, parseInt(process.env.BCRYPT_SALT_ROUNDS || '12'));
-    
+
     const user = await db.user.create({
       data: {
         email: input.email.toLowerCase(),
@@ -36,7 +37,7 @@ class UserService {
         role: input.role as any || 'USER',
       },
     });
-    
+
     // Don't return the password hash
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword as User;
@@ -49,9 +50,9 @@ class UserService {
     const user = await db.user.findUnique({
       where: { id: userId },
     });
-    
+
     if (!user) return null;
-    
+
     // Don't return the password hash
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword as Omit<User, 'password'>;
@@ -73,7 +74,7 @@ class UserService {
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase() },
     });
-    
+
     return !!user;
   }
 
@@ -82,18 +83,18 @@ class UserService {
    */
   static async updateUser(input: UpdateUserInput): Promise<Omit<User, 'password'> | null> {
     const updateData: any = {};
-    
+
     if (input.email) updateData.email = input.email.toLowerCase();
     if (input.firstName) updateData.firstName = input.firstName;
     if (input.lastName) updateData.lastName = input.lastName;
     if (input.role) updateData.role = input.role as any;
     if (input.isActive !== undefined) updateData.isActive = input.isActive;
-    
+
     const user = await db.user.update({
       where: { id: input.userId },
       data: updateData,
     });
-    
+
     // Don't return the password hash
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword as Omit<User, 'password'>;
@@ -105,12 +106,12 @@ class UserService {
   static async changePassword(userId: string, newPassword: string): Promise<boolean> {
     try {
       const hashedPassword = await bcrypt.hash(newPassword, parseInt(process.env.BCRYPT_SALT_ROUNDS || '12'));
-      
+
       await db.user.update({
         where: { id: userId },
         data: { password: hashedPassword },
       });
-      
+
       return true;
     } catch (error) {
       console.error('Error changing password:', error);
@@ -127,12 +128,12 @@ class UserService {
       await db.biometricRecord.deleteMany({
         where: { userId },
       });
-      
+
       // Then delete the user
       await db.user.delete({
         where: { id: userId },
       });
-      
+
       return true;
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -147,17 +148,17 @@ class UserService {
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase() },
     });
-    
+
     if (!user || !user.isActive) {
       return null;
     }
-    
+
     const isValidPassword = await bcrypt.compare(password, user.password);
-    
+
     if (!isValidPassword) {
       return null;
     }
-    
+
     // Don't return the password hash
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword as Omit<User, 'password'>;

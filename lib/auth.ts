@@ -15,7 +15,7 @@ export interface JWTPayload {
 }
 
 export function generateToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as any });
 }
 
 export function verifyToken(token: string): JWTPayload | null {
@@ -25,10 +25,10 @@ export function verifyToken(token: string): JWTPayload | null {
       console.warn('Invalid token format');
       return null;
     }
-    
+
     // Extract token from "Bearer <token>" format if needed
     const tokenValue = token.startsWith('Bearer ') ? token.split(' ')[1] : token;
-    
+
     const decoded = jwt.verify(tokenValue, JWT_SECRET) as JWTPayload;
     return decoded;
   } catch (error) {

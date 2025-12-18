@@ -24,6 +24,7 @@ model User {
 
   // Relations
   biometricRecords BiometricRecord[]
+  biometricExports BiometricExport[]
   
   @@map("users")
 }

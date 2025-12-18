@@ -1,9 +1,9 @@
 services:
   - type: web
     name: tasued-biometric-system
-    env: docker
-    region: oregon  # Use oregon for US deployment
-    plan: free      # Free tier for students
+    runtime: docker
+    region: oregon # Use oregon for US deployment
+    plan: free # Free tier for students
     branch: main
     healthCheckPath: /api/health
     envVars:
@@ -25,9 +25,8 @@ services:
         value: "12"
 
 databases:
-  - type: postgres
-    name: tasued-biometric-db
-    plan: free    # Free Postgres database
+  - name: tasued-biometric-db
+    plan: free # Free Postgres database
     region: oregon
     databaseName: tasued_biometric_system
     user: tasued_user

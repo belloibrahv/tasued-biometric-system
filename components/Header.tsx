@@ -57,11 +57,10 @@ const Header = () => {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`${
-                      pathname === item.href
-                        ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-500'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                    } px-3 py-2 rounded-md text-sm font-medium flex items-center`}
+                    className={`${pathname === item.href
+                      ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-500'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      } px-3 py-2 rounded-md text-sm font-medium flex items-center`}
                   >
                     <Icon className="mr-2 h-4 w-4" />
                     {item.name}
@@ -133,11 +132,10 @@ const Header = () => {
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`${
-                        pathname === item.href
-                          ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                          : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
-                      } block pl-3 pr-4 py-2 border-l-4 text-base font-medium flex items-center`}
+                      className={`${pathname === item.href
+                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                        : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
+                        } block pl-3 pr-4 py-2 border-l-4 text-base font-medium flex items-center`}
                     >
                       <Icon className="mr-2 h-4 w-4" />
                       {item.name}

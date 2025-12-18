@@ -102,7 +102,7 @@ const DashboardPage = () => {
             <div className="lg:w-0 lg:flex-1">
               <h1 className="text-2xl font-bold text-gray-900">Biometric Dashboard</h1>
               <p className="mt-1 text-sm text-gray-500">
-                Welcome back! Here's what's happening with your biometric data today.
+                Welcome back! Here&apos;s what&apos;s happening with your biometric data today.
               </p>
             </div>
             <div className="mt-5 flex lg:mt-0 lg:ml-4">

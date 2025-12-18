@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
+// @ts-ignore
 import { BiometricType } from '@prisma/client';
 import db from '@/lib/db';
 import { encryptData } from '@/lib/encryption';
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     // Read the file contents
     const fileBuffer = await file.arrayBuffer();
     const fileText = new TextDecoder().decode(fileBuffer);
-    
+
     // Parse the import data based on file extension
     let importData: any = null;
     let format: string = '';
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
         });
 
         importedRecords.push(newRecord);
-      } catch (recordError) {
+      } catch (recordError: any) {
         errors.push(`Error importing record: ${recordError.message}`);
       }
     }
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
       errors,
       importedRecords
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error importing biometric data:', error);
     return NextResponse.json(
       { error: 'Failed to import biometric data', details: error.message },
@@ -116,14 +117,14 @@ function extractBiometricRecordsFromXml(xmlString: string): any[] {
   // This is a simplified approach
   // In a real implementation, you'd use a proper XML parsing library
   const records: any[] = [];
-  
+
   // Simple regex to extract <biometric_record>...</biometric_record> blocks
   const recordRegex = /<biometric_record>(.*?)<\/biometric_record>/gs;
   let match;
-  
+
   while ((match = recordRegex.exec(xmlString)) !== null) {
     const recordXml = match[1];
-    
+
     // Extract fields using simple regex (not robust for production)
     const id = extractXmlValue(recordXml, 'id');
     const userId = extractXmlValue(recordXml, 'user_id');
@@ -131,7 +132,7 @@ function extractBiometricRecordsFromXml(xmlString: string): any[] {
     const biometricData = extractXmlValue(recordXml, 'biometric_data');
     const confidenceScore = parseFloat(extractXmlValue(recordXml, 'confidence_score'));
     const templateFormat = extractXmlValue(recordXml, 'template_format');
-    
+
     records.push({
       id,
       userId,
@@ -141,7 +142,7 @@ function extractBiometricRecordsFromXml(xmlString: string): any[] {
       templateFormat,
     });
   }
-  
+
   return records;
 }
 
@@ -156,29 +157,29 @@ function extractXmlValue(xml: string, tagName: string): string {
 function parseCsvToBiometricRecords(csvString: string): any[] {
   const lines = csvString.trim().split('\n');
   if (lines.length < 2) return [];
-  
+
   // Extract headers
   const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-  
+
   // Process data rows
   const records: any[] = [];
   for (let i = 1; i < lines.length; i++) {
     const values = lines[i].split(',').map(v => v.replace(/"/g, '').trim());
-    
+
     const record: any = {};
     for (let j = 0; j < headers.length; j++) {
       record[headers[j]] = values[j];
     }
-    
+
     // Convert confidence score to number if it exists
     if (record.confidence_score) {
       record.confidence_score = parseFloat(record.confidence_score);
       if (isNaN(record.confidence_score)) delete record.confidence_score;
     }
-    
+
     records.push(record);
   }
-  
+
   return records;
 }
 
@@ -198,9 +199,9 @@ function mapBiometricType(externalType: string): BiometricType {
     'hand_geometry': BiometricType.HAND_GEOMETRY,
     'signature': BiometricType.SIGNATURE,
   };
-  
+
   // Normalize the input string
   const normalizedType = externalType.toLowerCase().replace(' ', '_');
-  
+
   return typeMap[normalizedType] || BiometricType.FINGERPRINT; // Default to fingerprint
 }

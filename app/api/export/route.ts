@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
     switch (format) {
       case 'JSON':
         exportData = JSON.stringify({
-          records: records.map(record => ({
+          records: records.map((record: any) => ({
             ...record,
             biometricData: includeEncryptedData ? record.biometricData : '[ENCRYPTED_DATA_HIDDEN]',
             metadata: includeMetadata ? record.metadata : {},
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
 
       case 'XML':
         // Convert records to XML format
-        const xmlRecords = records.map(record => `
+        const xmlRecords = records.map((record: any) => `
           <biometric_record>
             <id>${record.id}</id>
             <user_id>${record.userId}</user_id>
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
           'template_format', 'metadata'
         ].join(',');
 
-        const csvRows = records.map(record => [
+        const csvRows = records.map((record: any) => [
           `"${record.id}"`,
           `"${record.userId}"`,
           `"${record.biometricType}"`,
@@ -198,11 +198,11 @@ export async function POST(request: NextRequest) {
         exportData = JSON.stringify({
           format: 'ISO_19794',
           version: '1.0',
-          records: records.map(record => ({
+          records: records.map((record: any) => ({
             biometric_id: record.id,
             format_id: record.templateFormat,
-            capture_device: record.metadata?.device || 'unknown',
-            quality: record.metadata?.quality || 'unknown',
+            capture_device: (record.metadata as any)?.device || 'unknown',
+            quality: (record.metadata as any)?.quality || 'unknown',
             biometric_data: includeEncryptedData ? record.biometricData : '[ENCRYPTED_DATA_HIDDEN]',
             // Additional ISO 19794 specific fields would go here
           })),
