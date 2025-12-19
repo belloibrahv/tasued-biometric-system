@@ -1,115 +1,116 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import { securityConfig } from '@/lib/security/config';
-import { withRateLimit, authRateLimiter, biometricRateLimiter } from '@/lib/security/rate-limit';
 
-// Production security middleware
-export default async function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Rate Limiting for sensitive API routes
-  if (pathname.startsWith('/api/auth/login') || pathname.startsWith('/api/auth/register')) {
-    const rateLimit = withRateLimit(request, authRateLimiter);
-    if (!rateLimit.allowed) {
-      return NextResponse.json({ error: rateLimit.message }, { status: 429 });
-    }
-  }
-
-  if (pathname.startsWith('/api/biometric')) {
-    const rateLimit = withRateLimit(request, biometricRateLimiter);
-    if (!rateLimit.allowed) {
-      return NextResponse.json({ error: rateLimit.message }, { status: 429 });
-    }
-  }
-
-  // 2. Authentication Protection
-  const protectedRoutes = [
-    '/api/biometric',
-    '/api/users',
-    '/api/export',
-    '/api/import',
-    '/dashboard',
-    '/collect',
-    '/records',
-    '/admin',
-    '/profile',
+  // Public routes that don't need authentication
+  const publicRoutes = [
+    '/',
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/api/auth/login',
+    '/api/auth/register',
+    '/api/auth/forgot-password',
+    '/api/auth/reset-password',
+    '/api/health',
   ];
 
-  const isProtectedRoute = protectedRoutes.some(route =>
-    pathname.startsWith(route) &&
-    !pathname.startsWith('/api/auth/login') &&
-    !pathname.startsWith('/api/auth/register')
+  // Check if it's a public route
+  const isPublicRoute = publicRoutes.some(route => 
+    pathname === route || pathname.startsWith('/_next') || pathname.startsWith('/static')
   );
 
-  let response = NextResponse.next();
-
-  if (isProtectedRoute) {
-    const authHeader = request.headers.get('authorization');
-    const token = request.cookies.get('auth-token')?.value || authHeader?.split(' ')[1];
-
-    if (!token) {
-      if (pathname.startsWith('/api/')) {
-        return NextResponse.json({ error: 'Authorization token required' }, { status: 401 });
-      } else {
-        return NextResponse.redirect(new URL('/login', request.url));
-      }
-    }
-
-    const decodedToken = verifyToken(token);
-
-    if (!decodedToken) {
-      if (pathname.startsWith('/api/')) {
-        return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
-      } else {
-        return NextResponse.redirect(new URL('/login', request.url));
-      }
-    }
-
-    // Add user info to request headers
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set('x-user-id', decodedToken.id);
-    requestHeaders.set('x-user-role', decodedToken.role);
-    requestHeaders.set('x-user-email', decodedToken.email);
-
-    response = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      }
-    });
+  if (isPublicRoute) {
+    return NextResponse.next();
   }
 
-  // 3. Security Headers
-  const headers = response.headers;
+  // Protected routes
+  const protectedRoutes = ['/dashboard', '/admin', '/operator', '/enroll-biometric', '/api/dashboard', '/api/admin', '/api/operator', '/api/lectures', '/api/webauthn', '/api/biometric/enroll'];
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
-  // CSP
-  const csp = Object.entries(securityConfig.csp.directives)
-    .map(([key, values]) => `${key.replace(/[A-Z]/g, m => '-' + m.toLowerCase())} ${values.join(' ')}`)
-    .join('; ');
-  headers.set('Content-Security-Policy', csp);
-
-  // HSTS (only on production)
-  if (process.env.NODE_ENV === 'production') {
-    const hsts = securityConfig.securityHeaders.strictTransportSecurity;
-    headers.set('Strict-Transport-Security', `max-age=${hsts.maxAge}; includeSubDomains${hsts.preload ? '; preload' : ''}`);
+  if (!isProtectedRoute) {
+    return NextResponse.next();
   }
 
-  headers.set('X-Content-Type-Options', securityConfig.securityHeaders.xContentTypeOptions);
-  headers.set('X-Frame-Options', securityConfig.securityHeaders.xFrameOptions);
-  headers.set('X-XSS-Protection', securityConfig.securityHeaders.xXssProtection);
-  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Get token from cookie or header
+  const token = request.cookies.get('auth-token')?.value ||
+                request.headers.get('authorization')?.replace('Bearer ', '');
 
-  return response;
+  if (!token) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  // Verify token
+  const payload = await verifyToken(token);
+
+  if (!payload) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+    const response = NextResponse.redirect(new URL('/login', request.url));
+    response.cookies.delete('auth-token');
+    return response;
+  }
+
+  // Role-based access control
+  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
+    if (payload.type !== 'admin' || (payload.role !== 'SUPER_ADMIN' && payload.role !== 'ADMIN')) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
+
+  if (pathname.startsWith('/operator') || pathname.startsWith('/api/operator')) {
+    if (payload.type !== 'admin') {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
+
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/api/dashboard')) {
+    if (payload.type !== 'student') {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    // Check biometric enrollment from token payload
+    // The biometricEnrolled flag is included in the JWT token
+    if (!pathname.startsWith('/api/biometric/enroll') && !pathname.includes('/enroll-biometric')) {
+      if (!payload.biometricEnrolled) {
+        if (pathname.startsWith('/api/')) {
+          return NextResponse.json({ error: 'Biometric enrollment required' }, { status: 403 });
+        }
+        return NextResponse.redirect(new URL('/enroll-biometric', request.url));
+      }
+    }
+  }
+
+  // Add user info to request headers for API routes
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-user-id', payload.id);
+  requestHeaders.set('x-user-role', payload.role || 'STUDENT');
+  requestHeaders.set('x-user-email', payload.email);
+  requestHeaders.set('x-user-type', payload.type || 'student');
+
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|api/auth/login|api/auth/register).*)',
+    '/((?!_next/static|_next/image|favicon.ico|images|sounds).*)',
   ],
 };

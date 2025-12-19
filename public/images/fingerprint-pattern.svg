@@ -1,0 +1,25 @@
+<svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fingerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0066CC"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+  <!-- Outer rings -->
+  <circle cx="200" cy="200" r="180" stroke="url(#fingerGrad)" stroke-width="2" opacity="0.2"/>
+  <circle cx="200" cy="200" r="150" stroke="url(#fingerGrad)" stroke-width="2" opacity="0.3"/>
+  <circle cx="200" cy="200" r="120" stroke="url(#fingerGrad)" stroke-width="3" opacity="0.4"/>
+  <!-- Fingerprint pattern -->
+  <g stroke="url(#fingerGrad)" stroke-width="3" fill="none" stroke-linecap="round">
+    <path d="M200 80 Q280 120 280 200 Q280 280 200 320"/>
+    <path d="M200 100 Q260 130 260 200 Q260 270 200 300"/>
+    <path d="M200 120 Q240 145 240 200 Q240 255 200 280"/>
+    <path d="M200 140 Q220 155 220 200 Q220 245 200 260"/>
+    <path d="M200 80 Q120 120 120 200 Q120 280 200 320"/>
+    <path d="M200 100 Q140 130 140 200 Q140 270 200 300"/>
+    <path d="M200 120 Q160 145 160 200 Q160 255 200 280"/>
+    <path d="M200 140 Q180 155 180 200 Q180 245 200 260"/>
+  </g>
+  <!-- Center dot -->
+  <circle cx="200" cy="200" r="8" fill="url(#fingerGrad)"/>
+</svg>

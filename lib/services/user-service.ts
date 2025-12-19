@@ -1,6 +1,5 @@
-// @ts-ignore
 import { User } from '@prisma/client';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import db from '@/lib/db';
 
 interface CreateUserInput {
@@ -8,7 +7,12 @@ interface CreateUserInput {
   password: string;
   firstName: string;
   lastName: string;
-  role?: string;
+  matricNumber: string;
+  phoneNumber: string;
+  dateOfBirth: Date;
+  department: string;
+  level: string;
+  otherNames?: string;
 }
 
 interface UpdateUserInput {
@@ -16,7 +20,8 @@ interface UpdateUserInput {
   email?: string;
   firstName?: string;
   lastName?: string;
-  role?: string;
+  phoneNumber?: string;
+  profilePhoto?: string;
   isActive?: boolean;
 }
 
@@ -25,8 +30,7 @@ class UserService {
    * Create a new user
    */
   static async createUser(input: CreateUserInput): Promise<User> {
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(input.password, parseInt(process.env.BCRYPT_SALT_ROUNDS || '12'));
+    const hashedPassword = await bcrypt.hash(input.password, 12);
 
     const user = await db.user.create({
       data: {
@@ -34,11 +38,18 @@ class UserService {
         password: hashedPassword,
         firstName: input.firstName,
         lastName: input.lastName,
-        role: input.role as any || 'USER',
+        otherNames: input.otherNames || null,
+        matricNumber: input.matricNumber.toUpperCase(),
+        phoneNumber: input.phoneNumber,
+        dateOfBirth: input.dateOfBirth,
+        department: input.department,
+        level: input.level,
+        isEmailVerified: false,
+        isActive: true,
+        isSuspended: false,
       },
     });
 
-    // Don't return the password hash
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword as User;
   }
@@ -53,7 +64,6 @@ class UserService {
 
     if (!user) return null;
 
-    // Don't return the password hash
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword as Omit<User, 'password'>;
   }
@@ -68,13 +78,31 @@ class UserService {
   }
 
   /**
+   * Get a user by matric number
+   */
+  static async getUserByMatricNumber(matricNumber: string): Promise<User | null> {
+    return await db.user.findUnique({
+      where: { matricNumber: matricNumber.toUpperCase() },
+    });
+  }
+
+  /**
    * Check if a user exists by email
    */
   static async userExists(email: string): Promise<boolean> {
     const user = await db.user.findUnique({
       where: { email: email.toLowerCase() },
     });
+    return !!user;
+  }
 
+  /**
+   * Check if matric number exists
+   */
+  static async matricNumberExists(matricNumber: string): Promise<boolean> {
+    const user = await db.user.findUnique({
+      where: { matricNumber: matricNumber.toUpperCase() },
+    });
     return !!user;
   }
 
@@ -87,7 +115,8 @@ class UserService {
     if (input.email) updateData.email = input.email.toLowerCase();
     if (input.firstName) updateData.firstName = input.firstName;
     if (input.lastName) updateData.lastName = input.lastName;
-    if (input.role) updateData.role = input.role as any;
+    if (input.phoneNumber) updateData.phoneNumber = input.phoneNumber;
+    if (input.profilePhoto) updateData.profilePhoto = input.profilePhoto;
     if (input.isActive !== undefined) updateData.isActive = input.isActive;
 
     const user = await db.user.update({
@@ -95,7 +124,6 @@ class UserService {
       data: updateData,
     });
 
-    // Don't return the password hash
     const { password, ...userWithoutPassword } = user;
     return userWithoutPassword as Omit<User, 'password'>;
   }
@@ -105,7 +133,7 @@ class UserService {
    */
   static async changePassword(userId: string, newPassword: string): Promise<boolean> {
     try {
-      const hashedPassword = await bcrypt.hash(newPassword, parseInt(process.env.BCRYPT_SALT_ROUNDS || '12'));
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
 
       await db.user.update({
         where: { id: userId },
@@ -120,19 +148,19 @@ class UserService {
   }
 
   /**
-   * Delete a user and all associated biometric records
+   * Delete a user and all associated data
    */
   static async deleteUser(userId: string): Promise<boolean> {
     try {
-      // Delete all biometric records associated with the user first
-      await db.biometricRecord.deleteMany({
-        where: { userId },
-      });
-
-      // Then delete the user
-      await db.user.delete({
-        where: { id: userId },
-      });
+      // Delete in order due to foreign key constraints
+      await db.notification.deleteMany({ where: { userId } });
+      await db.dataExport.deleteMany({ where: { userId } });
+      await db.accessLog.deleteMany({ where: { userId } });
+      await db.serviceConnection.deleteMany({ where: { userId } });
+      await db.qRCode.deleteMany({ where: { userId } });
+      await db.biometricData.deleteMany({ where: { userId } });
+      await db.auditLog.deleteMany({ where: { userId } });
+      await db.user.delete({ where: { id: userId } });
 
       return true;
     } catch (error) {
@@ -145,11 +173,16 @@ class UserService {
    * Authenticate a user
    */
   static async authenticateUser(email: string, password: string): Promise<Omit<User, 'password'> | null> {
-    const user = await db.user.findUnique({
-      where: { email: email.toLowerCase() },
+    const user = await db.user.findFirst({
+      where: {
+        OR: [
+          { email: email.toLowerCase() },
+          { matricNumber: email.toUpperCase() },
+        ],
+      },
     });
 
-    if (!user || !user.isActive) {
+    if (!user || !user.isActive || user.isSuspended) {
       return null;
     }
 
@@ -159,9 +192,52 @@ class UserService {
       return null;
     }
 
-    // Don't return the password hash
+    // Update last login
+    await db.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
     const { password: _, ...userWithoutPassword } = user;
     return userWithoutPassword as Omit<User, 'password'>;
+  }
+
+  /**
+   * Suspend a user
+   */
+  static async suspendUser(userId: string, reason: string): Promise<boolean> {
+    try {
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          isSuspended: true,
+          suspensionReason: reason,
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error('Error suspending user:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Unsuspend a user
+   */
+  static async unsuspendUser(userId: string): Promise<boolean> {
+    try {
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          isSuspended: false,
+          suspensionReason: null,
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error('Error unsuspending user:', error);
+      return false;
+    }
   }
 }
 

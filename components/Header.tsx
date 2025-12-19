@@ -3,34 +3,40 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Menu, X, LogOut, User, BarChart3, Fingerprint, Database, Settings, Home, UserPlus } from 'lucide-react';
+import {
+  Menu, X, LogOut, User, Fingerprint, ChevronDown,
+  LayoutDashboard, PlusCircle, FileSearch, DownloadCloud
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Header = () => {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in by checking for token in localStorage
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+
     const token = localStorage.getItem('token');
     if (token) {
       setIsLoggedIn(true);
-      // In a real app, you would decode the token to get user info
-      // For now, we'll just set a placeholder user
-      setUser({ firstName: 'User', lastName: 'Name' });
+      setUser({ firstName: 'Admin', lastName: 'User', role: 'ADMIN' });
     } else {
       setIsLoggedIn(false);
       setUser(null);
     }
+
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [pathname]);
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-    { name: 'Collect Data', href: '/collect', icon: Fingerprint },
-    { name: 'View Records', href: '/records', icon: Database },
-    { name: 'Export Data', href: '/export', icon: Settings },
-    ...(user?.role === 'ADMIN' ? [{ name: 'Admin', href: '/admin', icon: Settings }] : []),
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Collect Data', href: '/collect', icon: PlusCircle },
+    { name: 'Records', href: '/records', icon: FileSearch },
+    { name: 'Export', href: '/export', icon: DownloadCloud },
   ];
 
   const handleLogout = () => {
@@ -40,137 +46,158 @@ const Header = () => {
     window.location.href = '/login';
   };
 
+  // Don't show header on dashboard pages (they have their own layout)
+  if (pathname?.startsWith('/dashboard')) {
+    return null;
+  }
+
   return (
-    <header className="bg-white shadow-sm">
+    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+      scrolled ? 'bg-white/90 backdrop-blur-lg border-b border-surface-200 shadow-sm' : 'bg-transparent'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="bg-indigo-600 text-white font-bold text-lg p-2 rounded">TASUED</div>
-              <span className="hidden md:block text-xl font-semibold text-gray-900">Biometric System</span>
-            </Link>
+        <div className="flex justify-between items-center h-20">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-3">
+            <div className="bg-brand-500 p-2.5 rounded-xl text-white shadow-brand">
+              <Fingerprint size={24} />
+            </div>
+            <div>
+              <span className="text-xl font-bold text-surface-950 tracking-tight">TASUED</span>
+              <span className="ml-1.5 text-sm font-semibold text-brand-500">BioVault</span>
+            </div>
+          </Link>
 
-            <nav className="hidden md:ml-10 md:flex md:space-x-1">
-              {isLoggedIn && navigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`${pathname === item.href
-                      ? 'bg-indigo-50 text-indigo-700 border-b-2 border-indigo-500'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                      } px-3 py-2 rounded-md text-sm font-medium flex items-center`}
-                  >
-                    <Icon className="mr-2 h-4 w-4" />
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {isLoggedIn && navigation.map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={isActive ? 'nav-link-active' : 'nav-link-inactive'}
+                >
+                  <Icon size={16} />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </nav>
 
-          <div className="flex items-center">
+          {/* Right Actions */}
+          <div className="flex items-center gap-4">
             {isLoggedIn ? (
-              <div className="flex items-center">
-                <div className="hidden md:flex items-center text-sm font-medium text-gray-500">
-                  <User className="mr-2 h-4 w-4 text-gray-400" />
-                  <span className="text-gray-700">{user?.firstName} {user?.lastName}</span>
+              <div className="flex items-center gap-3">
+                <div className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl hover:bg-surface-50 transition-colors cursor-pointer">
+                  <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center text-brand-600">
+                    <User size={16} />
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm font-semibold text-surface-900">{user?.firstName}</span>
+                    <ChevronDown size={14} className="inline ml-1 text-surface-400" />
+                  </div>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="ml-4 md:ml-6 inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none flex items-center"
+                  className="btn-outline py-2 px-4 text-sm flex items-center gap-2 border-error-200 text-error-600 hover:bg-error-50"
                 >
-                  <LogOut className="mr-1 h-4 w-4" />
+                  <LogOut size={16} />
                   <span className="hidden sm:inline">Logout</span>
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-4">
-                <Link
-                  href="/login"
-                  className="text-sm font-medium text-gray-500 hover:text-gray-900 flex items-center"
-                >
-                  <User className="mr-1 h-4 w-4" />
+              <div className="flex items-center gap-3">
+                <Link href="/login" className="text-sm font-semibold text-surface-600 hover:text-brand-500 transition-colors px-4 py-2">
                   Sign in
                 </Link>
-                <Link
-                  href="/register"
-                  className="ml-2 inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 flex items-center"
-                >
-                  <UserPlus className="mr-1 h-4 w-4" />
-                  Register
+                <Link href="/register" className="btn-primary py-2.5 px-6 text-sm">
+                  Get Started
                 </Link>
               </div>
             )}
 
             {/* Mobile menu button */}
             <button
-              className="md:hidden ml-4 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
+              className="lg:hidden p-2 rounded-xl text-surface-500 hover:bg-surface-100 transition-colors"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
       </div>
 
       {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden">
-          <div className="pt-2 pb-3 space-y-1">
-            {isLoggedIn ? (
-              <>
-                {navigation.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={`${pathname === item.href
-                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                        : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
-                        } block pl-3 pr-4 py-2 border-l-4 text-base font-medium flex items-center`}
-                    >
-                      <Icon className="mr-2 h-4 w-4" />
-                      {item.name}
-                    </Link>
-                  );
-                })}
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left pl-3 pr-4 py-2 text-base font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-800 flex items-center"
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 flex items-center"
-                >
-                  <User className="mr-2 h-4 w-4" />
-                  Sign in
-                </Link>
-                <Link
-                  href="/register"
-                  className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800 flex items-center"
-                >
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Register
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="lg:hidden bg-white border-b border-surface-200 overflow-hidden"
+          >
+            <div className="px-4 pt-4 pb-6 space-y-2">
+              {isLoggedIn ? (
+                <>
+                  <div className="mb-6 p-4 bg-surface-50 rounded-2xl flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-brand-100 flex items-center justify-center text-brand-600">
+                      <User size={24} />
+                    </div>
+                    <div>
+                      <div className="font-bold text-surface-950">{user?.firstName} {user?.lastName}</div>
+                      <div className="text-xs text-brand-500 font-semibold uppercase tracking-wider">{user?.role}</div>
+                    </div>
+                  </div>
+                  {navigation.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={() => setIsMenuOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition-all ${
+                          isActive ? 'text-brand-600 bg-brand-50' : 'text-surface-600 hover:bg-surface-100'
+                        }`}
+                      >
+                        <Icon size={20} />
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                  <button
+                    onClick={handleLogout}
+                    className="w-full mt-4 px-4 py-3 rounded-xl text-base font-semibold text-error-600 hover:bg-error-50 flex items-center gap-3 transition-colors"
+                  >
+                    <LogOut size={20} />
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold text-surface-600 hover:bg-surface-50"
+                  >
+                    <User size={20} />
+                    Sign in
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block px-4 py-4 rounded-xl text-base font-bold text-white bg-brand-gradient text-center shadow-brand"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 };

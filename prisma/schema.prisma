@@ -1,7 +1,3 @@
-// This is a basic example of a Prisma schema file.
-// To learn more about how to define relationships and models, visit:
-// https://www.prisma.io/docs/guides/database/schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,76 +8,348 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  email        String   @unique
-  password     String   
-  firstName    String
-  lastName     String
-  role         Role     @default(USER)
-  isActive     Boolean  @default(true)
+  id                 String              @id @default(uuid())
+  matricNumber       String              @unique
+  email              String              @unique
+  password           String
+  firstName          String
+  lastName           String
+  otherNames         String?
+  phoneNumber        String
+  dateOfBirth        DateTime
+  department         String
+  level              String
+  profilePhoto       String?
+  isEmailVerified    Boolean             @default(false)
+  isActive           Boolean             @default(true)
+  isSuspended        Boolean             @default(false)
+  suspensionReason   String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  lastLoginAt        DateTime?
+  biometricEnrolled  Boolean             @default(false)
+  accessLogs         AccessLog[]
+  auditLogs          AuditLog[]
+  biometricData      BiometricData?
+  exports            DataExport[]
+  lectureAttendances LectureAttendance[]
+  notifications      Notification[]
+  passkeys           Passkey[]
+  qrCodes            QRCode[]
+  serviceConnections ServiceConnection[]
 
-  // Relations
-  biometricRecords BiometricRecord[]
-  biometricExports BiometricExport[]
-  
   @@map("users")
 }
 
-model BiometricRecord {
-  id              String   @id @default(cuid())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  userId          String
-  biometricType   BiometricType
-  biometricData   String   // This will store encrypted biometric data
-  templateFormat  String   // Format of the biometric template
-  confidenceScore Float?   // Confidence level of the match
-  metadata        Json?    // Additional metadata about the biometric
-  
-  // Relations
-  user            User     @relation(fields: [userId], references: [id])
-  
-  @@map("biometric_records")
+model Admin {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  password    String
+  fullName    String
+  role        AdminRole @default(OPERATOR)
+  permissions String[]
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("admins")
 }
 
-model BiometricExport {
-  id              String   @id @default(cuid())
-  createdAt       DateTime @default(now())
-  exportedById    String
-  exportFormat    ExportFormat
-  exportData      String   // Encrypted export data
-  fileName        String
-  fileSize        Int?     // Size in bytes
-  isDownloaded    Boolean  @default(false)
-  downloadCount   Int      @default(0)
-  
-  // Relations
-  user            User     @relation(fields: [exportedById], references: [id])
-  
-  @@map("biometric_exports")
+model BiometricData {
+  id                  String    @id @default(uuid())
+  userId              String    @unique
+  fingerprintTemplate String?
+  fingerprintQuality  Int?
+  facialTemplate      String?
+  facialQuality       Int?
+  facialPhotos        String[]
+  irisTemplate        String?
+  irisQuality         Int?
+  enrolledAt          DateTime  @default(now())
+  lastUpdated         DateTime  @updatedAt
+  expiresAt           DateTime?
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("biometric_data")
 }
 
-enum Role {
-  USER
-  ADMIN
+model QRCode {
+  id         String    @id @default(uuid())
+  userId     String
+  code       String    @unique
+  isActive   Boolean   @default(true)
+  expiresAt  DateTime
+  usageCount Int       @default(0)
+  maxUsage   Int?
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([code])
+  @@map("qr_codes")
+}
+
+model Service {
+  id                  String              @id @default(uuid())
+  name                String              @unique
+  slug                String              @unique
+  description         String
+  icon                String?
+  isActive            Boolean             @default(true)
+  apiKey              String              @unique @default(uuid())
+  webhookUrl          String?
+  requiredPermissions String[]
+  optionalPermissions String[]
+  settings            Json?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  accessLogs          AccessLog[]
+  connections         ServiceConnection[]
+
+  @@map("services")
+}
+
+model ServiceConnection {
+  id             String    @id @default(uuid())
+  userId         String
+  serviceId      String
+  isActive       Boolean   @default(true)
+  permissions    String[]
+  connectedAt    DateTime  @default(now())
+  lastAccessedAt DateTime?
+  accessCount    Int       @default(0)
+  service        Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, serviceId])
+  @@index([userId])
+  @@index([serviceId])
+  @@map("service_connections")
+}
+
+model AccessLog {
+  id                  String             @id @default(uuid())
+  userId              String
+  serviceId           String
+  verificationMethod  VerificationMethod
+  status              VerificationStatus
+  failureReason       String?
+  location            String?
+  ipAddress           String?
+  deviceFingerprint   String?
+  operatorId          String?
+  terminalId          String?
+  biometricMatchScore Float?
+  photoUrl            String?
+  timestamp           DateTime           @default(now())
+  service             Service            @relation(fields: [serviceId], references: [id])
+  user                User               @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([serviceId])
+  @@index([timestamp])
+  @@index([status])
+  @@map("access_logs")
+}
+
+model AuditLog {
+  id           String    @id @default(uuid())
+  userId       String?
+  actorType    ActorType
+  actorId      String
+  actionType   String
+  resourceType String
+  resourceId   String?
+  details      Json?
+  ipAddress    String?
+  userAgent    String?
+  status       String
+  errorMessage String?
+  timestamp    DateTime  @default(now())
+  user         User?     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([actorId])
+  @@index([actionType])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
+
+model DataExport {
+  id           String       @id @default(uuid())
+  userId       String
+  format       ExportFormat
+  categories   String[]
+  fileSize     BigInt?
+  filePath     String?
+  isEncrypted  Boolean      @default(false)
+  status       ExportStatus @default(PROCESSING)
+  expiresAt    DateTime
+  downloadedAt DateTime?
+  createdAt    DateTime     @default(now())
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@map("data_exports")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  readAt    DateTime?
+  user      User             @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+model LectureSession {
+  id          String              @id @default(uuid())
+  courseCode  String
+  courseName  String
+  lecturer    String?
+  venue       String
+  startTime   DateTime
+  endTime     DateTime
+  department  String
+  level       String
+  createdBy   String
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  attendances LectureAttendance[]
+
+  @@index([courseCode])
+  @@index([startTime])
+  @@map("lecture_sessions")
+}
+
+model LectureAttendance {
+  id               String             @id @default(uuid())
+  lectureSessionId String
+  userId           String
+  method           VerificationMethod
+  status           VerificationStatus @default(SUCCESS)
+  checkInTime      DateTime           @default(now())
+  checkOutTime     DateTime?
+  matchScore       Float?
+  location         String?
+  deviceId         String?
+  lectureSession   LectureSession     @relation(fields: [lectureSessionId], references: [id], onDelete: Cascade)
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([lectureSessionId, userId])
+  @@index([lectureSessionId])
+  @@index([userId])
+  @@map("lecture_attendance")
+}
+
+model Passkey {
+  id           String   @id @default(uuid())
+  userId       String
+  credentialId String   @unique
+  publicKey    String
+  counter      Int      @default(0)
+  transports   String[]
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("passkeys")
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  category  String
+  updatedBy String
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model ExamSession {
+  id               String     @id @default(uuid())
+  courseCode       String
+  courseName       String
+  venue            String
+  examDate         DateTime
+  startTime        DateTime
+  endTime          DateTime
+  expectedStudents Int
+  verifiedCount    Int        @default(0)
+  studentList      String[]
+  status           ExamStatus @default(SCHEDULED)
+  createdBy        String
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@map("exam_sessions")
+}
+
+enum AdminRole {
   SUPER_ADMIN
+  ADMIN
+  OPERATOR
 }
 
-enum BiometricType {
+enum VerificationMethod {
+  QR_CODE
   FINGERPRINT
-  FACE_RECOGNITION
-  IRIS_SCAN
-  RETINA_SCAN
-  VOICE_RECOGNITION
-  HAND_GEOMETRY
-  SIGNATURE
+  FACIAL
+  MANUAL
+  IRIS
+}
+
+enum VerificationStatus {
+  SUCCESS
+  FAILED
+  PENDING
+}
+
+enum ActorType {
+  ADMIN
+  STUDENT
+  OPERATOR
+  SYSTEM
 }
 
 enum ExportFormat {
-  XML
   JSON
-  ISO_19794 // Standard for biometric data interchange
-  CUSTOM
+  CSV
+  PDF
+  XML
+  FIDO2
+  ISO_19794
+}
+
+enum ExportStatus {
+  PROCESSING
+  READY
+  DOWNLOADED
+  EXPIRED
+}
+
+enum NotificationType {
+  VERIFICATION
+  SECURITY
+  SYSTEM
+  SERVICE
+}
+
+enum ExamStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }

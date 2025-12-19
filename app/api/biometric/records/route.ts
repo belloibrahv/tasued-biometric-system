@@ -1,136 +1,98 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { BiometricRecord } from '@prisma/client';
-import BiometricService from '@/lib/services/biometric-service';
-import { validateBiometricRecord } from '@/lib/security/validation';
-import { biometricRateLimiter, withRateLimit } from '@/lib/security/rate-limit';
+import db from '@/lib/db';
+import { verifyToken } from '@/lib/auth';
 
-// GET /api/biometric/records
-// Fetch biometric records for a user or all records (admin)
+// GET /api/biometric/records - Get user's biometric data
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    // Apply rate limiting
-    const rateLimitResult = withRateLimit(request, biometricRateLimiter);
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { error: rateLimitResult.message },
-        { status: 429 }
-      );
+    const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
+                  request.cookies.get('auth-token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user info from middleware headers
-    const userIdFromToken = request.headers.get('x-user-id');
-    const userRole = request.headers.get('x-user-role');
-
-    if (!userIdFromToken) {
-      return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
-      );
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    let requestedUserId = searchParams.get('userId');
+    const biometricData = await db.biometricData.findUnique({
+      where: { userId: payload.id },
+    });
 
-    // Non-admin users can only access their own records
-    if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
-      requestedUserId = userIdFromToken;
+    if (!biometricData) {
+      return NextResponse.json({ error: 'No biometric data found' }, { status: 404 });
     }
 
-    const type = searchParams.get('type');
-    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit') as string) : 10;
-    const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset') as string) : 0;
-
-    let records: BiometricRecord[] = [];
-
-    if (requestedUserId) {
-      records = await BiometricService.getUserBiometricRecords(requestedUserId);
-    } else if (type) {
-      records = await BiometricService.searchByBiometricType(type);
-    } else {
-      // In a real implementation, this would require admin privileges
-      records = [];
-    }
-
-    // Apply pagination
-    const paginatedRecords = records.slice(offset, offset + limit);
-
+    // Don't return actual templates, just metadata
     return NextResponse.json({
-      records: paginatedRecords,
-      total: records.length,
-      limit,
-      offset
+      id: biometricData.id,
+      hasFingerprint: !!biometricData.fingerprintTemplate,
+      fingerprintQuality: biometricData.fingerprintQuality,
+      hasFacial: !!biometricData.facialTemplate,
+      facialQuality: biometricData.facialQuality,
+      enrolledAt: biometricData.enrolledAt,
+      lastUpdated: biometricData.lastUpdated,
     });
   } catch (error) {
-    console.error('Error fetching biometric records:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch biometric records' },
-      { status: 500 }
-    );
+    console.error('Error fetching biometric data:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// POST /api/biometric/records
-// Create a new biometric record
+// POST /api/biometric/records - Update biometric data
 export async function POST(request: NextRequest) {
   try {
-    // Apply rate limiting
-    const rateLimitResult = withRateLimit(request, biometricRateLimiter);
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { error: rateLimitResult.message },
-        { status: 429 }
-      );
+    const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
+                  request.cookies.get('auth-token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get user info from middleware headers
-    const userIdFromToken = request.headers.get('x-user-id');
-    const userRole = request.headers.get('x-user-role');
-
-    if (!userIdFromToken) {
-      return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
-      );
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
     const body = await request.json();
-    let { userId, biometricType, biometricData, templateFormat, confidenceScore, metadata } = body;
+    const { type, template, quality } = body;
 
-    // Non-admin users can only create records for themselves
-    if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
-      userId = userIdFromToken;
+    if (!type || !['fingerprint', 'facial'].includes(type)) {
+      return NextResponse.json({ error: 'Invalid biometric type' }, { status: 400 });
     }
 
-    // Validate the input
-    const validation = validateBiometricRecord({
-      userId,
-      biometricType,
-      biometricData,
-      confidenceScore
-    });
+    const updateData: any = {
+      lastUpdated: new Date(),
+    };
 
-    if (!validation.isValid) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: validation.errors },
-        { status: 400 }
-      );
+    if (type === 'fingerprint') {
+      updateData.fingerprintTemplate = template;
+      updateData.fingerprintQuality = quality || 100;
+    } else if (type === 'facial') {
+      updateData.facialTemplate = template;
+      updateData.facialQuality = quality || 100;
     }
 
-    const record = await BiometricService.createBiometricRecord({
-      userId,
-      biometricType,
-      biometricData,
-      templateFormat,
-      confidenceScore,
-      metadata
+    const biometricData = await db.biometricData.upsert({
+      where: { userId: payload.id },
+      update: updateData,
+      create: {
+        userId: payload.id,
+        ...updateData,
+      },
     });
 
-    return NextResponse.json(record, { status: 201 });
+    return NextResponse.json({
+      message: 'Biometric data updated successfully',
+      type,
+      quality: type === 'fingerprint' ? biometricData.fingerprintQuality : biometricData.facialQuality,
+    });
   } catch (error) {
-    console.error('Error creating biometric record:', error);
-    return NextResponse.json(
-      { error: 'Failed to create biometric record' },
-      { status: 500 }
-    );
+    console.error('Error updating biometric data:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

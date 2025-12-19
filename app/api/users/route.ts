@@ -1,99 +1,125 @@
 import { NextRequest, NextResponse } from 'next/server';
-import UserService from '@/lib/services/user-service';
+import db from '@/lib/db';
+import { verifyToken } from '@/lib/auth';
 
-// GET /api/users
-// Fetch all users (admin) or search users
+// GET /api/users - Get current user or search users (admin)
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    // Get user info from middleware headers
-    const userIdFromToken = request.headers.get('x-user-id');
-    const userRole = request.headers.get('x-user-role');
+    const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
+                  request.cookies.get('auth-token')?.value;
 
-    if (!userIdFromToken) {
-      return NextResponse.json(
-        { error: 'User not authenticated' },
-        { status: 401 }
-      );
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Only admins can fetch all users
-    if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
-      return NextResponse.json(
-        { error: 'Not authorized to fetch users' },
-        { status: 403 }
-      );
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const email = searchParams.get('email');
+    const userId = searchParams.get('id');
 
-    if (email) {
-      // Search for a specific user by email
-      const user = await UserService.getUserByEmail(email);
+    // If specific user ID requested
+    if (userId) {
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          matricNumber: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          otherNames: true,
+          phoneNumber: true,
+          department: true,
+          level: true,
+          profilePhoto: true,
+          isEmailVerified: true,
+          isActive: true,
+          createdAt: true,
+          lastLoginAt: true,
+        },
+      });
 
       if (!user) {
-        return NextResponse.json(
-          { error: 'User not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
 
-      // Don't return password hash
-      const { password, ...userWithoutPassword } = user;
-      return NextResponse.json(userWithoutPassword);
+      return NextResponse.json(user);
     }
 
-    // In a real implementation, this would return a list of users
-    // For now, return an empty array
-    return NextResponse.json([]);
+    // Return current user
+    const user = await db.user.findUnique({
+      where: { id: payload.id },
+      select: {
+        id: true,
+        matricNumber: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        otherNames: true,
+        phoneNumber: true,
+        department: true,
+        level: true,
+        profilePhoto: true,
+        isEmailVerified: true,
+        isActive: true,
+        createdAt: true,
+        lastLoginAt: true,
+      },
+    });
+
+    return NextResponse.json(user);
   } catch (error) {
-    console.error('Error fetching users:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch users' },
-      { status: 500 }
-    );
+    console.error('Error fetching user:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// POST /api/users
-// Create a new user
-export async function POST(request: NextRequest) {
+// PATCH /api/users - Update current user
+export async function PATCH(request: NextRequest) {
   try {
+    const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
+                  request.cookies.get('auth-token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = await verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
     const body = await request.json();
-    const { email, password, firstName, lastName, role } = body;
+    const { firstName, lastName, phoneNumber, profilePhoto } = body;
 
-    if (!email || !password || !firstName || !lastName) {
-      return NextResponse.json(
-        { error: 'Email, password, firstName, and lastName are required' },
-        { status: 400 }
-      );
-    }
+    const updateData: any = {};
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (phoneNumber) updateData.phoneNumber = phoneNumber;
+    if (profilePhoto) updateData.profilePhoto = profilePhoto;
 
-    // Check if user already exists
-    const userExists = await UserService.userExists(email);
-    if (userExists) {
-      return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 409 }
-      );
-    }
-
-    const user = await UserService.createUser({
-      email,
-      password,
-      firstName,
-      lastName,
-      role
+    const user = await db.user.update({
+      where: { id: payload.id },
+      data: updateData,
+      select: {
+        id: true,
+        matricNumber: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phoneNumber: true,
+        profilePhoto: true,
+      },
     });
 
-    // Don't return password hash
-    const { password: _, ...userWithoutPassword } = user;
-    return NextResponse.json(userWithoutPassword, { status: 201 });
+    return NextResponse.json(user);
   } catch (error) {
-    console.error('Error creating user:', error);
-    return NextResponse.json(
-      { error: 'Failed to create user' },
-      { status: 500 }
-    );
+    console.error('Error updating user:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

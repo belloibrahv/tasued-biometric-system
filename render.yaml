@@ -1,33 +1,41 @@
 services:
   - type: web
-    name: tasued-biometric-system
-    runtime: docker
-    region: oregon # Use oregon for US deployment
-    plan: free # Free tier for students
+    name: tasued-biovault
+    runtime: node
+    region: oregon
+    plan: free
     branch: main
     autoDeploy: true
     healthCheckPath: /api/health
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm start
     envVars:
       - key: DATABASE_URL
         fromDatabase:
-          name: tasued-biometric-db
+          name: tasued-biovault-db
           property: connectionString
       - key: JWT_SECRET
-        sync: false
+        generateValue: true
       - key: ENCRYPTION_KEY
         sync: false
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_API_URL
-        value: https://tasued-biometric-system.onrender.com
-      - key: CORS_ORIGIN
-        value: https://tasued-biometric-system.onrender.com
+        sync: false
+      - key: WEBAUTHN_RP_ID
+        sync: false
+      - key: WEBAUTHN_ORIGIN
+        sync: false
       - key: BCRYPT_SALT_ROUNDS
         value: "12"
+      - key: SECURE_COOKIES
+        value: "true"
+      - key: JWT_EXPIRES_IN
+        value: "24h"
 
 databases:
-  - name: tasued-biometric-db
-    plan: free # Free Postgres database
+  - name: tasued-biovault-db
+    plan: free
     region: oregon
-    databaseName: tasued_biometric_system
-    user: tasued_user
+    databaseName: tasued_biovault
+    user: biovault_user

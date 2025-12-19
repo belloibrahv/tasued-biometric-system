@@ -1,7 +1,12 @@
-import jwt from 'jsonwebtoken';
+import * as jose from 'jose';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_dev';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+
+// Helper to get encoded secret
+function getSecretKey() {
+  return new TextEncoder().encode(JWT_SECRET);
+}
 
 // Helper to ensure JWT_SECRET is set in production at runtime
 function ensureSecret() {
@@ -16,45 +21,40 @@ export interface JWTPayload {
   id: string;
   email: string;
   role: string;
+  [key: string]: any;
 }
 
-export function generateToken(payload: JWTPayload): string {
+export async function generateToken(payload: JWTPayload): Promise<string> {
   ensureSecret();
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN as any });
+
+  return await new jose.SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(JWT_EXPIRES_IN)
+    .sign(getSecretKey());
 }
 
-export function verifyToken(token: string): JWTPayload | null {
+export async function verifyToken(token: string): Promise<JWTPayload | null> {
   ensureSecret();
   try {
-    // Ensure token starts with "Bearer " or is a raw token
     if (!token || token.length < 10) {
-      console.warn('Invalid token format');
       return null;
     }
 
-    // Extract token from "Bearer <token>" format if needed
     const tokenValue = token.startsWith('Bearer ') ? token.split(' ')[1] : token;
 
-    const decoded = jwt.verify(tokenValue, JWT_SECRET) as JWTPayload;
-    return decoded;
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      console.error('Token expired:', error);
-    } else if (error instanceof jwt.JsonWebTokenError) {
-      console.error('Invalid token:', error);
-    } else {
-      console.error('Token verification error:', error);
-    }
+    const { payload } = await jose.jwtVerify(tokenValue, getSecretKey());
+    return payload as unknown as JWTPayload;
+  } catch (error: any) {
+    console.error('Token verification error:', error.message || error);
     return null;
   }
 }
 
 export function decodeToken(token: string): JWTPayload | null {
   try {
-    // Extract token from "Bearer <token>" format if needed
     const tokenValue = token.startsWith('Bearer ') ? token.split(' ')[1] : token;
-    const decoded = jwt.decode(tokenValue) as JWTPayload;
-    return decoded;
+    return jose.decodeJwt(tokenValue) as unknown as JWTPayload;
   } catch (error) {
     console.error('Token decode error:', error);
     return null;

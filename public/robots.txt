@@ -1,0 +1,10 @@
+# TASUED BioVault - Robots.txt
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /operator/
+
+# Sitemap
+Sitemap: https://biovault.tasued.edu.ng/sitemap.xml
