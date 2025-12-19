@@ -7,6 +7,10 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma
+
+# Set temporary DATABASE_URL for build process
+ENV DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
+
 RUN npm ci
 
 # Rebuild the source code only when needed
@@ -14,9 +18,6 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
-# Set temporary DATABASE_URL for build process
-ENV DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder
 
 # Generate Prisma client
 RUN npx prisma generate
