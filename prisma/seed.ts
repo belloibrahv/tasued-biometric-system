@@ -1,6 +1,12 @@
 import { PrismaClient, AdminRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
+// Handle missing DATABASE_URL for seeding
+if (!process.env.DATABASE_URL) {
+  console.warn('DATABASE_URL not set, using placeholder for seeding');
+  process.env.DATABASE_URL = 'postgresql://placeholder:placeholder@localhost:5432/placeholder';
+}
+
 const prisma = new PrismaClient();
 
 async function main() {
