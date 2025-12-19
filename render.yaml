@@ -7,7 +7,7 @@ services:
     branch: main
     autoDeploy: true
     healthCheckPath: /api/health
-    buildCommand: npm install && npx prisma generate && npm run build
+    buildCommand: DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder npm install && npx prisma generate && npm run build
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
