@@ -3,13 +3,13 @@
 ## Course Information
 - **Course**: CSC 415 Net-Centric Computing
 - **Lecturer**: Dr. Ogunsanwo
-- **Institution**: Tai Solarin University of Education (TASUED)
+- **Institution**: Tai SOLARIN Federal University of Education (TASUED)
 - **Project Type**: Group Assignment
 - **Platform**: Full-stack Web Application
 
 ## Project Description
 
-The TASUED Biometric Data Collection System is a secure, full-stack web application designed to collect, store, manage, and transfer biometric data for Tai Solarin University of Education. The system prioritizes data security, privacy compliance, and data portability to ensure that users have control over their biometric information.
+The TASUED Biometric Data Collection System is a secure, full-stack web application designed to collect, store, manage, and transfer biometric data for Tai SOLARIN Federal University of Education. The system prioritizes data security, privacy compliance, and data portability to ensure that users have control over their biometric information.
 
 ## Project Goals
 

@@ -323,7 +323,7 @@ export default function Home() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-surface-900/60 to-transparent" />
                 <div className="absolute bottom-6 left-6 right-6">
-                  <p className="text-white font-semibold text-lg">Tai Solarin University of Education</p>
+                  <p className="text-white font-semibold text-lg">Tai SOLARIN Federal University of Education</p>
                   <p className="text-white/80 text-sm">Empowering Future Educators</p>
                 </div>
               </div>
@@ -643,7 +643,7 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-surface-400 mb-6 max-w-md">
-                A universal biometric identity platform for Tai Solarin University of Education, 
+                A universal biometric identity platform for Tai SOLARIN Federal University of Education,
                 providing secure and seamless access to all campus services.
               </p>
               <div className="flex gap-4">
@@ -666,7 +666,7 @@ export default function Home() {
             <div>
               <h4 className="font-bold mb-4">Contact</h4>
               <ul className="space-y-3 text-surface-400">
-                <li>Tai Solarin University of Education</li>
+                <li>Tai SOLARIN Federal University of Education</li>
                 <li>Ijagun, Ijebu-Ode</li>
                 <li>Ogun State, Nigeria</li>
                 <li className="text-brand-400">biovault@tasued.edu.ng</li>

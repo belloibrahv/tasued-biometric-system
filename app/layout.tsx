@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     default: 'TASUED BioVault - Universal Student Biometric Identity Platform',
     template: '%s | TASUED BioVault'
   },
-  description: 'A centralized biometric identity system serving as a digital passport for students across all university services at Tai Solarin University of Education.',
+  description: 'A centralized biometric identity system serving as a digital passport for students across all university services at Tai SOLARIN Federal University of Education.',
   keywords: [
     'biometric',
     'student identity',

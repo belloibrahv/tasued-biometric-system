@@ -2,7 +2,7 @@
 
 **Universal Student Biometric Identity Platform**
 
-A comprehensive biometric identity management system for Tai Solarin University of Education (TASUED), built as a CSC 415 Net-Centric Computing project.
+A comprehensive biometric identity management system for Tai SOLARIN Federal University of Education (TASUED), built as a CSC 415 Net-Centric Computing project.
 
 ![TASUED BioVault](https://img.shields.io/badge/TASUED-BioVault-0066CC?style=for-the-badge)
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square)
@@ -124,7 +124,7 @@ tasued-biovault/
 
 **Course**: CSC 415 - Net-Centric Computing  
 **Lecturer**: Dr. Ogunsanwo  
-**Institution**: Tai Solarin University of Education (TASUED)
+**Institution**: Tai SOLARIN Federal University of Education (TASUED)
 
 ---
 

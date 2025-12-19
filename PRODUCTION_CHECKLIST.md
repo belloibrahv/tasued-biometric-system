@@ -114,7 +114,7 @@ npx prisma db seed
 
 **Course:** CSC 415 - Net-Centric Computing  
 **Lecturer:** Dr. Ogunsanwo  
-**Institution:** Tai Solarin University of Education (TASUED)
+**Institution:** Tai SOLARIN Federal University of Education (TASUED)
 
 ---
 
