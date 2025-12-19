@@ -256,8 +256,8 @@ export default function RegisterPage() {
                   <Fingerprint size={32} className="text-white" />
                 </div>
                 <div className="text-left">
-                  <h1 className="text-2xl font-bold text-surface-950">TASUED BioVault</h1>
-                  <p className="text-sm text-surface-500">Student Registration</p>
+                  <h1 className="text-2xl font-bold text-surface-950">Create Account</h1>
+                  <p className="text-sm text-surface-500">Join TASUED BioVault</p>
                 </div>
               </div>
             </div>
@@ -299,15 +299,14 @@ export default function RegisterPage() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <div>
+                    <div className="text-center mb-6">
                       <h2 className="text-xl font-bold text-surface-950 mb-2">Personal Information</h2>
                       <p className="text-surface-500 text-sm">Please provide your accurate details</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="label">
-                          <User size={16} className="text-surface-500" />
+                        <label className="input-label">
                           First Name *
                         </label>
                         <input
@@ -322,8 +321,7 @@ export default function RegisterPage() {
                       </div>
 
                       <div>
-                        <label className="label">
-                          <User size={16} className="text-surface-500" />
+                        <label className="input-label">
                           Last Name *
                         </label>
                         <input
@@ -338,8 +336,7 @@ export default function RegisterPage() {
                       </div>
 
                       <div className="md:col-span-2">
-                        <label className="label">
-                          <User size={16} className="text-surface-500" />
+                        <label className="input-label">
                           Other Names (Optional)
                         </label>
                         <input
@@ -353,8 +350,7 @@ export default function RegisterPage() {
                       </div>
 
                       <div>
-                        <label className="label">
-                          <GraduationCap size={16} className="text-surface-500" />
+                        <label className="input-label">
                           Matric Number *
                         </label>
                         <input
@@ -369,8 +365,7 @@ export default function RegisterPage() {
                       </div>
 
                       <div>
-                        <label className="label">
-                          <Mail size={16} className="text-surface-500" />
+                        <label className="input-label">
                           Email Address *
                         </label>
                         <input
@@ -385,8 +380,7 @@ export default function RegisterPage() {
                       </div>
 
                       <div>
-                        <label className="label">
-                          <Phone size={16} className="text-surface-500" />
+                        <label className="input-label">
                           Phone Number *
                         </label>
                         <input
@@ -401,8 +395,7 @@ export default function RegisterPage() {
                       </div>
 
                       <div>
-                        <label className="label">
-                          <Calendar size={16} className="text-surface-500" />
+                        <label className="input-label">
                           Date of Birth *
                         </label>
                         <input
@@ -416,8 +409,7 @@ export default function RegisterPage() {
                       </div>
 
                       <div>
-                        <label className="label">
-                          <Building2 size={16} className="text-surface-500" />
+                        <label className="input-label">
                           Department *
                         </label>
                         <select
@@ -435,8 +427,7 @@ export default function RegisterPage() {
                       </div>
 
                       <div>
-                        <label className="label">
-                          <GraduationCap size={16} className="text-surface-500" />
+                        <label className="input-label">
                           Level *
                         </label>
                         <select
@@ -458,8 +449,8 @@ export default function RegisterPage() {
                       <Link href="/login" className="btn-outline">
                         Cancel
                       </Link>
-                      <button type="button" onClick={handleNext} className="btn-primary">
-                        Next: Biometric <ArrowRight size={16} className="ml-2" />
+                      <button type="button" onClick={handleNext} className="btn-primary py-3 flex items-center justify-center gap-2">
+                        Next: Biometric <ArrowRight size={16} />
                       </button>
                     </div>
                   </motion.div>
@@ -474,7 +465,7 @@ export default function RegisterPage() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <div>
+                    <div className="text-center mb-6">
                       <h2 className="text-xl font-bold text-surface-950 mb-2">Facial Recognition Enrollment</h2>
                       <p className="text-surface-500 text-sm">Capture your face for secure verification</p>
                     </div>
@@ -566,17 +557,17 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="flex justify-between gap-3 pt-4">
-                      <button type="button" onClick={handleBack} className="btn-outline">
-                        <ArrowLeft size={16} className="mr-2" />
+                      <button type="button" onClick={handleBack} className="btn-outline py-3 flex items-center justify-center gap-2">
+                        <ArrowLeft size={16} />
                         Back
                       </button>
                       <button
                         type="button"
                         onClick={handleNext}
                         disabled={!capturedImage || !facialEmbedding}
-                        className="btn-primary"
+                        className="btn-primary py-3 flex items-center justify-center gap-2"
                       >
-                        Next: Security <ArrowRight size={16} className="ml-2" />
+                        Next: Security <ArrowRight size={16} />
                       </button>
                     </div>
                   </motion.div>
@@ -591,15 +582,14 @@ export default function RegisterPage() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <div>
+                    <div className="text-center mb-6">
                       <h2 className="text-xl font-bold text-surface-950 mb-2">Security Setup</h2>
                       <p className="text-surface-500 text-sm">Create a strong password for your account</p>
                     </div>
 
                     <div className="space-y-4">
                       <div>
-                        <label className="label">
-                          <Lock size={16} className="text-surface-500" />
+                        <label className="input-label">
                           Password *
                         </label>
                         <div className="relative">
@@ -623,8 +613,7 @@ export default function RegisterPage() {
                       </div>
 
                       <div>
-                        <label className="label">
-                          <Lock size={16} className="text-surface-500" />
+                        <label className="input-label">
                           Confirm Password *
                         </label>
                         <div className="relative">
@@ -661,20 +650,19 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="flex justify-between gap-3 pt-4">
-                      <button type="button" onClick={handleBack} className="btn-outline">
-                        <ArrowLeft size={16} className="mr-2" />
+                      <button type="button" onClick={handleBack} className="btn-outline py-3 flex items-center justify-center gap-2">
+                        <ArrowLeft size={16} />
                         Back
                       </button>
-                      <button type="submit" disabled={loading} className="btn-primary">
+                      <button type="submit" disabled={loading} className="btn-primary py-3 flex items-center justify-center gap-2">
                         {loading ? (
                           <>
-                            <Loader2 className="animate-spin mr-2" size={16} />
+                            <Loader2 className="animate-spin" size={16} />
                             Creating Account...
                           </>
                         ) : (
                           <>
-                            <Check size={16} className="mr-2" />
-                            Complete Registration
+                            Complete Registration <ArrowRight size={16} />
                           </>
                         )}
                       </button>
