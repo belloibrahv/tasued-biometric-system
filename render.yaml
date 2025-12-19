@@ -19,11 +19,11 @@ services:
       - key: NODE_ENV
         value: production
       - key: NEXT_PUBLIC_API_URL
-        sync: false
+        value: "https://tasued-biometric-sys.onrender.com"
       - key: WEBAUTHN_RP_ID
-        sync: false
+        value: "tasued-biometric-sys.onrender.com"
       - key: WEBAUTHN_ORIGIN
-        sync: false
+        value: "https://tasued-biometric-sys.onrender.com"
       - key: BCRYPT_SALT_ROUNDS
         value: "12"
       - key: SECURE_COOKIES
