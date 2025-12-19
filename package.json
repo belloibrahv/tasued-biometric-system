@@ -17,7 +17,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset --force",
-    "postinstall": "prisma generate",
+    
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
