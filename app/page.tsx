@@ -593,8 +593,8 @@ export default function Home() {
               
               <div className="relative hidden lg:block">
                 <img 
-                  src="https://tasued.edu.ng/web/wp-content/uploads/2020/07/DSC_0395.jpg" 
-                  alt="TASUED Campus" 
+                  src="/images/drogansanwo.png" 
+                  alt="Dr. Ogunsanwo" 
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-surface-900 to-transparent" />
