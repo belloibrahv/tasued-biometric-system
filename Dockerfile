@@ -1,9 +1,8 @@
 # Use the official Node.js 18 image as the base image
-FROM node:18-alpine AS base
+FROM node:18 AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma
@@ -31,8 +30,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 nodejs
+RUN useradd --system --uid 1001 nextjs
 
 # Copy node_modules and prisma folder
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
