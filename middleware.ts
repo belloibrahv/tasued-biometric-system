@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { updateSession } from '@/utils/supabase/middleware';
 import { verifyToken } from '@/lib/auth';
 
 export async function middleware(request: NextRequest) {
+  // Update session and get Supabase response
+  const supabaseResponse = await updateSession(request);
   const { pathname } = request.nextUrl;
 
-  // Public routes that don't need authentication
+  // Path protection logic...
   const publicRoutes = [
     '/',
     '/login',
@@ -15,98 +18,65 @@ export async function middleware(request: NextRequest) {
     '/api/health',
   ];
 
-  // Check if it's a public route
   const isPublicRoute = publicRoutes.some(route =>
     pathname === route || pathname.startsWith('/_next') || pathname.startsWith('/static')
   );
 
   if (isPublicRoute) {
-    return NextResponse.next();
+    return supabaseResponse;
   }
 
-  // Protected routes
-  const protectedRoutes = ['/dashboard', '/admin', '/operator', '/enroll-biometric', '/api/dashboard', '/api/admin', '/api/operator', '/api/lectures', '/api/webauthn', '/api/biometric/enroll'];
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
-
-  if (!isProtectedRoute) {
-    return NextResponse.next();
-  }
-
-  // Get token from cookie or header
-  const token = request.cookies.get('auth-token')?.value ||
-    request.headers.get('authorization')?.replace('Bearer ', '');
+  const token = request.cookies.get('auth-token')?.value;
 
   if (!token) {
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const response = NextResponse.redirect(new URL('/login', request.url));
-    response.headers.set('x-middleware-auth', 'missing-token');
-    return response;
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  // Verify token
   const payload = await verifyToken(token);
 
   if (!payload) {
-    if (pathname.startsWith('/api/')) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-    const response = NextResponse.redirect(new URL('/login', request.url));
-    response.headers.set('x-middleware-auth', 'invalid-token');
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    const response = NextResponse.redirect(loginUrl);
     response.cookies.delete('auth-token');
     return response;
   }
 
+  // Dashboard / Enrollment check
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/student')) {
+    if (!payload.biometricEnrolled && pathname !== '/enroll-biometric') {
+      return NextResponse.redirect(new URL('/enroll-biometric', request.url));
+    }
+  }
+
   // Role-based access control
-  if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
-    if (payload.type !== 'admin' || (payload.role !== 'SUPER_ADMIN' && payload.role !== 'ADMIN')) {
-      if (pathname.startsWith('/api/')) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  if (pathname.startsWith('/admin') && payload.role !== 'ADMIN') {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  if (pathname.startsWith('/operator') || pathname.startsWith('/api/operator')) {
-    if (payload.type !== 'admin') {
-      if (pathname.startsWith('/api/')) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  if (pathname.startsWith('/operator') && payload.role !== 'OPERATOR' && payload.role !== 'ADMIN') {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/api/dashboard')) {
-    if (payload.type !== 'student') {
-      if (pathname.startsWith('/api/')) {
-        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-      }
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    // Check biometric enrollment from token payload
-    // The biometricEnrolled flag is included in the JWT token
-    if (!pathname.startsWith('/api/biometric/enroll') && !pathname.includes('/enroll-biometric')) {
-      if (!payload.biometricEnrolled) {
-        if (pathname.startsWith('/api/')) {
-          return NextResponse.json({ error: 'Biometric enrollment required' }, { status: 403 });
-        }
-        return NextResponse.redirect(new URL('/enroll-biometric', request.url));
-      }
-    }
-  }
-
-  // Add user info to request headers for API routes
+  // Add user info to request headers for downstream use
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-user-id', payload.id);
   requestHeaders.set('x-user-role', payload.role || 'STUDENT');
-  requestHeaders.set('x-user-email', payload.email);
-  requestHeaders.set('x-user-type', payload.type || 'student');
 
-  return NextResponse.next({
+  // Return the original supabaseResponse but with updated headers if needed
+  // Note: Since we are using SSR, we want to maintain the cookie updates from updateSession
+  const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
+
+  // Copy over the cookies from updateSession to the new response
+  supabaseResponse.cookies.getAll().forEach(cookie => {
+    response.cookies.set(cookie.name, cookie.value, cookie);
+  });
+
+  return response;
 }
 
 export const config = {

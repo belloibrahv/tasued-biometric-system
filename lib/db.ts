@@ -6,6 +6,7 @@ declare global {
 
 const prismaOptions: any = {
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  errorFormat: 'minimal',
 };
 
 const client = global.prisma || new PrismaClient(prismaOptions);

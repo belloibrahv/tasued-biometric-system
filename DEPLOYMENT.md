@@ -132,6 +132,18 @@ SUPABASE_SERVICE_ROLE_KEY=<your_supabase_service_role_key>
 1. Click "Deploy"
 2. Wait for build (3-5 minutes)
 3. Once deployed, update environment variables with actual Vercel URL
+### Step 5: Critical Database Connection (Supabase on Vercel)
+
+If you see an error like `Can't reach database server at ...:6543`, ensure your `DATABASE_URL` uses the **Transaction Mode** connection string (Port 6543) and includes these parameters:
+
+```env
+DATABASE_URL="postgres://postgres.xxxx:[PASSWORD]@db.xxxx.supabase.co:6543/postgres?pgbouncer=true&connection_limit=1"
+```
+
+> [!IMPORTANT]
+> - `pgbouncer=true` is required when using port 6543.
+> - `connection_limit=1` prevents serverless functions from exhausting the pool.
+
 ### Step 6: Verify Database Connection
 
 > [!CAUTION]

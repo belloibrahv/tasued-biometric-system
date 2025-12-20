@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { register } from '@/app/actions/auth';
 
 const departments = [
   'Computer Science',
@@ -181,108 +181,24 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // 1. Register with Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            matric_number: formData.matricNumber.toUpperCase(),
-            full_name: `${formData.firstName} ${formData.lastName}`
-          }
-        }
-      });
+      const result = await register(formData, facialEmbedding, capturedImage!);
 
-      if (authError) {
-        throw new Error(authError.message);
+      if (result.error) {
+        throw new Error(result.error);
       }
 
-      if (!authData.user) {
-        throw new Error('Registration failed');
+      if (result.success) {
+        toast.success('Registration successful! Redirecting to dashboard...');
+
+        // Minor cleanup
+        localStorage.removeItem('token'); // No longer needed in localStorage
+
+        setTimeout(() => {
+          window.location.replace(result.target!);
+        }, 1500);
       }
-
-      // 2. Register user in public database
-      const syncRes = await fetch('/api/auth/sync-profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: authData.user.id, // Link to Supabase User
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          otherNames: formData.otherNames || undefined,
-          matricNumber: formData.matricNumber.toUpperCase(),
-          email: formData.email.toLowerCase(),
-          phoneNumber: formData.phoneNumber,
-          dateOfBirth: formData.dateOfBirth,
-          department: formData.department,
-          level: formData.level,
-        }),
-      });
-
-      const syncData = await syncRes.json();
-
-      if (!syncRes.ok) {
-        throw new Error(syncData.error || 'Profile synchronization failed');
-      }
-
-      const biometricRes = await fetch('/api/biometric/enroll', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authData.session?.access_token}`
-        },
-        body: JSON.stringify({
-          facialTemplate: JSON.stringify(facialEmbedding),
-          facialPhoto: capturedImage,
-        }),
-      });
-
-      console.log('Registration: Biometric enrollment successful');
-      const biometricData = await biometricRes.json();
-      console.log('Registration: Biometric data parsed', biometricData);
-
-      if (!biometricRes.ok) {
-        throw new Error(biometricData.error || 'Biometric enrollment failed');
-      }
-
-      // 4. Finalize Session
-      console.log('Registration: Finalizing session...');
-      try {
-        // Update token cookie with new token if provided (Supabase user metadata might have changed)
-        if (biometricData.token) {
-          document.cookie = `auth-token=${biometricData.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
-          localStorage.setItem('token', biometricData.token);
-        } else {
-          localStorage.setItem('token', authData.session?.access_token || '');
-        }
-
-        // Save user data for legacy app logic
-        const userObj = {
-          ...(syncData.user || {}),
-          biometricEnrolled: true,
-          type: 'student'
-        };
-        localStorage.setItem('user', JSON.stringify(userObj));
-        console.log('Registration: User profile saved to localStorage');
-      } catch (storageError) {
-        console.error('Registration: Local storage error (ignoring)', storageError);
-      }
-
-      toast.success('Registration successful! Redirecting to dashboard...');
-      console.log('Registration: Redirecting in 2s...');
-
-      // Ensure cookie is set before redirect
-      const rawToken = authData.session?.access_token;
-      if (rawToken) {
-        document.cookie = `auth-token=${rawToken}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax; ${window.location.protocol === 'https:' ? 'Secure;' : ''}`;
-      }
-
-      setTimeout(() => {
-        window.location.replace('/dashboard');
-      }, 2000); // Increased delay for background sync
-
     } catch (error: any) {
-      console.error('Registration error details:', error);
+      console.error('Registration error:', error);
       toast.error(error.message || 'Registration failed');
       setLoading(false);
     }

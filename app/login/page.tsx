@@ -9,7 +9,7 @@ import {
   Eye, EyeOff, Shield, CheckCircle, User, Users
 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
-import { supabase } from '@/lib/supabase';
+import { login } from '@/app/actions/auth';
 
 function LoginForm() {
   const router = useRouter();
@@ -32,87 +32,43 @@ function LoginForm() {
     console.log(`Login: Attempting ${loginType} login for ${email}`);
 
     try {
-      let loginEmail = email;
+      const formData = new FormData();
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('loginType', loginType);
+      formData.append('redirect', redirect);
 
-      // Logic to resolve Matric Number to Email if needed
-      if (loginType === 'student' && !email.includes('@')) {
-        console.log('Login: Resolving matric number to email...');
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('email')
-          .eq('matricNumber', email.toUpperCase())
-          .single();
+      const result = await login(formData);
 
-        if (userError || !userData) {
-          console.error('Login: Matric number not found in users table', userError);
-          setError('Student profile not found. If you are a new student, please enroll first.');
-          setLoading(false);
-          return;
-        }
-        loginEmail = userData.email;
-        console.log(`Login: Resolved to ${loginEmail}`);
-      }
-
-      // Login with Supabase
-      console.log('Login: Signing in with Supabase Auth...');
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password: password,
-      });
-
-      if (error) {
-        console.error('Login: Supabase Auth error', error);
-        setError(error.message);
-        toast.error('Login Failed', { description: error.message });
+      if (result.error) {
+        setError(result.error);
+        toast.error('Login Failed', { description: result.error });
         setLoading(false);
         return;
       }
 
-      if (data.session) {
-        console.log('Login: Session established');
+      if (result.success) {
         toast.success('Login Successful!');
 
-        // Store session for legacy app logic
-        localStorage.setItem('token', data.session.access_token);
+        // We still store user info in localStorage for UI purposes, but token is in HttpOnly cookie
+        // The middleware will handle verification
 
-        // Fetch user profile from public table to return rich data to local storage
-        console.log(`Login: Fetching profile from ${loginType === 'admin' ? 'admins' : 'users'} table...`);
-        const { data: profile, error: profileError } = await supabase
-          .from(loginType === 'admin' ? 'admins' : 'users')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profileError) {
-          console.warn('Login: Profile not found in public database after auth success', profileError);
+        // Fetch minimal user info for localStorage UI state
+        try {
+          const res = await fetch('/api/auth/me');
+          if (res.ok) {
+            const userData = await res.json();
+            localStorage.setItem('user', JSON.stringify(userData));
+          }
+        } catch (e) {
+          console.warn('Failed to fetch user info for localStorage', e);
         }
 
-        const userObj = {
-          ...(profile || {}),
-          id: data.user.id,
-          email: data.user.email,
-          role: data.user.user_metadata?.role || (loginType === 'admin' ? 'ADMIN' : 'STUDENT'),
-          type: loginType
-        };
-
-        localStorage.setItem('user', JSON.stringify(userObj));
-        console.log('Login: User data saved to localStorage');
-
-        // Set cookie for middleware with explicit domain and security flags
-        document.cookie = `auth-token=${data.session.access_token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax; ${window.location.protocol === 'https:' ? 'Secure;' : ''}`;
-
-        const targetUrl = loginType === 'admin'
-          ? ((userObj as any).role === 'OPERATOR' ? '/operator' : '/admin')
-          : (redirect === '/login' ? '/dashboard' : redirect); // Avoid self-redirect
-
-        console.log(`Login: Redirecting to ${targetUrl}`);
-        // Use replace to prevent back-button loops
-        window.location.replace(targetUrl);
+        window.location.replace(result.target);
       }
     } catch (err: any) {
-      console.error('Login: Unexpected catch block error', err);
-      setError('Connection error. Please check your internet and try again.');
-      toast.error('Network Error');
+      console.error('Login: Unexpected error', err);
+      setError('An unexpected error occurred. Please try again.');
       setLoading(false);
     }
   };
