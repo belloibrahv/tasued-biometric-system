@@ -60,6 +60,8 @@ WEBAUTHN_RP_ID=tasued-biometric-system.onrender.com
 WEBAUTHN_ORIGIN=https://tasued-biometric-system.onrender.com
 NODE_ENV=production
 BCRYPT_SALT_ROUNDS=12
+NEXT_PUBLIC_SUPABASE_URL=<your_supabase_project_url>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your_supabase_anon_key>
 ```
 
 > **Important**: Use the **Internal Database URL**, not the External one!
@@ -117,6 +119,8 @@ WEBAUTHN_RP_ID=your-app.vercel.app
 WEBAUTHN_ORIGIN=https://your-app.vercel.app
 NODE_ENV=production
 BCRYPT_SALT_ROUNDS=12
+NEXT_PUBLIC_SUPABASE_URL=<your_supabase_project_url>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<your_supabase_anon_key>
 ```
 
 > **Note**: Replace `your-app` with your actual Vercel project name.
@@ -260,6 +264,8 @@ npx prisma migrate deploy
 | `WEBAUTHN_ORIGIN` | Yes | Full app URL | `https://your-app.vercel.app` |
 | `NODE_ENV` | Yes | Environment | `production` |
 | `BCRYPT_SALT_ROUNDS` | No | Password hashing rounds | `12` |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase Project URL | `https://your-proj.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase Anon Key | `eyJhbGci...` |
 
 ---
 
