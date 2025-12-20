@@ -141,6 +141,12 @@ SUPABASE_SERVICE_ROLE_KEY=<your_supabase_service_role_key>
 > 2. Copy the **External Database URL**.
 > 3. Paste it into Vercel's `DATABASE_URL` environment variable.
 
+> [!IMPORTANT]
+> **Supabase on Vercel**: If you are using Supabase as your database, use the **Transaction Mode** connection string for better stability in serverless functions:
+> - Format: `postgres://postgres.[YOUR-PROJECT-ID]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true`
+> - Port: **6543**
+> - Parameter: **?pgbouncer=true**
+
 4. Redeploy to apply changes
 
 ### Step 5: Run Database Migrations
