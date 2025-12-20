@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Webcam from 'react-webcam';
@@ -240,26 +240,76 @@ export default function RegisterPage() {
   };
 
   return (
-    <>
+    <div className="min-h-screen flex">
       <Toaster position="top-center" richColors />
-      <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-accent-50 flex items-center justify-center p-4">
+      
+      {/* Left Panel - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-brand-gradient p-12 flex-col justify-between relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)" />
+          </svg>
+        </div>
+
+        <div className="relative z-10">
+          <Link href="/" className="flex items-center gap-3 mb-12">
+            <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+              <Fingerprint size={32} className="text-white" />
+            </div>
+            <div>
+              <span className="text-2xl font-bold text-white">TASUED</span>
+              <span className="ml-2 text-white/80">BioVault</span>
+            </div>
+          </Link>
+
+          <h1 className="text-4xl font-bold text-white mb-6">Create Your Account</h1>
+          <p className="text-white/80 text-lg leading-relaxed">
+            Join thousands of students using BioVault for seamless access to all university services.
+          </p>
+        </div>
+
+        <div className="relative z-10">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <Shield size={24} className="text-white" />
+              <h3 className="font-bold text-white">Secure Biometric Enrollment</h3>
+            </div>
+            <div className="flex gap-4 text-sm text-white/70">
+              <span className="flex items-center gap-1"><CheckCircle size={14} className="text-success-400" /> Encrypted</span>
+              <span className="flex items-center gap-1"><CheckCircle size={14} className="text-success-400" /> Privacy Focused</span>
+              <span className="flex items-center gap-1"><CheckCircle size={14} className="text-success-400" /> Secure Storage</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Registration Form */}
+      <div className="flex-1 flex items-center justify-center p-8 bg-surface-50">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-4xl"
+          className="w-full max-w-2xl"
         >
+          {/* Mobile Logo */}
+          <div className="lg:hidden text-center mb-8">
+            <Link href="/" className="inline-flex items-center gap-3 justify-center w-full">
+              <div className="bg-brand-500 p-2.5 rounded-xl text-white">
+                <Fingerprint size={28} />
+              </div>
+              <span className="text-xl font-bold text-surface-950">TASUED BioVault</span>
+            </Link>
+          </div>
+
           <div className="glass-card p-8">
             {/* Header */}
             <div className="text-center mb-8">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <div className="bg-brand-500 p-3 rounded-xl">
-                  <Fingerprint size={32} className="text-white" />
-                </div>
-                <div className="text-left">
-                  <h1 className="text-2xl font-bold text-surface-950">Create Account</h1>
-                  <p className="text-sm text-surface-500">Join TASUED BioVault</p>
-                </div>
-              </div>
+              <h2 className="text-2xl font-bold text-surface-950 mb-2">Create Account</h2>
+              <p className="text-surface-500">Join TASUED BioVault in seconds</p>
             </div>
 
             {/* Progress Steps */}
@@ -300,7 +350,7 @@ export default function RegisterPage() {
                     className="space-y-6"
                   >
                     <div className="text-center mb-6">
-                      <h2 className="text-xl font-bold text-surface-950 mb-2">Personal Information</h2>
+                      <h3 className="text-xl font-bold text-surface-950 mb-2">Personal Information</h3>
                       <p className="text-surface-500 text-sm">Please provide your accurate details</p>
                     </div>
 
@@ -309,14 +359,17 @@ export default function RegisterPage() {
                         <label className="input-label">
                           First Name *
                         </label>
-                        <input
-                          type="text"
-                          name="firstName"
-                          value={formData.firstName}
-                          onChange={handleChange}
-                          className={`input-field ${errors.firstName ? 'input-field-error' : ''}`}
-                          placeholder="John"
-                        />
+                        <div className="relative">
+                          <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+                          <input
+                            type="text"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            className={`input-field pl-11 ${errors.firstName ? 'input-field-error' : ''}`}
+                            placeholder="John"
+                          />
+                        </div>
                         {errors.firstName && <p className="text-error-500 text-xs mt-1">{errors.firstName}</p>}
                       </div>
 
@@ -324,14 +377,17 @@ export default function RegisterPage() {
                         <label className="input-label">
                           Last Name *
                         </label>
-                        <input
-                          type="text"
-                          name="lastName"
-                          value={formData.lastName}
-                          onChange={handleChange}
-                          className={`input-field ${errors.lastName ? 'input-field-error' : ''}`}
-                          placeholder="Doe"
-                        />
+                        <div className="relative">
+                          <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+                          <input
+                            type="text"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            className={`input-field pl-11 ${errors.lastName ? 'input-field-error' : ''}`}
+                            placeholder="Doe"
+                          />
+                        </div>
                         {errors.lastName && <p className="text-error-500 text-xs mt-1">{errors.lastName}</p>}
                       </div>
 
@@ -339,28 +395,34 @@ export default function RegisterPage() {
                         <label className="input-label">
                           Other Names (Optional)
                         </label>
-                        <input
-                          type="text"
-                          name="otherNames"
-                          value={formData.otherNames}
-                          onChange={handleChange}
-                          className="input-field"
-                          placeholder="Middle names"
-                        />
+                        <div className="relative">
+                          <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+                          <input
+                            type="text"
+                            name="otherNames"
+                            value={formData.otherNames}
+                            onChange={handleChange}
+                            className="input-field pl-11"
+                            placeholder="Middle names"
+                          />
+                        </div>
                       </div>
 
                       <div>
                         <label className="input-label">
                           Matric Number *
                         </label>
-                        <input
-                          type="text"
-                          name="matricNumber"
-                          value={formData.matricNumber}
-                          onChange={handleChange}
-                          className={`input-field ${errors.matricNumber ? 'input-field-error' : ''}`}
-                          placeholder="CSC/2020/001"
-                        />
+                        <div className="relative">
+                          <GraduationCap size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+                          <input
+                            type="text"
+                            name="matricNumber"
+                            value={formData.matricNumber}
+                            onChange={handleChange}
+                            className={`input-field pl-11 ${errors.matricNumber ? 'input-field-error' : ''}`}
+                            placeholder="CSC/2020/001"
+                          />
+                        </div>
                         {errors.matricNumber && <p className="text-error-500 text-xs mt-1">{errors.matricNumber}</p>}
                       </div>
 
@@ -368,14 +430,17 @@ export default function RegisterPage() {
                         <label className="input-label">
                           Email Address *
                         </label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          className={`input-field ${errors.email ? 'input-field-error' : ''}`}
-                          placeholder="student@tasued.edu.ng"
-                        />
+                        <div className="relative">
+                          <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+                          <input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            className={`input-field pl-11 ${errors.email ? 'input-field-error' : ''}`}
+                            placeholder="student@tasued.edu.ng"
+                          />
+                        </div>
                         {errors.email && <p className="text-error-500 text-xs mt-1">{errors.email}</p>}
                       </div>
 
@@ -383,14 +448,17 @@ export default function RegisterPage() {
                         <label className="input-label">
                           Phone Number *
                         </label>
-                        <input
-                          type="tel"
-                          name="phoneNumber"
-                          value={formData.phoneNumber}
-                          onChange={handleChange}
-                          className={`input-field ${errors.phoneNumber ? 'input-field-error' : ''}`}
-                          placeholder="+234 800 000 0000"
-                        />
+                        <div className="relative">
+                          <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+                          <input
+                            type="tel"
+                            name="phoneNumber"
+                            value={formData.phoneNumber}
+                            onChange={handleChange}
+                            className={`input-field pl-11 ${errors.phoneNumber ? 'input-field-error' : ''}`}
+                            placeholder="+234 800 000 0000"
+                          />
+                        </div>
                         {errors.phoneNumber && <p className="text-error-500 text-xs mt-1">{errors.phoneNumber}</p>}
                       </div>
 
@@ -398,13 +466,16 @@ export default function RegisterPage() {
                         <label className="input-label">
                           Date of Birth *
                         </label>
-                        <input
-                          type="date"
-                          name="dateOfBirth"
-                          value={formData.dateOfBirth}
-                          onChange={handleChange}
-                          className={`input-field ${errors.dateOfBirth ? 'input-field-error' : ''}`}
-                        />
+                        <div className="relative">
+                          <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+                          <input
+                            type="date"
+                            name="dateOfBirth"
+                            value={formData.dateOfBirth}
+                            onChange={handleChange}
+                            className={`input-field pl-11 ${errors.dateOfBirth ? 'input-field-error' : ''}`}
+                          />
+                        </div>
                         {errors.dateOfBirth && <p className="text-error-500 text-xs mt-1">{errors.dateOfBirth}</p>}
                       </div>
 
@@ -412,17 +483,20 @@ export default function RegisterPage() {
                         <label className="input-label">
                           Department *
                         </label>
-                        <select
-                          name="department"
-                          value={formData.department}
-                          onChange={handleChange}
-                          className={`input-field ${errors.department ? 'input-field-error' : ''}`}
-                        >
-                          <option value="">Select department</option>
-                          {departments.map(dept => (
-                            <option key={dept} value={dept}>{dept}</option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <Building2 size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+                          <select
+                            name="department"
+                            value={formData.department}
+                            onChange={handleChange}
+                            className={`input-field pl-11 ${errors.department ? 'input-field-error' : ''}`}
+                          >
+                            <option value="">Select department</option>
+                            {departments.map(dept => (
+                              <option key={dept} value={dept}>{dept}</option>
+                            ))}
+                          </select>
+                        </div>
                         {errors.department && <p className="text-error-500 text-xs mt-1">{errors.department}</p>}
                       </div>
 
@@ -430,17 +504,20 @@ export default function RegisterPage() {
                         <label className="input-label">
                           Level *
                         </label>
-                        <select
-                          name="level"
-                          value={formData.level}
-                          onChange={handleChange}
-                          className={`input-field ${errors.level ? 'input-field-error' : ''}`}
-                        >
-                          <option value="">Select level</option>
-                          {levels.map(level => (
-                            <option key={level} value={level}>{level} Level</option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <GraduationCap size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+                          <select
+                            name="level"
+                            value={formData.level}
+                            onChange={handleChange}
+                            className={`input-field pl-11 ${errors.level ? 'input-field-error' : ''}`}
+                          >
+                            <option value="">Select level</option>
+                            {levels.map(level => (
+                              <option key={level} value={level}>{level} Level</option>
+                            ))}
+                          </select>
+                        </div>
                         {errors.level && <p className="text-error-500 text-xs mt-1">{errors.level}</p>}
                       </div>
                     </div>
@@ -466,7 +543,7 @@ export default function RegisterPage() {
                     className="space-y-6"
                   >
                     <div className="text-center mb-6">
-                      <h2 className="text-xl font-bold text-surface-950 mb-2">Facial Recognition Enrollment</h2>
+                      <h3 className="text-xl font-bold text-surface-950 mb-2">Facial Recognition Enrollment</h3>
                       <p className="text-surface-500 text-sm">Capture your face for secure verification</p>
                     </div>
 
@@ -583,7 +660,7 @@ export default function RegisterPage() {
                     className="space-y-6"
                   >
                     <div className="text-center mb-6">
-                      <h2 className="text-xl font-bold text-surface-950 mb-2">Security Setup</h2>
+                      <h3 className="text-xl font-bold text-surface-950 mb-2">Security Setup</h3>
                       <p className="text-surface-500 text-sm">Create a strong password for your account</p>
                     </div>
 
@@ -593,18 +670,19 @@ export default function RegisterPage() {
                           Password *
                         </label>
                         <div className="relative">
+                          <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
                           <input
                             type={showPassword ? 'text' : 'password'}
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            className={`input-field pr-12 ${errors.password ? 'input-field-error' : ''}`}
+                            className={`input-field pl-11 pr-11 ${errors.password ? 'input-field-error' : ''}`}
                             placeholder="Min. 8 characters"
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
                           >
                             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                           </button>
@@ -617,18 +695,19 @@ export default function RegisterPage() {
                           Confirm Password *
                         </label>
                         <div className="relative">
+                          <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
                           <input
                             type={showConfirmPassword ? 'text' : 'password'}
                             name="confirmPassword"
                             value={formData.confirmPassword}
                             onChange={handleChange}
-                            className={`input-field pr-12 ${errors.confirmPassword ? 'input-field-error' : ''}`}
+                            className={`input-field pl-11 pr-11 ${errors.confirmPassword ? 'input-field-error' : ''}`}
                             placeholder="Re-enter password"
                           />
                           <button
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
                           >
                             {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                           </button>
@@ -679,8 +758,12 @@ export default function RegisterPage() {
               </Link>
             </div>
           </div>
+          
+          <p className="text-center text-xs text-surface-400 mt-8">
+            &copy; {new Date().getFullYear()} TASUED BioVault • CSC 415 Project
+          </p>
         </motion.div>
       </div>
-    </>
+    </div>
   );
 }

@@ -66,6 +66,20 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### Vercel Deployment
+
+This project is configured for easy deployment to Vercel:
+
+1. Push your code to GitHub/GitLab/Bitbucket
+2. Connect your repository to Vercel
+3. Set the following environment variables in your Vercel project settings:
+   - `DATABASE_URL` - Your PostgreSQL database connection string
+   - `JWT_SECRET` - A secure random string for JWT signing
+   - `ENCRYPTION_KEY` - A 32-character string for biometric data encryption
+4. Deploy!
+
+The project includes Vercel-specific configurations in `vercel.json` and will automatically use the correct build and runtime settings.
+
 ---
 
 ## 🔑 Test Credentials

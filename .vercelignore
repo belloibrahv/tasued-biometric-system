@@ -1,0 +1,10 @@
+# Ignore files that aren't needed for Vercel deployment
+Dockerfile
+render.yaml
+render-buildpack.yaml
+.pre-commit-config.yaml
+DEPLOYMENT_CHECKLIST.md
+PRODUCTION_CHECKLIST.md
+RENDER_SETUP_GUIDE.md
+cookies.txt
+predeploy.sh

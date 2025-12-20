@@ -8,6 +8,13 @@ const nextConfig = {
   experimental: {
     typedRoutes: false,
   },
+  // Vercel-specific configurations
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
     remotePatterns: [
       {

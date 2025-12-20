@@ -35,21 +35,20 @@ RUN useradd --system --uid 1001 nextjs
 
 # Copy node_modules and prisma folder
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 
 # Copy the built application
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./ 
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 # Copy migration script
 COPY --from=builder --chown=nextjs:nodejs /app/predeploy.sh ./predeploy.sh
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
 
-EXPOSE 3000
+EXPOSE $PORT
 
-ENV PORT=3000
+ENV PORT=${PORT:-3000}
 
 # Run migrations then start the server
 CMD ["/bin/sh", "-c", "./predeploy.sh && node server.js"]
