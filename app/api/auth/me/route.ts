@@ -98,8 +98,14 @@ export async function GET(request: NextRequest) {
       },
     });
 
-  } catch (error) {
-    console.error('Get user error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('CRITICAL: /api/auth/me error:', {
+      message: error.message,
+      stack: error.stack,
+    });
+    return NextResponse.json({
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    }, { status: 500 });
   }
 }

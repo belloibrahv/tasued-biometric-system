@@ -40,6 +40,9 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
 
+  // Skip non-HTTP schemes (e.g., chrome-extension, internal browser schemes)
+  if (!event.request.url.startsWith('http')) return;
+
   // Skip API requests (always go to network)
   if (event.request.url.includes('/api/')) {
     return;
@@ -50,14 +53,14 @@ self.addEventListener('fetch', (event) => {
       .then((response) => {
         // Clone the response before caching
         const responseClone = response.clone();
-        
+
         // Cache successful responses
         if (response.status === 200) {
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
           });
         }
-        
+
         return response;
       })
       .catch(async () => {
@@ -66,7 +69,7 @@ self.addEventListener('fetch', (event) => {
         if (cachedResponse) {
           return cachedResponse;
         }
-        
+
         // Return offline page for navigation requests
         if (event.request.mode === 'navigate') {
           const offlineResponse = await caches.match(OFFLINE_URL);
@@ -74,7 +77,7 @@ self.addEventListener('fetch', (event) => {
             return offlineResponse;
           }
         }
-        
+
         // Return a basic offline response
         return new Response('Offline', {
           status: 503,
