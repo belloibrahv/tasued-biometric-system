@@ -8,7 +8,7 @@ import {
   Fingerprint, Shield, QrCode, Activity, Download, ShieldCheck,
   ArrowRight, Eye, Lock, BookOpen, GraduationCap, Building2,
   Utensils, Bus, Heart, CreditCard, Users, CheckCircle, Menu, X,
-  Play, ChevronRight, Smartphone, Globe, Zap, Award
+  Play, ChevronRight, Smartphone, Globe, Zap, Award, LogOut
 } from 'lucide-react';
 import { Toaster } from 'sonner';
 import TeamSlider from '@/components/TeamSlider';
@@ -114,6 +114,18 @@ export default function Home() {
     return '/dashboard';
   };
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      window.location.reload(); // Refresh to update UI state
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
@@ -180,10 +192,20 @@ export default function Home() {
               {loading ? (
                 <div className="w-24 h-10 bg-surface-100 rounded-xl animate-pulse" />
               ) : user ? (
-                <Link href={getDashboardPath()} className="px-6 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-bold hover:bg-brand-600 shadow-brand transition flex items-center gap-2">
-                  <Activity size={18} />
-                  Dashboard
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link href={getDashboardPath()} className="px-6 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-bold hover:bg-brand-600 shadow-brand transition flex items-center gap-2">
+                    <Activity size={18} />
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className={`p-2.5 rounded-xl border transition-all hover:bg-error-50 hover:text-error-600 hover:border-error-200 ${scrolled ? 'border-surface-200 text-surface-600' : 'border-white/20 text-white hover:bg-white/10'
+                      }`}
+                    title="Logout"
+                  >
+                    <LogOut size={20} />
+                  </button>
+                </div>
               ) : (
                 <>
                   <Link href="/login" className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${scrolled ? 'text-surface-700 hover:bg-surface-100' : 'text-white hover:bg-white/10'}`}>
@@ -213,9 +235,17 @@ export default function Home() {
               <a href="#course" className="block text-surface-700 font-medium py-2" onClick={() => setIsMenuOpen(false)}>Course Info</a>
               <div className="pt-4 border-t space-y-3">
                 {user ? (
-                  <Link href={getDashboardPath()} className="block w-full text-center py-3 bg-brand-500 text-white rounded-xl font-bold">
-                    View Dashboard
-                  </Link>
+                  <div className="space-y-3">
+                    <Link href={getDashboardPath()} className="block w-full text-center py-3 bg-brand-500 text-white rounded-xl font-bold">
+                      View Dashboard
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center justify-center gap-2 w-full py-3 border-2 border-error-100 text-error-600 rounded-xl font-bold hover:bg-error-50 transition-colors"
+                    >
+                      <LogOut size={20} /> Logout Account
+                    </button>
+                  </div>
                 ) : (
                   <>
                     <Link href="/login" className="block w-full text-center py-3 border-2 border-brand-500 text-brand-500 rounded-xl font-semibold">Sign In</Link>
