@@ -8,6 +8,7 @@ import {
   LayoutDashboard, PlusCircle, FileSearch, DownloadCloud
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
 
 const Header = () => {
   const pathname = usePathname();
@@ -39,11 +40,14 @@ const Header = () => {
     { name: 'Export', href: '/export', icon: DownloadCloud },
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     setIsLoggedIn(false);
     setUser(null);
-    window.location.href = '/login';
+    window.location.href = '/';
   };
 
   // Don't show header on dashboard pages (they have their own layout)

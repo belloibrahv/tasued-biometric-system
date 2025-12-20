@@ -234,9 +234,15 @@ export default function LoginPage() {
       <Toaster position="top-center" richColors />
 
       {/* Left Panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-mesh p-16 flex-col justify-between relative overflow-hidden border-r border-white/10">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/20 blur-[120px] rounded-full animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-success-500/10 blur-[120px] rounded-full animate-pulse delay-700" />
+      <div className="hidden lg:flex lg:w-1/2 bg-surface-900 relative overflow-hidden border-r border-white/10">
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-b from-surface-950/80 via-surface-950/60 to-surface-900/90 z-10" />
+          <img
+            src="/images/biometric-hero.png"
+            alt="TASUED Biometric"
+            className="w-full h-full object-cover blur-[1px] opacity-60 scale-105"
+          />
+        </div>
 
         <div className="relative z-10">
           <Link href="/" className="flex items-center gap-4 mb-16 group">
