@@ -21,14 +21,15 @@ const Header = () => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
 
-    const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
-    if (token && savedUser) {
-      setIsLoggedIn(true);
+    if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        setIsLoggedIn(true);
       } catch (e) {
         setUser(null);
+        setIsLoggedIn(false);
       }
     } else {
       setIsLoggedIn(false);

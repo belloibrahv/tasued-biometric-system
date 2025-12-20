@@ -26,6 +26,10 @@ export async function login(formData: FormData) {
   const role = data.user.user_metadata?.role || (type === 'admin' ? 'ADMIN' : 'STUDENT')
 
   let target = redirectPath
+  if (target === '/login' || target === '/') {
+    target = '/dashboard'
+  }
+
   if (type === 'admin') {
     target = role === 'OPERATOR' ? '/operator' : '/admin'
   }
@@ -47,12 +51,19 @@ export async function register(formData: any, facialEmbedding: number[], facialP
         type: 'student',
         role: 'STUDENT',
         biometricEnrolled: true
-      }
+      },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SITE_URL || ''}/dashboard`
     }
   })
 
   if (authError) return { error: authError.message }
   if (!authData.user) return { error: 'Registration failed' }
+
+  // Check if session was created (Supabase might require email confirmation)
+  if (!authData.session) {
+    console.warn('Registration: No session created - email confirmation may be required')
+    // Still proceed with profile creation, but inform user
+  }
 
   // 2. Sync Profile to Public DB
   try {
@@ -79,7 +90,7 @@ export async function register(formData: any, facialEmbedding: number[], facialP
     }
   } catch (err) {
     console.error('Registration Sync Error:', err)
-    // Continue if sync fails - can be retried later
+    return { error: 'Failed to create user profile. Please contact support.' }
   }
 
   // 3. Enroll Biometric (Internal API call as we are on server)
@@ -102,9 +113,21 @@ export async function register(formData: any, facialEmbedding: number[], facialP
     }
   } catch (err) {
     console.error('Biometric Enrollment Error:', err)
+    return { error: 'Failed to enroll biometric data. Please try again from your dashboard.' }
   }
 
-  return { success: true, target: '/dashboard' }
+  // 4. If session exists, user is auto-logged in
+  // If not, they need to verify email first
+  if (authData.session) {
+    return { success: true, target: '/dashboard', autoLogin: true }
+  } else {
+    return { 
+      success: true, 
+      target: '/login', 
+      autoLogin: false,
+      message: 'Registration successful! Please check your email to verify your account.' 
+    }
+  }
 }
 
 export async function logout() {

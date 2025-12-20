@@ -188,14 +188,18 @@ export default function RegisterPage() {
       }
 
       if (result.success) {
-        toast.success('Registration successful! Redirecting to dashboard...');
-
-        // Minor cleanup
-        localStorage.removeItem('token'); // No longer needed in localStorage
-
-        setTimeout(() => {
-          window.location.replace(result.target!);
-        }, 1500);
+        if (result.autoLogin) {
+          toast.success('Registration successful! Redirecting to dashboard...');
+          setTimeout(() => {
+            window.location.replace(result.target!);
+          }, 1500);
+        } else {
+          // Email verification required
+          toast.success(result.message || 'Registration successful! Please check your email.');
+          setTimeout(() => {
+            router.push(result.target!);
+          }, 2000);
+        }
       }
     } catch (error: any) {
       console.error('Registration error:', error);
