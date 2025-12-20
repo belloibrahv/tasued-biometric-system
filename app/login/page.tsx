@@ -199,22 +199,6 @@ function LoginForm() {
             {loading ? <Loader2 className="animate-spin" size={20} /> : <>Sign In <ArrowRight size={18} /></>}
           </button>
         </form>
-
-        {/* Demo Credentials */}
-        <div className="mt-6 p-4 bg-surface-100 rounded-xl">
-          <p className="text-xs font-bold text-surface-500 uppercase mb-2">Demo Credentials</p>
-          {loginType === 'student' ? (
-            <div className="text-sm text-surface-600">
-              <p><span className="font-medium">Email:</span> john.doe@student.tasued.edu.ng</p>
-              <p><span className="font-medium">Password:</span> studentPassword123!</p>
-            </div>
-          ) : (
-            <div className="text-sm text-surface-600">
-              <p><span className="font-medium">Admin:</span> admin@tasued.edu.ng</p>
-              <p><span className="font-medium">Password:</span> adminPassword123!</p>
-            </div>
-          )}
-        </div>
       </div>
 
       {loginType === 'student' && (

@@ -33,7 +33,7 @@ export const securityConfig = {
 
   // CORS Configuration
   cors: {
-    origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
+    origin: process.env.CORS_ORIGIN?.split(',') || (process.env.NODE_ENV === 'production' ? [] : ['http://localhost:3000']),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -47,7 +47,7 @@ export const securityConfig = {
       styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       imgSrc: ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'", 'https://api.example.com'],
+      connectSrc: ["'self'", 'https://*.supabase.co', 'https://*.vercel.app'],
       frameAncestors: ["'none'"], // Prevent clickjacking
     },
   },

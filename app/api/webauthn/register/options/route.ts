@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 function b64url(input: Buffer | Uint8Array) {
-  return Buffer.from(input).toString('base64').replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  return Buffer.from(input).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 }
 
 export async function POST(req: NextRequest) {
@@ -13,7 +13,10 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const challenge = crypto.getRandomValues(new Uint8Array(32));
-    const rpId = process.env.WEBAUTHN_RP_ID || 'localhost';
+    const rpId = process.env.WEBAUTHN_RP_ID || (process.env.NODE_ENV === 'production' ? '' : 'localhost');
+    if (!rpId && process.env.NODE_ENV === 'production') {
+      console.warn('WebAuthn: WEBAUTHN_RP_ID is missing in production');
+    }
     const rpName = 'TASUED BioVault';
 
     const pubKeyOptions: any = {
