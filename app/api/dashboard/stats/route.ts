@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value ||
-                  request.headers.get('authorization')?.replace('Bearer ', '');
+      request.headers.get('authorization')?.replace('Bearer ', '');
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -68,12 +68,12 @@ export async function GET(request: NextRequest) {
     // Get daily access data for chart (last 7 days)
     const dailyData = [];
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    
+
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       date.setHours(0, 0, 0, 0);
-      
+
       const nextDate = new Date(date);
       nextDate.setDate(nextDate.getDate() + 1);
 
@@ -103,8 +103,16 @@ export async function GET(request: NextRequest) {
       chartData: dailyData,
     });
 
-  } catch (error) {
-    console.error('Dashboard stats error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Dashboard Stats Route Error:', {
+      message: error.message,
+      stack: error.stack,
+      cause: error.cause
+    });
+    return NextResponse.json({
+      error: 'Internal server error',
+      message: error.message || 'Failed to fetch dashboard statistics',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 });
   }
 }

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Fingerprint, LayoutDashboard, QrCode, History, Link2, Download,
-  Settings, Shield, HelpCircle, LogOut, Menu, X, Bell, User, Search
+  Settings, Shield, HelpCircle, LogOut, Menu, X, Bell, User, Search, RefreshCw
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -79,6 +79,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
           <p className="text-surface-600 text-sm">Loading your dashboard...</p>
         </motion.div>
+      </div>
+    );
+  }
+
+  if (!user && !loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-surface-50 p-4">
+        <div className="max-w-md w-full glass-card p-8 text-center bg-white shadow-xl rounded-[32px] border border-surface-200">
+          <div className="w-20 h-20 bg-error-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Shield className="text-error-500" size={40} />
+          </div>
+          <h2 className="text-2xl font-bold text-surface-900 mb-2">Sync Error</h2>
+          <p className="text-surface-600 mb-8">
+            We couldn't synchronize your secure profile. This might be due to a connection issue or a system update.
+          </p>
+          <div className="space-y-3">
+            <button
+              onClick={() => window.location.reload()}
+              className="btn-primary w-full py-3 flex items-center justify-center gap-2 shadow-brand-lg"
+            >
+              <RefreshCw size={18} /> Retry Connection
+            </button>
+            <button
+              onClick={handleLogout}
+              className="btn-outline w-full py-3"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
       </div>
     );
   }

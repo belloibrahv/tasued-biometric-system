@@ -50,7 +50,7 @@ export async function GET(request: Request) {
       user = await db.user.findUnique({
         where: { id: payload.id },
         include: {
-          biometrics: true
+          biometricData: true
         }
       });
     }
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
     }
 
     // Student logic
-    const biometric = (user as any).biometrics?.[0];
+    const biometric = (user as any).biometricData;
 
     // Get stats
     const servicesCount = await db.serviceConnection.count({
@@ -94,10 +94,16 @@ export async function GET(request: Request) {
     });
 
   } catch (error: any) {
-    console.error('Auth Me Error:', error);
+    console.error('Auth Me Route Error:', {
+      message: error.message,
+      stack: error.stack,
+      cause: error.cause
+    });
+
     return NextResponse.json({
       error: 'Internal server error',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: error.message || 'An unexpected error occurred during profile verification',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }, { status: 500 });
   }
 }
