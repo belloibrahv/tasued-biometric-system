@@ -55,10 +55,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is active
-    if (!user.isActive || user.isSuspended) {
+    if (!user.isActive) {
       return NextResponse.json({
         success: false,
-        error: user.isSuspended ? 'Account suspended' : 'Account inactive',
+        error: 'Account inactive',
       }, { status: 403 });
     }
 
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         department: user.department,
         level: user.level,
         profilePhoto: user.profilePhoto,
-        isVerified: user.isEmailVerified,
+        isVerified: true,
       },
       verifiedAt: new Date().toISOString(),
       method: method || 'QR_CODE',

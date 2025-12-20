@@ -7,14 +7,14 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value ||
-                  request.headers.get('authorization')?.replace('Bearer ', '');
+      request.headers.get('authorization')?.replace('Bearer ', '');
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const payload = await verifyToken(token);
-    if (!payload || payload.type !== 'admin') {
+    if (!payload || (payload.type !== 'admin' && payload.type !== 'operator')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -42,8 +42,6 @@ export async function GET(request: NextRequest) {
         level: true,
         profilePhoto: true,
         isActive: true,
-        isSuspended: true,
-        isEmailVerified: true,
         createdAt: true,
       },
     });
@@ -52,29 +50,31 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Student not found' }, { status: 404 });
     }
 
-    // Check biometric enrollment
-    const biometric = await db.biometricData.findUnique({
-      where: { userId: user.id },
-      select: {
-        fingerprintTemplate: true,
-        facialTemplate: true,
-        enrolledAt: true,
-      },
-    });
-
-    // Get recent access logs
-    const recentAccess = await db.accessLog.findMany({
-      where: { userId: user.id },
-      include: {
-        service: { select: { name: true } },
-      },
-      orderBy: { timestamp: 'desc' },
-      take: 5,
-    });
+    // Fetch biometric and access logs in parallel for better performance
+    const [biometric, recentAccess] = await Promise.all([
+      db.biometricData.findUnique({
+        where: { userId: user.id },
+        select: {
+          fingerprintTemplate: true,
+          facialTemplate: true,
+          enrolledAt: true,
+        },
+      }),
+      db.accessLog.findMany({
+        where: { userId: user.id },
+        include: {
+          service: { select: { name: true } },
+        },
+        orderBy: { timestamp: 'desc' },
+        take: 5,
+      })
+    ]);
 
     return NextResponse.json({
       student: {
         ...user,
+        isSuspended: false,
+        isEmailVerified: true,
         biometricEnrolled: !!(biometric?.fingerprintTemplate || biometric?.facialTemplate),
         biometricEnrolledAt: biometric?.enrolledAt,
         recentAccess: recentAccess.map(log => ({

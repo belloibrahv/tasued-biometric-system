@@ -1,5 +1,4 @@
 import { User } from '@prisma/client';
-import bcrypt from 'bcryptjs';
 import db from '@/lib/db';
 
 interface CreateUserInput {
@@ -28,14 +27,13 @@ interface UpdateUserInput {
 class UserService {
   /**
    * Create a new user
+   * (Note: Auth is now handled by Supabase, this is mainly for profile data)
    */
   static async createUser(input: CreateUserInput): Promise<User> {
-    const hashedPassword = await bcrypt.hash(input.password, 12);
-
     const user = await db.user.create({
       data: {
         email: input.email.toLowerCase(),
-        password: hashedPassword,
+        password: input.password, // Plain text here as auth is handled by Supabase
         firstName: input.firstName,
         lastName: input.lastName,
         otherNames: input.otherNames || null,
@@ -44,9 +42,7 @@ class UserService {
         dateOfBirth: input.dateOfBirth,
         department: input.department,
         level: input.level,
-        isEmailVerified: false,
         isActive: true,
-        isSuspended: false,
       },
     });
 
@@ -129,25 +125,6 @@ class UserService {
   }
 
   /**
-   * Change user password
-   */
-  static async changePassword(userId: string, newPassword: string): Promise<boolean> {
-    try {
-      const hashedPassword = await bcrypt.hash(newPassword, 12);
-
-      await db.user.update({
-        where: { id: userId },
-        data: { password: hashedPassword },
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Error changing password:', error);
-      return false;
-    }
-  }
-
-  /**
    * Delete a user and all associated data
    */
   static async deleteUser(userId: string): Promise<boolean> {
@@ -165,77 +142,6 @@ class UserService {
       return true;
     } catch (error) {
       console.error('Error deleting user:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Authenticate a user
-   */
-  static async authenticateUser(email: string, password: string): Promise<Omit<User, 'password'> | null> {
-    const user = await db.user.findFirst({
-      where: {
-        OR: [
-          { email: email.toLowerCase() },
-          { matricNumber: email.toUpperCase() },
-        ],
-      },
-    });
-
-    if (!user || !user.isActive || user.isSuspended) {
-      return null;
-    }
-
-    const isValidPassword = await bcrypt.compare(password, user.password);
-
-    if (!isValidPassword) {
-      return null;
-    }
-
-    // Update last login
-    await db.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
-
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword as Omit<User, 'password'>;
-  }
-
-  /**
-   * Suspend a user
-   */
-  static async suspendUser(userId: string, reason: string): Promise<boolean> {
-    try {
-      await db.user.update({
-        where: { id: userId },
-        data: {
-          isSuspended: true,
-          suspensionReason: reason,
-        },
-      });
-      return true;
-    } catch (error) {
-      console.error('Error suspending user:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Unsuspend a user
-   */
-  static async unsuspendUser(userId: string): Promise<boolean> {
-    try {
-      await db.user.update({
-        where: { id: userId },
-        data: {
-          isSuspended: false,
-          suspensionReason: null,
-        },
-      });
-      return true;
-    } catch (error) {
-      console.error('Error unsuspending user:', error);
       return false;
     }
   }

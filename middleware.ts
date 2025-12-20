@@ -11,15 +11,12 @@ export async function middleware(request: NextRequest) {
     '/register',
     '/forgot-password',
     '/reset-password',
-    '/api/auth/login',
-    '/api/auth/register',
-    '/api/auth/forgot-password',
-    '/api/auth/reset-password',
+    '/api/auth/sync-profile',
     '/api/health',
   ];
 
   // Check if it's a public route
-  const isPublicRoute = publicRoutes.some(route => 
+  const isPublicRoute = publicRoutes.some(route =>
     pathname === route || pathname.startsWith('/_next') || pathname.startsWith('/static')
   );
 
@@ -37,7 +34,7 @@ export async function middleware(request: NextRequest) {
 
   // Get token from cookie or header
   const token = request.cookies.get('auth-token')?.value ||
-                request.headers.get('authorization')?.replace('Bearer ', '');
+    request.headers.get('authorization')?.replace('Bearer ', '');
 
   if (!token) {
     if (pathname.startsWith('/api/')) {

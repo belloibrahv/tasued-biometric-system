@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 const departments = [
   'Computer Science',
@@ -28,12 +29,12 @@ const levels = ['100', '200', '300', '400', '500'];
 export default function RegisterPage() {
   const router = useRouter();
   const webcamRef = useRef<Webcam>(null);
-  
+
   const [step, setStep] = useState(1); // 1: Personal Info, 2: Biometric, 3: Security
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   // Form data
   const [formData, setFormData] = useState({
     firstName: '',
@@ -108,7 +109,7 @@ export default function RegisterPage() {
 
     setCapturingBiometric(true);
     const imageSrc = webcamRef.current.getScreenshot();
-    
+
     if (!imageSrc) {
       toast.error('Failed to capture image. Please try again.');
       setCapturingBiometric(false);
@@ -126,7 +127,7 @@ export default function RegisterPage() {
       });
 
       const data = await res.json();
-      
+
       if (!res.ok) throw new Error(data.error);
 
       setFacialEmbedding(data.embedding);
@@ -180,11 +181,32 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // Register user
-      const registerRes = await fetch('/api/auth/register', {
+      // 1. Register with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            matric_number: formData.matricNumber.toUpperCase(),
+            full_name: `${formData.firstName} ${formData.lastName}`
+          }
+        }
+      });
+
+      if (authError) {
+        throw new Error(authError.message);
+      }
+
+      if (!authData.user) {
+        throw new Error('Registration failed');
+      }
+
+      // 2. Register user in public database
+      const syncRes = await fetch('/api/auth/sync-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: authData.user.id, // Link to Supabase User
           firstName: formData.firstName,
           lastName: formData.lastName,
           otherNames: formData.otherNames || undefined,
@@ -194,21 +216,20 @@ export default function RegisterPage() {
           dateOfBirth: formData.dateOfBirth,
           department: formData.department,
           level: formData.level,
-          password: formData.password,
         }),
       });
 
-      const registerData = await registerRes.json();
+      const syncData = await syncRes.json();
 
-      if (!registerRes.ok) {
-        throw new Error(registerData.error || 'Registration failed');
+      if (!syncRes.ok) {
+        throw new Error(syncData.error || 'Profile synchronization failed');
       }
 
       const biometricRes = await fetch('/api/biometric/enroll', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${registerData.token}`
+          'Authorization': `Bearer ${authData.session?.access_token}`
         },
         body: JSON.stringify({
           facialTemplate: JSON.stringify(facialEmbedding),
@@ -216,24 +237,46 @@ export default function RegisterPage() {
         }),
       });
 
+      console.log('Registration: Biometric enrollment successful');
       const biometricData = await biometricRes.json();
+      console.log('Registration: Biometric data parsed', biometricData);
 
       if (!biometricRes.ok) {
         throw new Error(biometricData.error || 'Biometric enrollment failed');
       }
 
-      // Update token cookie with new token that has biometricEnrolled = true
-      if (biometricData.token) {
-        document.cookie = `auth-token=${biometricData.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
+      // 4. Finalize Session
+      console.log('Registration: Finalizing session...');
+      try {
+        // Update token cookie with new token if provided (Supabase user metadata might have changed)
+        if (biometricData.token) {
+          document.cookie = `auth-token=${biometricData.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
+          localStorage.setItem('token', biometricData.token);
+        } else {
+          localStorage.setItem('token', authData.session?.access_token || '');
+        }
+
+        // Save user data for legacy app logic
+        const userObj = {
+          ...(syncData.user || {}),
+          biometricEnrolled: true,
+          type: 'student'
+        };
+        localStorage.setItem('user', JSON.stringify(userObj));
+        console.log('Registration: User profile saved to localStorage');
+      } catch (storageError) {
+        console.error('Registration: Local storage error (ignoring)', storageError);
       }
 
       toast.success('Registration successful! Redirecting to dashboard...');
-      
+      console.log('Registration: Redirecting in 1s...');
+
       setTimeout(() => {
-        router.push('/dashboard');
-      }, 1500);
+        window.location.href = '/dashboard';
+      }, 1000);
 
     } catch (error: any) {
+      console.error('Registration error details:', error);
       toast.error(error.message || 'Registration failed');
       setLoading(false);
     }
@@ -242,49 +285,61 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       <Toaster position="top-center" richColors />
-      
+
       {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-brand-gradient p-12 flex-col justify-between relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
+      <div className="hidden lg:flex lg:w-1/2 bg-mesh p-16 flex-col justify-between relative overflow-hidden border-r border-white/10">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/20 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-success-500/10 blur-[120px] rounded-full animate-pulse delay-700" />
 
         <div className="relative z-10">
-          <Link href="/" className="flex items-center gap-3 mb-12">
-            <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+          <Link href="/" className="flex items-center gap-4 mb-16 group">
+            <div className="bg-white/10 p-3.5 rounded-2xl backdrop-blur-md border border-white/20 transition-transform group-hover:scale-110 shadow-2xl">
               <Fingerprint size={32} className="text-white" />
             </div>
             <div>
-              <span className="text-2xl font-bold text-white">TASUED</span>
-              <span className="ml-2 text-white/80">BioVault</span>
+              <span className="text-2xl font-black text-white tracking-tighter">TASUED</span>
+              <p className="text-[10px] font-black text-brand-300 uppercase tracking-[0.3em] leading-none mt-1">BioVault</p>
             </div>
           </Link>
 
-          <h1 className="text-4xl font-bold text-white mb-6">Create Your Account</h1>
-          <p className="text-white/80 text-lg leading-relaxed">
-            Join thousands of students using BioVault for seamless access to all university services.
-          </p>
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h1 className="text-5xl font-black text-white mb-8 tracking-tight leading-none">
+              Initialize Your <br />
+              <span className="text-brand-400">Digital Identity.</span>
+            </h1>
+            <p className="text-white/60 text-lg leading-relaxed max-w-md font-medium">
+              Begin your journey into a secure, biometric-enabled campus experience. Complete your enrollment in three simple, high-security steps.
+            </p>
+          </motion.div>
         </div>
 
         <div className="relative z-10">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <Shield size={24} className="text-white" />
-              <h3 className="font-bold text-white">Secure Biometric Enrollment</h3>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="glass-card-dark p-8 border border-white/5 bg-white/5 backdrop-blur-2xl"
+          >
+            <div className="flex items-center gap-5 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-success-500/20 flex items-center justify-center border border-success-500/30">
+                <Shield size={24} className="text-success-400" />
+              </div>
+              <div>
+                <h3 className="font-black text-white uppercase tracking-tight">Identity Vault</h3>
+                <p className="text-[10px] text-surface-500 font-bold uppercase tracking-widest mt-0.5">Biometric Encryption Active</p>
+              </div>
             </div>
-            <div className="flex gap-4 text-sm text-white/70">
-              <span className="flex items-center gap-1"><CheckCircle size={14} className="text-success-400" /> Encrypted</span>
-              <span className="flex items-center gap-1"><CheckCircle size={14} className="text-success-400" /> Privacy Focused</span>
-              <span className="flex items-center gap-1"><CheckCircle size={14} className="text-success-400" /> Secure Storage</span>
+            <div className="flex gap-6">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-success-500 animate-pulse" />
+                <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.1em]">Public Key Infrastructure</span>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -758,7 +813,7 @@ export default function RegisterPage() {
               </Link>
             </div>
           </div>
-          
+
           <p className="text-center text-xs text-surface-400 mt-8">
             &copy; {new Date().getFullYear()} TASUED BioVault • CSC 415 Project
           </p>

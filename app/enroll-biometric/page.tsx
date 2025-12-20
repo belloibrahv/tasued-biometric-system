@@ -9,11 +9,12 @@ import {
   Shield, Loader2, ArrowRight
 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 export default function EnrollBiometricPage() {
   const router = useRouter();
   const webcamRef = useRef<Webcam>(null);
-  
+
   const [loading, setLoading] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [facialEmbedding, setFacialEmbedding] = useState<number[] | null>(null);
@@ -25,7 +26,7 @@ export default function EnrollBiometricPage() {
 
     setCapturingBiometric(true);
     const imageSrc = webcamRef.current.getScreenshot();
-    
+
     if (!imageSrc) {
       toast.error('Failed to capture image. Please try again.');
       setCapturingBiometric(false);
@@ -43,7 +44,7 @@ export default function EnrollBiometricPage() {
       });
 
       const data = await res.json();
-      
+
       if (!res.ok) throw new Error(data.error);
 
       setFacialEmbedding(data.embedding);
@@ -72,7 +73,7 @@ export default function EnrollBiometricPage() {
     try {
       const biometricRes = await fetch('/api/biometric/enroll', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${document.cookie.replace(/(?:(?:^|.*;\s*)auth-token\s*=\s*([^;]*).*$)|^.*$/, '$1')}`
         },
@@ -88,19 +89,23 @@ export default function EnrollBiometricPage() {
         throw new Error(data.error || 'Biometric enrollment failed');
       }
 
-      // Update token cookie with new token that has biometricEnrolled = true
-      if (data.token) {
-        document.cookie = `auth-token=${data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
-      }
+      // Update metadata on client side as a fallback/reinforcement
+      // This ensures the current session is immediately updated
+      console.log('Enrollment: Updating local Supabase Auth metadata...');
+      await supabase.auth.updateUser({
+        data: { biometricEnrolled: true }
+      });
 
       toast.success('Biometric enrollment successful! Redirecting to dashboard...');
-      
+
+      // Use window.location.href to force a full reload and cookie/middleware re-check
       setTimeout(() => {
-        router.push('/dashboard');
+        window.location.href = '/dashboard';
       }, 1500);
 
     } catch (error: any) {
       toast.error(error.message || 'Enrollment failed');
+    } finally {
       setLoading(false);
     }
   };

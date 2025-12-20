@@ -12,15 +12,16 @@ import {
 } from 'lucide-react';
 import { Toaster } from 'sonner';
 import TeamSlider from '@/components/TeamSlider';
+import { supabase } from '@/lib/supabase';
 
 // Team members data
 const teamMembers = [
-  { name: 'Adeyemi Oluwaseun', matricNumber: 'CSC/2020/001', role: 'Team Lead', image: '/team/member1.jpg' },
-  { name: 'Bakare Temitope', matricNumber: 'CSC/2020/015', role: 'Backend Developer', image: '/team/member2.jpg' },
-  { name: 'Chukwu Emmanuel', matricNumber: 'CSC/2020/023', role: 'Frontend Developer', image: '/team/member3.jpg' },
-  { name: 'Damilola Akinwale', matricNumber: 'CSC/2020/031', role: 'Database Admin', image: '/team/member4.jpg' },
-  { name: 'Eze Chidinma', matricNumber: 'CSC/2020/042', role: 'UI/UX Designer', image: '/team/member5.jpg' },
-  { name: 'Fashola Kehinde', matricNumber: 'CSC/2020/055', role: 'Security Analyst', image: '/team/member6.jpg' },
+  { name: 'Adeyemi Oluwaseun', matricNumber: 'CSC/2020/001', role: 'Team Lead' },
+  { name: 'Bakare Temitope', matricNumber: 'CSC/2020/015', role: 'Backend Developer' },
+  { name: 'Chukwu Emmanuel', matricNumber: 'CSC/2020/023', role: 'Frontend Developer' },
+  { name: 'Damilola Akinwale', matricNumber: 'CSC/2020/031', role: 'Database Admin' },
+  { name: 'Eze Chidinma', matricNumber: 'CSC/2020/042', role: 'UI/UX Designer' },
+  { name: 'Fashola Kehinde', matricNumber: 'CSC/2020/055', role: 'Security Analyst' },
 ];
 
 // Biometric SVG Component
@@ -32,32 +33,32 @@ const BiometricSVG = () => (
         <stop offset="100%" stopColor="#059669" />
       </linearGradient>
       <filter id="glow">
-        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-        <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+        <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
       </filter>
     </defs>
     {/* Outer rings */}
-    <circle cx="200" cy="200" r="180" stroke="url(#fingerGrad)" strokeWidth="2" opacity="0.2" className="animate-pulse"/>
-    <circle cx="200" cy="200" r="150" stroke="url(#fingerGrad)" strokeWidth="2" opacity="0.3"/>
-    <circle cx="200" cy="200" r="120" stroke="url(#fingerGrad)" strokeWidth="3" opacity="0.4"/>
+    <circle cx="200" cy="200" r="180" stroke="url(#fingerGrad)" strokeWidth="2" opacity="0.2" className="animate-pulse" />
+    <circle cx="200" cy="200" r="150" stroke="url(#fingerGrad)" strokeWidth="2" opacity="0.3" />
+    <circle cx="200" cy="200" r="120" stroke="url(#fingerGrad)" strokeWidth="3" opacity="0.4" />
     {/* Fingerprint pattern */}
     <g filter="url(#glow)" className="animate-pulse">
-      <path d="M200 80 Q280 120 280 200 Q280 280 200 320" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round"/>
-      <path d="M200 100 Q260 130 260 200 Q260 270 200 300" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round"/>
-      <path d="M200 120 Q240 145 240 200 Q240 255 200 280" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round"/>
-      <path d="M200 140 Q220 155 220 200 Q220 245 200 260" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round"/>
-      <path d="M200 80 Q120 120 120 200 Q120 280 200 320" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round"/>
-      <path d="M200 100 Q140 130 140 200 Q140 270 200 300" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round"/>
-      <path d="M200 120 Q160 145 160 200 Q160 255 200 280" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round"/>
-      <path d="M200 140 Q180 155 180 200 Q180 245 200 260" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      <path d="M200 80 Q280 120 280 200 Q280 280 200 320" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d="M200 100 Q260 130 260 200 Q260 270 200 300" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d="M200 120 Q240 145 240 200 Q240 255 200 280" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d="M200 140 Q220 155 220 200 Q220 245 200 260" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d="M200 80 Q120 120 120 200 Q120 280 200 320" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d="M200 100 Q140 130 140 200 Q140 270 200 300" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d="M200 120 Q160 145 160 200 Q160 255 200 280" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d="M200 140 Q180 155 180 200 Q180 245 200 260" stroke="url(#fingerGrad)" strokeWidth="3" fill="none" strokeLinecap="round" />
     </g>
     {/* Center dot */}
-    <circle cx="200" cy="200" r="8" fill="url(#fingerGrad)" className="animate-ping"/>
-    <circle cx="200" cy="200" r="5" fill="#0066CC"/>
+    <circle cx="200" cy="200" r="8" fill="url(#fingerGrad)" className="animate-ping" />
+    <circle cx="200" cy="200" r="5" fill="#0066CC" />
     {/* Scan line */}
     <rect x="120" y="195" width="160" height="10" fill="url(#fingerGrad)" opacity="0.5" rx="5">
-      <animate attributeName="y" values="100;300;100" dur="3s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.5;0.8;0.5" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="100;300;100" dur="3s" repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0.5;0.8;0.5" dur="3s" repeatCount="indefinite" />
     </rect>
   </svg>
 );
@@ -65,26 +66,26 @@ const BiometricSVG = () => (
 // QR Code SVG Component
 const QRCodeSVG = () => (
   <svg viewBox="0 0 200 200" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="200" height="200" rx="20" fill="white"/>
+    <rect width="200" height="200" rx="20" fill="white" />
     <g fill="#0066CC">
       {/* QR Pattern */}
-      <rect x="20" y="20" width="50" height="50" rx="5"/>
-      <rect x="130" y="20" width="50" height="50" rx="5"/>
-      <rect x="20" y="130" width="50" height="50" rx="5"/>
-      <rect x="30" y="30" width="30" height="30" rx="3" fill="white"/>
-      <rect x="140" y="30" width="30" height="30" rx="3" fill="white"/>
-      <rect x="30" y="140" width="30" height="30" rx="3" fill="white"/>
-      <rect x="40" y="40" width="10" height="10" rx="2"/>
-      <rect x="150" y="40" width="10" height="10" rx="2"/>
-      <rect x="40" y="150" width="10" height="10" rx="2"/>
+      <rect x="20" y="20" width="50" height="50" rx="5" />
+      <rect x="130" y="20" width="50" height="50" rx="5" />
+      <rect x="20" y="130" width="50" height="50" rx="5" />
+      <rect x="30" y="30" width="30" height="30" rx="3" fill="white" />
+      <rect x="140" y="30" width="30" height="30" rx="3" fill="white" />
+      <rect x="30" y="140" width="30" height="30" rx="3" fill="white" />
+      <rect x="40" y="40" width="10" height="10" rx="2" />
+      <rect x="150" y="40" width="10" height="10" rx="2" />
+      <rect x="40" y="150" width="10" height="10" rx="2" />
       {/* Data pattern */}
-      <rect x="80" y="20" width="10" height="10" rx="2"/>
-      <rect x="100" y="20" width="10" height="10" rx="2"/>
-      <rect x="80" y="40" width="10" height="10" rx="2"/>
-      <rect x="100" y="50" width="10" height="10" rx="2"/>
-      <rect x="80" y="80" width="40" height="40" rx="5" fill="#059669"/>
-      <rect x="90" y="90" width="20" height="20" rx="3" fill="white"/>
-      <rect x="95" y="95" width="10" height="10" rx="2" fill="#059669"/>
+      <rect x="80" y="20" width="10" height="10" rx="2" />
+      <rect x="100" y="20" width="10" height="10" rx="2" />
+      <rect x="80" y="40" width="10" height="10" rx="2" />
+      <rect x="100" y="50" width="10" height="10" rx="2" />
+      <rect x="80" y="80" width="40" height="40" rx="5" fill="#059669" />
+      <rect x="90" y="90" width="20" height="20" rx="3" fill="white" />
+      <rect x="95" y="95" width="10" height="10" rx="2" fill="#059669" />
     </g>
   </svg>
 );
@@ -93,6 +94,25 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setLoading(false);
+    }
+    checkAuth();
+  }, []);
+
+  const getDashboardPath = () => {
+    if (!user) return '/login';
+    const type = user.user_metadata?.type || 'student';
+    if (type === 'admin') return '/admin';
+    if (type === 'operator') return '/operator';
+    return '/dashboard';
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -128,18 +148,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       <Toaster position="top-center" richColors />
-      
+
       {/* Navigation */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'
-      }`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-lg shadow-lg' : 'bg-transparent'
+        }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3">
-              <img 
-                src="https://tasued.edu.ng/web/wp-content/uploads/2023/03/logo3.png" 
-                alt="TASUED Logo" 
+              <img
+                src="https://tasued.edu.ng/web/wp-content/uploads/2023/03/logo3.png"
+                alt="TASUED Logo"
                 className="h-12 w-auto"
               />
               <div className="hidden sm:block">
@@ -158,12 +177,23 @@ export default function Home() {
 
             {/* CTA Buttons */}
             <div className="hidden md:flex items-center gap-3">
-              <Link href="/login" className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${scrolled ? 'text-surface-700 hover:bg-surface-100' : 'text-white hover:bg-white/10'}`}>
-                Sign In
-              </Link>
-              <Link href="/register" className="px-5 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 shadow-brand transition">
-                Enroll Now
-              </Link>
+              {loading ? (
+                <div className="w-24 h-10 bg-surface-100 rounded-xl animate-pulse" />
+              ) : user ? (
+                <Link href={getDashboardPath()} className="px-6 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-bold hover:bg-brand-600 shadow-brand transition flex items-center gap-2">
+                  <Activity size={18} />
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link href="/login" className={`px-4 py-2 rounded-xl text-sm font-semibold transition ${scrolled ? 'text-surface-700 hover:bg-surface-100' : 'text-white hover:bg-white/10'}`}>
+                    Sign In
+                  </Link>
+                  <Link href="/register" className="px-5 py-2.5 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 shadow-brand transition">
+                    Enroll Now
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -182,8 +212,16 @@ export default function Home() {
               <a href="#team" className="block text-surface-700 font-medium py-2" onClick={() => setIsMenuOpen(false)}>Team</a>
               <a href="#course" className="block text-surface-700 font-medium py-2" onClick={() => setIsMenuOpen(false)}>Course Info</a>
               <div className="pt-4 border-t space-y-3">
-                <Link href="/login" className="block w-full text-center py-3 border-2 border-brand-500 text-brand-500 rounded-xl font-semibold">Sign In</Link>
-                <Link href="/register" className="block w-full text-center py-3 bg-brand-500 text-white rounded-xl font-semibold">Enroll Now</Link>
+                {user ? (
+                  <Link href={getDashboardPath()} className="block w-full text-center py-3 bg-brand-500 text-white rounded-xl font-bold">
+                    View Dashboard
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login" className="block w-full text-center py-3 border-2 border-brand-500 text-brand-500 rounded-xl font-semibold">Sign In</Link>
+                    <Link href="/register" className="block w-full text-center py-3 bg-brand-500 text-white rounded-xl font-semibold">Enroll Now</Link>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
@@ -191,16 +229,25 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <img 
-            src="https://tasued.edu.ng/web/wp-content/uploads/2024/02/DSC_5892.jpg" 
-            alt="TASUED Campus" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-surface-900/95 via-surface-900/80 to-surface-900/60" />
-          <div className="absolute inset-0 bg-brand-500/20" />
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-mesh">
+        {/* Cinematic Background Layer */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-gradient-to-b from-surface-950/40 via-surface-950/20 to-surface-50 z-10" />
+          <motion.div
+            initial={{ scale: 1.1, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="w-full h-full"
+          >
+            <img
+              src="/images/biometric-hero.png"
+              alt="TASUED Campus"
+              className="w-full h-full object-cover blur-[2px] opacity-90"
+            />
+          </motion.div>
+          {/* Animated Mesh Gradients */}
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-500/10 blur-[120px] rounded-full animate-pulse" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-success-500/10 blur-[120px] rounded-full animate-pulse delay-700" />
         </div>
 
         {/* Animated Background Elements */}
@@ -218,24 +265,24 @@ export default function Home() {
                 <span className="w-2 h-2 bg-success-400 rounded-full animate-pulse" />
                 <span className="text-white/90 text-sm font-medium">CSC 415 Net-Centric Computing Project</span>
               </div>
-              
+
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
                 Your Digital
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-success-400">
                   Campus Identity
                 </span>
               </h1>
-              
+
               <p className="text-lg text-white/80 mb-8 max-w-xl leading-relaxed">
-                TASUED BioVault is a universal biometric identity platform that serves as your digital passport 
+                TASUED BioVault is a universal biometric identity platform that serves as your digital passport
                 across all university services. One enrollment, unlimited access.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
-                <Link href="/register" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-brand-500 text-white rounded-xl font-semibold hover:bg-brand-600 shadow-brand transition group">
-                  Start Enrollment <ArrowRight size={20} className="group-hover:translate-x-1 transition" />
+                <Link href={user ? getDashboardPath() : "/register"} className="btn-primary flex items-center justify-center gap-2 group">
+                  {user ? 'View Dashboard' : 'Start Enrollment'} <ArrowRight size={20} className="group-hover:translate-x-1 transition" />
                 </Link>
-                <button onClick={() => setShowVideo(true)} className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-semibold hover:bg-white/20 transition border border-white/20">
+                <button onClick={() => setShowVideo(true)} className="btn-outline bg-white/5 backdrop-blur-md border-white/20 text-white hover:bg-white/10 flex items-center justify-center gap-2">
                   <Play size={20} /> Watch Demo
                 </button>
               </div>
@@ -300,8 +347,8 @@ export default function Home() {
             <button onClick={() => setShowVideo(false)} className="absolute -top-12 right-0 text-white hover:text-brand-400">
               <X size={32} />
             </button>
-            <iframe 
-              src="https://www.youtube.com/embed/MWrSj5ghlPg?autoplay=1" 
+            <iframe
+              src="https://www.youtube.com/embed/MWrSj5ghlPg?autoplay=1"
               className="w-full h-full rounded-2xl"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
@@ -315,24 +362,28 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-                <img 
-                  src="https://tasued.edu.ng/web/wp-content/uploads/2020/07/DSC_0395.jpg" 
-                  alt="TASUED Students" 
-                  className="w-full h-[400px] object-cover"
+              <div className="relative rounded-[32px] overflow-hidden shadow-2xl border-8 border-white group">
+                <img
+                  src="https://tasued.edu.ng/web/wp-content/uploads/2020/07/DSC_0395.jpg"
+                  alt="TASUED Students"
+                  className="w-full h-[450px] object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-surface-900/60 to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6">
-                  <p className="text-white font-semibold text-lg">Tai SOLARIN Federal University of Education</p>
-                  <p className="text-white/80 text-sm">Empowering Future Educators</p>
+                <div className="absolute inset-0 bg-gradient-to-t from-surface-950/80 via-transparent to-transparent" />
+                <div className="absolute bottom-8 left-8 right-8">
+                  <p className="text-white font-bold text-xl mb-1">Empowering the Future</p>
+                  <p className="text-white/70 text-sm">Tai Solarin Federal University of Education</p>
                 </div>
               </div>
               {/* Floating Badge */}
-              <div className="absolute -bottom-6 -right-6 bg-brand-500 text-white p-6 rounded-2xl shadow-xl">
-                <Award size={32} className="mb-2" />
-                <p className="font-bold text-2xl">CSC 415</p>
-                <p className="text-sm text-white/80">Project</p>
-              </div>
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                className="absolute -bottom-6 -right-6 glass-card p-6 shadow-2xl bg-white/90"
+              >
+                <Award size={32} className="text-brand-600 mb-2" />
+                <p className="font-bold text-2xl text-surface-900 leading-tight">CSC 415</p>
+                <p className="text-xs font-bold text-brand-500 uppercase tracking-widest">Capstone Project</p>
+              </motion.div>
             </motion.div>
 
             <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
@@ -341,8 +392,8 @@ export default function Home() {
                 Revolutionizing Campus Identity Management
               </h2>
               <p className="text-surface-600 mb-6 leading-relaxed">
-                BioVault is a comprehensive biometric identity management system designed specifically for TASUED. 
-                It provides a secure, efficient, and user-friendly way for students to access all university services 
+                BioVault is a comprehensive biometric identity management system designed specifically for TASUED.
+                It provides a secure, efficient, and user-friendly way for students to access all university services
                 with a single digital identity.
               </p>
               <div className="space-y-4">
@@ -374,7 +425,7 @@ export default function Home() {
               Everything You Need in One Platform
             </h2>
             <p className="text-surface-600 max-w-2xl mx-auto">
-              BioVault combines cutting-edge biometric technology with user-friendly design to deliver 
+              BioVault combines cutting-edge biometric technology with user-friendly design to deliver
               a seamless identity management experience.
             </p>
           </div>
@@ -387,13 +438,13 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.1 }}
-                className="group p-8 bg-white rounded-2xl border border-surface-200 hover:border-brand-200 hover:shadow-xl transition-all duration-300"
+                className="glass-card p-8 group hover:scale-[1.02] transition-all duration-300"
               >
-                <div className={`w-14 h-14 ${feature.color} rounded-2xl flex items-center justify-center text-white mb-6 group-hover:scale-110 transition-transform`}>
+                <div className={`w-14 h-14 ${feature.color} rounded-2xl flex items-center justify-center text-white mb-6 group-hover:rotate-6 transition-transform shadow-lg shadow-${feature.color.split('-')[1]}-500/20`}>
                   <feature.icon size={28} />
                 </div>
-                <h3 className="text-xl font-bold text-surface-900 mb-3">{feature.title}</h3>
-                <p className="text-surface-600">{feature.description}</p>
+                <h3 className="text-xl font-bold text-surface-900 mb-3 group-hover:text-brand-600 transition-colors uppercase tracking-tight">{feature.title}</h3>
+                <p className="text-surface-600 leading-relaxed text-sm">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -412,7 +463,7 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8 relative">
             {/* Connection Line */}
             <div className="hidden md:block absolute top-24 left-1/4 right-1/4 h-0.5 bg-gradient-to-r from-brand-500 via-success-500 to-accent-500" />
-            
+
             {[
               { step: '01', title: 'Register', desc: 'Create your account with basic information and matric number', icon: Users, color: 'bg-brand-500' },
               { step: '02', title: 'Enroll Biometrics', desc: 'Capture your fingerprint and facial data securely', icon: Fingerprint, color: 'bg-success-500' },
@@ -476,40 +527,50 @@ export default function Home() {
       {/* QR Code Demo Section */}
       <section className="py-20 bg-gradient-to-br from-brand-500 to-brand-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <span className="text-brand-200 font-semibold text-sm uppercase tracking-wider">QR Code System</span>
-              <h2 className="text-3xl sm:text-4xl font-bold mt-2 mb-6">
-                Your Identity in Your Pocket
+              <span className="inline-block px-3 py-1 bg-white/10 rounded-full text-brand-200 font-bold text-xs uppercase tracking-widest mb-4">Secure Identity</span>
+              <h2 className="text-3xl sm:text-5xl font-bold mt-2 mb-8 leading-tight">
+                Your Identity, <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-300 to-white">Always in Your Pocket</span>
               </h2>
-              <p className="text-white/80 mb-8 leading-relaxed">
-                Generate dynamic QR codes that refresh automatically for maximum security. 
-                Simply show your QR code at any verification terminal for instant access.
+              <p className="text-white/70 mb-10 text-lg leading-relaxed">
+                Generate dynamic QR codes that refresh automatically for maximum security.
+                Simply show your QR code at any verification terminal for instant access to university resources.
               </p>
-              <ul className="space-y-4 mb-8">
+              <div className="grid sm:grid-cols-2 gap-6 mb-10">
                 {[
-                  'Auto-refreshing every 5 minutes',
-                  'Works offline once generated',
-                  'Encrypted with timestamp verification',
-                  'Compatible with all campus scanners',
+                  'Auto-refreshing technology',
+                  'Offline-first availability',
+                  'Timestamp verification',
+                  'Unified access point',
                 ].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-3">
-                    <CheckCircle className="text-success-400 flex-shrink-0" size={20} />
-                    <span>{item}</span>
-                  </li>
+                  <div key={idx} className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-full bg-success-500/20 flex items-center justify-center">
+                      <CheckCircle className="text-success-400" size={14} />
+                    </div>
+                    <span className="text-sm font-medium text-white/90">{item}</span>
+                  </div>
                 ))}
-              </ul>
-              <Link href="/register" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-brand-600 rounded-xl font-semibold hover:bg-surface-100 transition">
-                Get Your QR Code <ChevronRight size={20} />
+              </div>
+              <Link href={user ? getDashboardPath() : "/register"} className="btn-primary !bg-white !text-brand-700 hover:!bg-brand-50 flex items-center gap-3 w-fit">
+                {user ? 'View Your QR Code' : 'Get Started Now'} <ChevronRight size={20} />
               </Link>
             </div>
-            <div className="flex justify-center">
-              <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 5, repeat: Infinity }} className="relative">
-                <div className="w-64 h-64 bg-white rounded-3xl shadow-2xl p-6">
+            <div className="flex justify-center relative">
+              <div className="absolute inset-0 bg-brand-400/20 blur-[100px] rounded-full animate-pulse" />
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                className="relative z-10"
+              >
+                <div className="w-72 h-72 bg-white rounded-[40px] shadow-2xl p-8 transform -rotate-3 hover:rotate-0 transition-transform duration-500">
                   <QRCodeSVG />
                 </div>
-                <div className="absolute -bottom-4 -right-4 bg-success-500 text-white px-4 py-2 rounded-xl font-semibold text-sm shadow-lg">
-                  ✓ Active
+                <div className="absolute -bottom-6 -right-6 glass-card px-6 py-3 bg-white/90 backdrop-blur-md shadow-xl border-2 border-brand-500">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-success-500 rounded-full animate-ping" />
+                    <span className="text-brand-900 font-bold uppercase tracking-widest text-[10px]">Active Session</span>
+                  </div>
                 </div>
               </motion.div>
             </div>
@@ -541,9 +602,9 @@ export default function Home() {
             <div className="grid lg:grid-cols-2">
               <div className="p-8 lg:p-12">
                 <div className="flex items-center gap-4 mb-6">
-                  <img 
-                    src="https://tasued.edu.ng/web/wp-content/uploads/2023/03/logo3-1.png" 
-                    alt="TASUED Logo" 
+                  <img
+                    src="https://tasued.edu.ng/web/wp-content/uploads/2023/03/logo3-1.png"
+                    alt="TASUED Logo"
                     className="h-16 w-auto bg-white rounded-xl p-2"
                   />
                   <div>
@@ -551,9 +612,9 @@ export default function Home() {
                     <p className="text-surface-400 text-sm">Department of Computer Science</p>
                   </div>
                 </div>
-                
+
                 <h2 className="text-3xl font-bold text-white mb-6">CSC 415: Net-Centric Computing</h2>
-                
+
                 <div className="space-y-4 mb-8">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-brand-500/20 rounded-xl flex items-center justify-center">
@@ -585,16 +646,16 @@ export default function Home() {
                 </div>
 
                 <p className="text-surface-400 leading-relaxed">
-                  This project demonstrates the practical application of net-centric computing concepts 
-                  including web development, database management, API design, authentication systems, 
+                  This project demonstrates the practical application of net-centric computing concepts
+                  including web development, database management, API design, authentication systems,
                   and responsive user interface design.
                 </p>
               </div>
-              
+
               <div className="relative hidden lg:block">
-                <img 
-                  src="/images/drogansanwo.png" 
-                  alt="Dr. Ogunsanwo" 
+                <img
+                  src="/images/drogansanwo.png"
+                  alt="Dr. Ogunsanwo"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-surface-900 to-transparent" />
@@ -615,12 +676,14 @@ export default function Home() {
               Join thousands of TASUED students already using BioVault for seamless campus access.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/register" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-brand-500 text-white rounded-xl font-semibold hover:bg-brand-600 shadow-brand transition">
-                Enroll Now <ArrowRight size={20} />
+              <Link href={user ? getDashboardPath() : "/register"} className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-brand-500 text-white rounded-xl font-bold hover:bg-brand-600 shadow-brand transition">
+                {user ? 'Return to Dashboard' : 'Enroll Now'} <ArrowRight size={20} />
               </Link>
-              <Link href="/login" className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-surface-300 text-surface-700 rounded-xl font-semibold hover:bg-surface-100 transition">
-                Sign In
-              </Link>
+              {!user && (
+                <Link href="/login" className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-surface-300 text-surface-700 rounded-xl font-semibold hover:bg-surface-100 transition">
+                  Sign In
+                </Link>
+              )}
             </div>
           </motion.div>
         </div>
@@ -632,9 +695,9 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-6">
-                <img 
-                  src="https://tasued.edu.ng/web/wp-content/uploads/2023/03/logo3.png" 
-                  alt="TASUED Logo" 
+                <img
+                  src="https://tasued.edu.ng/web/wp-content/uploads/2023/03/logo3.png"
+                  alt="TASUED Logo"
                   className="h-12 w-auto"
                 />
                 <div>
@@ -652,17 +715,23 @@ export default function Home() {
                 </a>
               </div>
             </div>
-            
+
             <div>
               <h4 className="font-bold mb-4">Quick Links</h4>
               <ul className="space-y-3 text-surface-400">
-                <li><Link href="/login" className="hover:text-white transition">Sign In</Link></li>
-                <li><Link href="/register" className="hover:text-white transition">Enroll</Link></li>
+                {user ? (
+                  <li><Link href={getDashboardPath()} className="hover:text-white transition font-bold text-brand-400">View Dashboard</Link></li>
+                ) : (
+                  <>
+                    <li><Link href="/login" className="hover:text-white transition">Sign In</Link></li>
+                    <li><Link href="/register" className="hover:text-white transition">Enroll</Link></li>
+                  </>
+                )}
                 <li><a href="#features" className="hover:text-white transition">Features</a></li>
                 <li><a href="#services" className="hover:text-white transition">Services</a></li>
               </ul>
             </div>
-            
+
             <div>
               <h4 className="font-bold mb-4">Contact</h4>
               <ul className="space-y-3 text-surface-400">
@@ -673,7 +742,7 @@ export default function Home() {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-surface-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-surface-500 text-sm">
               © {new Date().getFullYear()} TASUED BioVault. CSC 415 Net-Centric Computing Project.

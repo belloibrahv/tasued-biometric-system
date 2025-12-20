@@ -5,7 +5,7 @@ import db from '@/lib/db';
 export async function POST(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value ||
-                  request.headers.get('authorization')?.replace('Bearer ', '');
+      request.headers.get('authorization')?.replace('Bearer ', '');
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
             level: true,
             profilePhoto: true,
             isActive: true,
-            isSuspended: true,
           },
         },
       },
@@ -58,10 +57,6 @@ export async function POST(request: NextRequest) {
 
     if (!student.isActive) {
       return NextResponse.json({ error: 'Student account is inactive' }, { status: 403 });
-    }
-
-    if (student.isSuspended) {
-      return NextResponse.json({ error: 'Student account is suspended' }, { status: 403 });
     }
 
     // Get service

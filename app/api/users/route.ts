@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
-                  request.cookies.get('auth-token')?.value;
+      request.cookies.get('auth-token')?.value;
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -37,7 +37,6 @@ export async function GET(request: NextRequest) {
           department: true,
           level: true,
           profilePhoto: true,
-          isEmailVerified: true,
           isActive: true,
           createdAt: true,
           lastLoginAt: true,
@@ -65,7 +64,6 @@ export async function GET(request: NextRequest) {
         department: true,
         level: true,
         profilePhoto: true,
-        isEmailVerified: true,
         isActive: true,
         createdAt: true,
         lastLoginAt: true,
@@ -83,7 +81,7 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
-                  request.cookies.get('auth-token')?.value;
+      request.cookies.get('auth-token')?.value;
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

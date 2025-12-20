@@ -1,38 +1,26 @@
 import { PrismaClient, AdminRole } from '@prisma/client';
-import bcrypt from 'bcryptjs';
-
-// Handle missing DATABASE_URL for seeding
-if (!process.env.DATABASE_URL) {
-  console.warn('DATABASE_URL not set, using placeholder for seeding');
-  process.env.DATABASE_URL = 'postgresql://placeholder:placeholder@localhost:5432/placeholder';
-}
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('Seeding database...');
 
-  const saltRounds = 12;
-
   // Create Admin Users
   const adminsSetup = [
     {
       email: 'admin@tasued.edu.ng',
-      password: 'adminPassword123!',
       fullName: 'System Administrator',
       role: AdminRole.SUPER_ADMIN,
       permissions: ['all'],
     },
     {
       email: 'ogunsanwo@tasued.edu.ng',
-      password: 'lecturerPassword123!',
       fullName: 'Dr. Ogunsanwo',
       role: AdminRole.ADMIN,
       permissions: ['users', 'reports', 'services'],
     },
     {
       email: 'operator@tasued.edu.ng',
-      password: 'operatorPassword123!',
       fullName: 'Verification Operator',
       role: AdminRole.OPERATOR,
       permissions: ['verify', 'search'],
@@ -40,18 +28,15 @@ async function main() {
   ];
 
   for (const admin of adminsSetup) {
-    const hashedPassword = await bcrypt.hash(admin.password, saltRounds);
     await prisma.admin.upsert({
       where: { email: admin.email },
       update: {
         fullName: admin.fullName,
         role: admin.role,
-        password: hashedPassword,
         permissions: admin.permissions,
       },
       create: {
         email: admin.email,
-        password: hashedPassword,
         fullName: admin.fullName,
         role: admin.role,
         permissions: admin.permissions,
@@ -61,12 +46,10 @@ async function main() {
   }
 
   // Create Sample Students - CSC 415 Class
-  // NOTE: These test users do NOT have biometrics enrolled - they must complete enrollment
   const studentsSetup: any[] = [
     {
       matricNumber: 'CSC/2024/001',
       email: 'test.student@tasued.edu.ng',
-      password: 'Test123456!',
       firstName: 'Test',
       lastName: 'Student',
       phoneNumber: '+234 800 123 4567',
@@ -77,7 +60,6 @@ async function main() {
     {
       matricNumber: 'CSC/2024/002',
       email: 'demo.user@tasued.edu.ng',
-      password: 'Demo123456!',
       firstName: 'Demo',
       lastName: 'User',
       phoneNumber: '+234 800 234 5678',
@@ -88,34 +70,28 @@ async function main() {
   ];
 
   for (const student of studentsSetup) {
-    const hashedPassword = await bcrypt.hash(student.password, saltRounds);
-    
     const user = await prisma.user.upsert({
       where: { matricNumber: student.matricNumber },
       update: {
         email: student.email,
         firstName: student.firstName,
         lastName: student.lastName,
-        password: hashedPassword,
       },
       create: {
         matricNumber: student.matricNumber,
         email: student.email,
-        password: hashedPassword,
         firstName: student.firstName,
         lastName: student.lastName,
         phoneNumber: student.phoneNumber,
         dateOfBirth: student.dateOfBirth,
         department: student.department,
         level: student.level,
-        isEmailVerified: true,
         isActive: true,
-        isSuspended: false,
-        biometricEnrolled: false, // Test users must enroll
+        biometricEnrolled: false,
       },
     });
 
-    // Create empty biometric data placeholder (user must enroll)
+    // Create empty biometric data placeholder
     await prisma.biometricData.upsert({
       where: { userId: user.id },
       update: {},

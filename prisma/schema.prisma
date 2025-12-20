@@ -11,7 +11,6 @@ model User {
   id                 String              @id @default(uuid())
   matricNumber       String              @unique
   email              String              @unique
-  password           String
   firstName          String
   lastName           String
   otherNames         String?
@@ -20,10 +19,7 @@ model User {
   department         String
   level              String
   profilePhoto       String?
-  isEmailVerified    Boolean             @default(false)
   isActive           Boolean             @default(true)
-  isSuspended        Boolean             @default(false)
-  suspensionReason   String?
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   lastLoginAt        DateTime?
@@ -44,7 +40,6 @@ model User {
 model Admin {
   id          String    @id @default(uuid())
   email       String    @unique
-  password    String
   fullName    String
   role        AdminRole @default(OPERATOR)
   permissions String[]

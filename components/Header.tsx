@@ -52,19 +52,18 @@ const Header = () => {
   }
 
   return (
-    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-      scrolled ? 'bg-white/90 backdrop-blur-lg border-b border-surface-200 shadow-sm' : 'bg-transparent'
-    }`}>
+    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/90 backdrop-blur-lg border-b border-surface-200 shadow-sm' : 'bg-transparent'
+      }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="bg-brand-500 p-2.5 rounded-xl text-white shadow-brand">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="bg-brand-500 p-2.5 rounded-[14px] text-white shadow-brand transition-transform group-hover:scale-110">
               <Fingerprint size={24} />
             </div>
             <div>
-              <span className="text-xl font-bold text-surface-950 tracking-tight">TASUED</span>
-              <span className="ml-1.5 text-sm font-semibold text-brand-500">BioVault</span>
+              <span className={`text-xl font-black tracking-tighter ${scrolled ? 'text-surface-950' : 'text-surface-950'}`}>TASUED</span>
+              <p className="text-[10px] font-black text-brand-600 uppercase tracking-[0.2em] leading-none mt-0.5">BioVault</p>
             </div>
           </Link>
 
@@ -108,12 +107,12 @@ const Header = () => {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-3">
-                <Link href="/login" className="text-sm font-semibold text-surface-600 hover:text-brand-500 transition-colors px-4 py-2">
-                  Sign in
+              <div className="flex items-center gap-5">
+                <Link href="/login" className="text-xs font-black text-surface-600 uppercase tracking-widest hover:text-brand-500 transition-colors px-4 py-2">
+                  Portal Login
                 </Link>
-                <Link href="/register" className="btn-primary py-2.5 px-6 text-sm">
-                  Get Started
+                <Link href="/register" className="btn-primary py-3 px-8 text-xs font-black uppercase tracking-widest shadow-brand-lg">
+                  Register
                 </Link>
               </div>
             )}
@@ -158,9 +157,8 @@ const Header = () => {
                         key={item.name}
                         href={item.href}
                         onClick={() => setIsMenuOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition-all ${
-                          isActive ? 'text-brand-600 bg-brand-50' : 'text-surface-600 hover:bg-surface-100'
-                        }`}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition-all ${isActive ? 'text-brand-600 bg-brand-50' : 'text-surface-600 hover:bg-surface-100'
+                          }`}
                       >
                         <Icon size={20} />
                         {item.name}

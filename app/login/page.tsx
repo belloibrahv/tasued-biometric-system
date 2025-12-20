@@ -9,12 +9,13 @@ import {
   Eye, EyeOff, Shield, CheckCircle, User, Users
 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/dashboard';
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -22,42 +23,99 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginType, setLoginType] = useState<'student' | 'admin'>('student');
 
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    console.log(`Login: Attempting ${loginType} login for ${email}`);
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, loginType }),
+      let loginEmail = email;
+
+      // Logic to resolve Matric Number to Email if needed
+      if (loginType === 'student' && !email.includes('@')) {
+        console.log('Login: Resolving matric number to email...');
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('email')
+          .eq('matricNumber', email.toUpperCase())
+          .single();
+
+        if (userError || !userData) {
+          console.error('Login: Matric number not found in users table', userError);
+          setError('Student profile not found. If you are a new student, please enroll first.');
+          setLoading(false);
+          return;
+        }
+        loginEmail = userData.email;
+        console.log(`Login: Resolved to ${loginEmail}`);
+      }
+
+      // Login with Supabase
+      console.log('Login: Signing in with Supabase Auth...');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: password,
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Invalid credentials');
-        toast.error('Login Failed', { description: data.error });
+      if (error) {
+        console.error('Login: Supabase Auth error', error);
+        setError(error.message);
+        toast.error('Login Failed', { description: error.message });
         setLoading(false);
         return;
       }
 
-      toast.success('Login Successful!');
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.session) {
+        console.log('Login: Session established');
+        toast.success('Login Successful!');
 
-      const targetUrl = data.user.type === 'admin' 
-        ? (data.user.role === 'OPERATOR' ? '/operator' : '/admin')
-        : redirect;
-      
-      setTimeout(() => { window.location.href = targetUrl; }, 500);
-    } catch (err) {
-      setError('Connection error. Please try again.');
+        // Store session for legacy app logic
+        localStorage.setItem('token', data.session.access_token);
+
+        // Fetch user profile from public table to return rich data to local storage
+        console.log(`Login: Fetching profile from ${loginType === 'admin' ? 'admins' : 'users'} table...`);
+        const { data: profile, error: profileError } = await supabase
+          .from(loginType === 'admin' ? 'admins' : 'users')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileError) {
+          console.warn('Login: Profile not found in public database after auth success', profileError);
+        }
+
+        const userObj = {
+          ...(profile || {}),
+          id: data.user.id,
+          email: data.user.email,
+          role: data.user.user_metadata?.role || (loginType === 'admin' ? 'ADMIN' : 'STUDENT'),
+          type: loginType
+        };
+
+        localStorage.setItem('user', JSON.stringify(userObj));
+        console.log('Login: User data saved to localStorage');
+
+        // Set cookie for middleware
+        document.cookie = `auth-token=${data.session.access_token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
+
+        const targetUrl = loginType === 'admin'
+          ? ((userObj as any).role === 'OPERATOR' ? '/operator' : '/admin')
+          : redirect;
+
+        console.log(`Login: Redirecting to ${targetUrl}`);
+        window.location.href = targetUrl;
+      }
+    } catch (err: any) {
+      console.error('Login: Unexpected catch block error', err);
+      setError('Connection error. Please check your internet and try again.');
       toast.error('Network Error');
       setLoading(false);
     }
   };
+
 
   return (
     <>
@@ -65,17 +123,15 @@ function LoginForm() {
       <div className="flex bg-surface-100 p-1 rounded-xl mb-8">
         <button
           onClick={() => setLoginType('student')}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-            loginType === 'student' ? 'bg-white shadow-sm text-brand-600' : 'text-surface-500'
-          }`}
+          className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${loginType === 'student' ? 'bg-white shadow-sm text-brand-600' : 'text-surface-500'
+            }`}
         >
           <User size={16} /> Student
         </button>
         <button
           onClick={() => setLoginType('admin')}
-          className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
-            loginType === 'admin' ? 'bg-white shadow-sm text-brand-600' : 'text-surface-500'
-          }`}
+          className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${loginType === 'admin' ? 'bg-white shadow-sm text-brand-600' : 'text-surface-500'
+            }`}
         >
           <Users size={16} /> Staff/Admin
         </button>
@@ -178,47 +234,63 @@ export default function LoginPage() {
       <Toaster position="top-center" richColors />
 
       {/* Left Panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-brand-gradient p-12 flex-col justify-between relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
+      <div className="hidden lg:flex lg:w-1/2 bg-mesh p-16 flex-col justify-between relative overflow-hidden border-r border-white/10">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/20 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-success-500/10 blur-[120px] rounded-full animate-pulse delay-700" />
 
         <div className="relative z-10">
-          <Link href="/" className="flex items-center gap-3 mb-12">
-            <div className="bg-white/20 p-3 rounded-xl backdrop-blur-sm">
+          <Link href="/" className="flex items-center gap-4 mb-16 group">
+            <div className="bg-white/10 p-3.5 rounded-2xl backdrop-blur-md border border-white/20 transition-transform group-hover:scale-110 shadow-2xl">
               <Fingerprint size={32} className="text-white" />
             </div>
             <div>
-              <span className="text-2xl font-bold text-white">TASUED</span>
-              <span className="ml-2 text-white/80">BioVault</span>
+              <span className="text-2xl font-black text-white tracking-tighter">TASUED</span>
+              <p className="text-[10px] font-black text-brand-300 uppercase tracking-[0.3em] leading-none mt-1">BioVault</p>
             </div>
           </Link>
 
-          <h1 className="text-4xl font-bold text-white mb-6">Welcome Back</h1>
-          <p className="text-white/80 text-lg leading-relaxed">
-            Access your digital identity and manage your campus services with a single secure login.
-          </p>
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h1 className="text-5xl font-black text-white mb-8 tracking-tight leading-none">
+              The Future of <br />
+              <span className="text-brand-400">Campus Identity.</span>
+            </h1>
+            <p className="text-white/60 text-lg leading-relaxed max-w-md font-medium">
+              Join the elite academic community using the next generation of biometric identity management. Secure, seamless, and world-class.
+            </p>
+          </motion.div>
         </div>
 
         <div className="relative z-10">
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <Shield size={24} className="text-white" />
-              <h3 className="font-bold text-white">Secure Authentication</h3>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="glass-card-dark p-8 border border-white/5 bg-white/5 backdrop-blur-2xl"
+          >
+            <div className="flex items-center gap-5 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-brand-500/20 flex items-center justify-center border border-brand-500/30">
+                <Shield size={24} className="text-brand-400" />
+              </div>
+              <div>
+                <h3 className="font-black text-white uppercase tracking-tight">AES-256 Vault</h3>
+                <p className="text-[10px] text-surface-500 font-bold uppercase tracking-widest mt-0.5">Quantum-Resistant Encryption</p>
+              </div>
             </div>
-            <div className="flex gap-4 text-sm text-white/70">
-              <span className="flex items-center gap-1"><CheckCircle size={14} className="text-success-400" /> Encrypted</span>
-              <span className="flex items-center gap-1"><CheckCircle size={14} className="text-success-400" /> 2FA Ready</span>
-              <span className="flex items-center gap-1"><CheckCircle size={14} className="text-success-400" /> Biometric</span>
+            <div className="flex gap-6">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-success-500 animate-pulse" />
+                <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.1em]">Verified Nodes</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-pulse" />
+                <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.1em]">Active Sync</span>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 

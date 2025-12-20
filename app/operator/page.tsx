@@ -73,120 +73,128 @@ export default function OperatorDashboard() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-surface-950">Operator Dashboard</h1>
-        <p className="text-surface-500 mt-1">Monitor and manage student verifications</p>
+      <div className="relative overflow-hidden rounded-[32px] bg-mesh p-8 md:p-12 border border-white/40 shadow-xl">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 blur-[80px] rounded-full" />
+        <div className="relative z-10">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="inline-flex items-center gap-2 bg-brand-500/10 px-3 py-1 rounded-full mb-4"
+          >
+            <Activity size={14} className="text-brand-600" />
+            <span className="text-[10px] font-black text-brand-700 uppercase tracking-widest">Operator Terminal Live</span>
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-3xl md:text-5xl font-black text-surface-950 tracking-tight"
+          >
+            Verification <span className="text-brand-500">Workspace</span>
+          </motion.h1>
+          <p className="text-surface-600 mt-4 text-lg max-w-lg font-medium">Streamlined frontline interface for secure identity validation and student onboarding.</p>
+        </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, idx) => (
           <motion.div
             key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: idx * 0.1 }}
-            className="glass-card p-5"
+            className="glass-card p-6 group hover:translate-y-[-4px] transition-all duration-300"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className={`p-2.5 rounded-xl ${stat.color} text-white`}>
-                <stat.icon size={20} />
+            <div className="flex items-center justify-between mb-4">
+              <div className={`p-3 rounded-2xl ${stat.color} text-white group-hover:scale-110 transition-transform shadow-lg shadow-${stat.color.split('-')[1]}-500/20`}>
+                <stat.icon size={24} />
               </div>
-              <span className="text-xs font-bold text-success-600 bg-success-50 px-2 py-1 rounded-full">
+              <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest bg-success-100 text-success-700`}>
                 {stat.change}
               </span>
             </div>
-            <div className="text-2xl font-bold text-surface-900">{stat.value}</div>
-            <div className="text-xs text-surface-500 font-medium mt-1">{stat.label}</div>
+            <div className="text-3xl font-black text-surface-950">{stat.value}</div>
+            <div className="text-xs text-surface-500 font-bold uppercase tracking-widest mt-2">{stat.label}</div>
           </motion.div>
         ))}
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <a
-          href="/operator/verify"
-          className="glass-card p-6 hover:border-brand-300 transition-all group cursor-pointer"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-brand-50 rounded-2xl text-brand-500 group-hover:bg-brand-500 group-hover:text-white transition-all">
-              <ScanLine size={28} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {[
+          { href: '/operator/verify', title: 'Verify Student', desc: 'Secure biometric portal', icon: ScanLine, color: 'from-brand-500 to-brand-700' },
+          { href: '/operator/scanner', title: 'QR Scanner', desc: 'Instant barcode entry', icon: QrCode, color: 'from-success-500 to-success-700' },
+          { href: '/operator/bulk', title: 'Bulk Mode', desc: 'High-traffic processing', icon: Users, color: 'from-accent-500 to-accent-700' },
+        ].map((action, idx) => (
+          <Link
+            key={action.title}
+            href={action.href}
+            className="glass-card p-8 group hover:scale-[1.05] transition-all duration-500 overflow-hidden relative"
+          >
+            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${action.color} opacity-10 blur-[40px] rounded-full transition-transform group-hover:scale-150`} />
+            <div className="flex items-center gap-6 relative z-10">
+              <div className={`p-5 bg-gradient-to-br ${action.color} rounded-[24px] text-white shadow-xl group-hover:-rotate-6 transition-transform`}>
+                <action.icon size={32} />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-surface-950 uppercase tracking-tight">{action.title}</h3>
+                <p className="text-xs text-surface-500 font-bold uppercase tracking-widest mt-1">{action.desc}</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold text-surface-900">Verify Student</h3>
-              <p className="text-sm text-surface-500">Single student verification</p>
-            </div>
-          </div>
-        </a>
-
-        <a
-          href="/operator/scanner"
-          className="glass-card p-6 hover:border-success-300 transition-all group cursor-pointer"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-success-50 rounded-2xl text-success-500 group-hover:bg-success-500 group-hover:text-white transition-all">
-              <QrCode size={28} />
-            </div>
-            <div>
-              <h3 className="font-bold text-surface-900">QR Scanner</h3>
-              <p className="text-sm text-surface-500">Scan student QR codes</p>
-            </div>
-          </div>
-        </a>
-
-        <a
-          href="/operator/bulk"
-          className="glass-card p-6 hover:border-accent-300 transition-all group cursor-pointer"
-        >
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-accent-50 rounded-2xl text-accent-500 group-hover:bg-accent-500 group-hover:text-white transition-all">
-              <Users size={28} />
-            </div>
-            <div>
-              <h3 className="font-bold text-surface-900">Bulk Verification</h3>
-              <p className="text-sm text-surface-500">Verify multiple students</p>
-            </div>
-          </div>
-        </a>
+          </Link>
+        ))}
       </div>
 
-      {/* Recent Verifications */}
-      <div className="glass-card">
-        <div className="p-6 border-b border-surface-100">
-          <h3 className="font-bold text-surface-900">Recent Verifications</h3>
+      {/* Recent Activity */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="glass-card flex flex-col overflow-hidden"
+      >
+        <div className="p-8 border-b border-surface-100 flex items-center justify-between bg-white/50">
+          <div>
+            <h3 className="text-lg font-black text-surface-950 uppercase tracking-tight">Recent Sessions</h3>
+            <p className="text-[10px] font-bold text-surface-500 uppercase tracking-widest mt-1">Live verification stream</p>
+          </div>
+          <div className="flex gap-2">
+            <span className="w-3 h-3 rounded-full bg-success-500 shadow-brand animate-pulse" />
+            <span className="text-[10px] font-black uppercase text-brand-600">Active Node</span>
+          </div>
         </div>
-        <div className="divide-y divide-surface-100">
+        <div className="divide-y divide-surface-100 flex-1">
           {loading ? (
-            <div className="p-8 text-center text-surface-500">Loading...</div>
+            <div className="p-12 text-center text-surface-500 animate-pulse font-bold uppercase tracking-widest text-xs">Synchronizing Buffer...</div>
           ) : recentVerifications.length === 0 ? (
-            <div className="p-8 text-center text-surface-500">
-              No verifications yet today
+            <div className="p-16 text-center">
+              <div className="w-16 h-16 bg-surface-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock className="text-surface-300" size={24} />
+              </div>
+              <p className="text-surface-500 font-medium">No sessions initiated yet</p>
             </div>
           ) : (
             recentVerifications.map((verification, idx) => (
-              <div key={idx} className="p-4 flex items-center gap-4 hover:bg-surface-50">
-                <div className={`p-2.5 rounded-xl ${
-                  verification.status === 'SUCCESS' ? 'bg-success-50 text-success-500' : 'bg-error-50 text-error-500'
-                }`}>
-                  {verification.status === 'SUCCESS' ? <CheckCircle size={20} /> : <XCircle size={20} />}
+              <div key={idx} className="p-6 flex items-center gap-6 hover:bg-surface-50/50 transition-colors group">
+                <div className={`p-4 rounded-2xl ${verification.status === 'SUCCESS' ? 'bg-success-100 text-success-600' : 'bg-error-100 text-error-600'
+                  } group-hover:scale-110 transition-transform shadow-sm`}>
+                  {verification.status === 'SUCCESS' ? <CheckCircle size={24} /> : <XCircle size={24} />}
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-surface-900">{verification.studentName}</p>
-                  <p className="text-sm text-surface-500">{verification.matricNumber}</p>
+                  <p className="font-black text-surface-950 text-sm uppercase tracking-tight">{verification.studentName}</p>
+                  <p className="text-xs text-surface-500 font-bold uppercase tracking-widest mt-1">{verification.matricNumber}</p>
                 </div>
                 <div className="text-right">
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                    verification.status === 'SUCCESS' ? 'bg-success-50 text-success-600' : 'bg-error-50 text-error-600'
-                  }`}>
-                    {verification.status}
+                  <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest ${verification.status === 'SUCCESS' ? 'bg-success-100 text-success-700' : 'bg-error-100 text-error-700'
+                    }`}>
+                    {verification.status === 'SUCCESS' ? 'Authorized' : 'Rejected'}
                   </span>
-                  <p className="text-xs text-surface-400 mt-1">{verification.time}</p>
+                  <p className="text-[10px] text-surface-400 font-bold uppercase tracking-widest mt-2">{verification.time}</p>
                 </div>
               </div>
             ))
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

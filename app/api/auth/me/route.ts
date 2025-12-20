@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value ||
-                  request.headers.get('authorization')?.replace('Bearer ', '');
+      request.headers.get('authorization')?.replace('Bearer ', '');
 
     if (!token) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
@@ -57,9 +57,7 @@ export async function GET(request: NextRequest) {
         department: true,
         level: true,
         profilePhoto: true,
-        isEmailVerified: true,
         isActive: true,
-        isSuspended: true,
         lastLoginAt: true,
         createdAt: true,
       },
@@ -67,10 +65,6 @@ export async function GET(request: NextRequest) {
 
     if (!user || !user.isActive) {
       return NextResponse.json({ error: 'User not found or inactive' }, { status: 404 });
-    }
-
-    if (user.isSuspended) {
-      return NextResponse.json({ error: 'Account suspended' }, { status: 403 });
     }
 
     // Get biometric status

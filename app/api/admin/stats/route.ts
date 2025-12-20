@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value ||
-                  request.headers.get('authorization')?.replace('Bearer ', '');
+      request.headers.get('authorization')?.replace('Bearer ', '');
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -18,73 +18,72 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get total users
-    const totalUsers = await db.user.count();
-
-    // Get active users
-    const activeUsers = await db.user.count({
-      where: { isActive: true, isSuspended: false },
-    });
-
-    // Get total verifications
-    const totalVerifications = await db.accessLog.count();
-
-    // Get active services
-    const activeServices = await db.service.count({
-      where: { isActive: true },
-    });
-
-    // Get new users today
+    // Get today's date
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const newUsersToday = await db.user.count({
-      where: { createdAt: { gte: today } },
-    });
 
-    // Get verifications trend (compare this week to last week)
+    // Get date ranges for trends
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - 7);
     const lastWeekStart = new Date();
     lastWeekStart.setDate(lastWeekStart.getDate() - 14);
 
-    const thisWeekVerifications = await db.accessLog.count({
-      where: { timestamp: { gte: weekStart } },
-    });
-
-    const lastWeekVerifications = await db.accessLog.count({
-      where: { timestamp: { gte: lastWeekStart, lt: weekStart } },
-    });
+    // Execute independent counts in parallel
+    const [
+      totalUsers,
+      activeUsers,
+      totalVerifications,
+      activeServices,
+      newUsersToday,
+      thisWeekVerifications,
+      lastWeekVerifications,
+      totalEnrollment,
+      totalLogs,
+      successfulLogs,
+      services
+    ] = await Promise.all([
+      db.user.count(),
+      db.user.count({ where: { isActive: true } }),
+      db.accessLog.count(),
+      db.service.count({ where: { isActive: true } }),
+      db.user.count({ where: { createdAt: { gte: today } } }),
+      db.accessLog.count({ where: { timestamp: { gte: weekStart } } }),
+      db.accessLog.count({ where: { timestamp: { gte: lastWeekStart, lt: weekStart } } }),
+      db.biometricData.count(),
+      db.accessLog.count(),
+      db.accessLog.count({ where: { status: 'SUCCESS' } }),
+      db.service.findMany({ where: { isActive: true }, select: { id: true, name: true } })
+    ]);
 
     const verificationsTrend = lastWeekVerifications > 0
       ? Math.round(((thisWeekVerifications - lastWeekVerifications) / lastWeekVerifications) * 100)
       : thisWeekVerifications > 0 ? 100 : 0;
 
-    // Get chart data (last 7 days)
-    const chartData = [];
+    const successRate = totalLogs > 0
+      ? Math.round((successfulLogs / totalLogs) * 100)
+      : 0;
+
+    // Get chart data in parallel
+    const chartPromises = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       date.setHours(0, 0, 0, 0);
-      
       const nextDate = new Date(date);
       nextDate.setDate(nextDate.getDate() + 1);
 
-      const count = await db.accessLog.count({
-        where: { timestamp: { gte: date, lt: nextDate } },
-      });
-
-      chartData.push({
-        date: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        count,
-      });
+      chartPromises.push(
+        db.accessLog.count({
+          where: { timestamp: { gte: date, lt: nextDate } }
+        }).then(count => ({
+          date: date.toLocaleDateString('en-US', { weekday: 'short' }),
+          count
+        }))
+      );
     }
+    const chartData = await Promise.all(chartPromises);
 
-    // Get service usage data
-    const services = await db.service.findMany({
-      where: { isActive: true },
-      select: { id: true, name: true },
-    });
-
+    // Get service usage in parallel
     const serviceData = await Promise.all(
       services.map(async (service) => {
         const count = await db.accessLog.count({
@@ -102,6 +101,8 @@ export async function GET(request: NextRequest) {
         activeServices,
         newUsersToday,
         verificationsTrend,
+        totalEnrollment,
+        successRate,
       },
       chartData,
       serviceData: serviceData.filter(s => s.value > 0),

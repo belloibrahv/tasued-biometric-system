@@ -5,7 +5,7 @@ import db from '@/lib/db';
 export async function GET(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value ||
-                  request.headers.get('authorization')?.replace('Bearer ', '');
+      request.headers.get('authorization')?.replace('Bearer ', '');
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -38,54 +38,49 @@ export async function GET(request: NextRequest) {
 
     if (filter === 'active') {
       where.isActive = true;
-      where.isSuspended = false;
-    } else if (filter === 'suspended') {
-      where.isSuspended = true;
-    } else if (filter === 'unverified') {
-      where.isEmailVerified = false;
+    } else if (filter === 'inactive') {
+      where.isActive = false;
+    } else if (filter === 'enrolled') {
+      where.biometricEnrolled = true;
+    } else if (filter === 'pending') {
+      where.biometricEnrolled = false;
     }
 
-    // Get users
-    const users = await db.user.findMany({
-      where,
-      select: {
-        id: true,
-        matricNumber: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        department: true,
-        level: true,
-        isActive: true,
-        isSuspended: true,
-        isEmailVerified: true,
-        createdAt: true,
-        lastLoginAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: limit,
-    });
-
-    // Get biometric status for each user
-    const usersWithBiometric = await Promise.all(
-      users.map(async (user) => {
-        const biometric = await db.biometricData.findUnique({
-          where: { userId: user.id },
-          select: { fingerprintTemplate: true, facialTemplate: true },
-        });
-        return {
-          ...user,
-          biometricEnrolled: !!(biometric?.fingerprintTemplate || biometric?.facialTemplate),
-        };
-      })
-    );
-
-    // Get total count
-    const total = await db.user.count({ where });
+    // Get users and stats in parallel
+    const [users, total, enrolledCount, totalStudents] = await Promise.all([
+      db.user.findMany({
+        where,
+        select: {
+          id: true,
+          matricNumber: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          department: true,
+          level: true,
+          isActive: true,
+          biometricEnrolled: true,
+          createdAt: true,
+          lastLoginAt: true,
+          profilePhoto: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      db.user.count({ where }),
+      db.user.count({ where: { biometricEnrolled: true } }),
+      db.user.count(),
+    ]);
 
     return NextResponse.json({
-      users: usersWithBiometric,
+      users,
+      stats: {
+        total: totalStudents,
+        enrolled: enrolledCount,
+        pending: totalStudents - enrolledCount,
+        enrollmentRate: totalStudents > 0 ? Math.round((enrolledCount / totalStudents) * 100) : 0,
+      },
       pagination: {
         page,
         limit,
