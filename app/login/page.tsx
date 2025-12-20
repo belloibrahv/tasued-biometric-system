@@ -179,7 +179,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-b from-surface-950/80 via-surface-950/60 to-surface-900/90 z-10" />
           <img
-            src="/images/biometric-hero.png"
+            src="/images/wallpaper.png"
             alt="TASUED Biometric"
             className="w-full h-full object-cover blur-[1px] opacity-60 scale-105"
           />

@@ -1,24 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import db from '@/lib/db';
+import { createClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value ||
+    let token = request.cookies.get('auth-token')?.value ||
       request.headers.get('authorization')?.replace('Bearer ', '');
+    let userId: string | null = null;
 
-    if (!token) {
+    if (token) {
+      // Try custom token verification first
+      const payload = await verifyToken(token);
+      if (payload) {
+        userId = payload.id;
+      }
+    }
+
+    // If custom token didn't work, try Supabase auth
+    if (!userId) {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      userId = user.id;
+    }
+
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const payload = await verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-
-    const userId = payload.id;
 
     // Get total verifications
     const totalVerifications = await db.accessLog.count({
@@ -35,10 +50,6 @@ export async function GET(request: NextRequest) {
       where: { userId, status: 'FAILED' },
     });
 
-    // Get connected services
-    const connectedServices = await db.serviceConnection.count({
-      where: { userId, isActive: true },
-    });
 
     // Get this week's verifications
     const weekStart = new Date();
@@ -96,7 +107,6 @@ export async function GET(request: NextRequest) {
         totalVerifications,
         successfulVerifications,
         failedVerifications,
-        connectedServices,
         thisWeekVerifications,
         weeklyChange,
       },

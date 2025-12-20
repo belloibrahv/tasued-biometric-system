@@ -13,10 +13,6 @@ const sidebarItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'My QR Code', href: '/dashboard/qr-code', icon: QrCode },
   { name: 'Access History', href: '/dashboard/history', icon: History },
-  { name: 'Connected Services', href: '/dashboard/services', icon: Link2 },
-  { name: 'Export Data', href: '/dashboard/export', icon: Download },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-  { name: 'Privacy Center', href: '/dashboard/privacy', icon: Shield },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -65,11 +61,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      router.push('/login');
+      // Clear all stored data
+      localStorage.clear();
+      sessionStorage.clear();
+      // Clear all cookies except essential ones
+      document.cookie.split(";").forEach(function(c) {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      // Redirect to homepage
+      window.location.href = '/';
     } catch (error) {
-      router.push('/login');
+      // Even if logout API fails, clear local data and redirect to homepage
+      localStorage.clear();
+      sessionStorage.clear();
+      document.cookie.split(";").forEach(function(c) {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      window.location.href = '/';
     }
   };
 
@@ -277,8 +285,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               { name: 'Home', href: '/dashboard', icon: LayoutDashboard },
               { name: 'QR Code', href: '/dashboard/qr-code', icon: QrCode },
               { name: 'History', href: '/dashboard/history', icon: History },
-              { name: 'Services', href: '/dashboard/services', icon: Link2 },
-              { name: 'Settings', href: '/dashboard/settings', icon: Settings },
             ].map((item) => {
               const isActive = pathname === item.href;
               return (

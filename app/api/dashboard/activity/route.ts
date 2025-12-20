@@ -1,21 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import db from '@/lib/db';
+import { createClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value ||
+    let token = request.cookies.get('auth-token')?.value ||
                   request.headers.get('authorization')?.replace('Bearer ', '');
+    let userId: string | null = null;
 
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (token) {
+      // Try custom token verification first
+      const payload = await verifyToken(token);
+      if (payload) {
+        userId = payload.id;
+      }
     }
 
-    const payload = await verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    // If custom token didn't work, try Supabase auth
+    if (!userId) {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      userId = user.id;
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const limit = parseInt(request.nextUrl.searchParams.get('limit') || '10');
@@ -24,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     // Get recent access logs with service info
     const accessLogs = await db.accessLog.findMany({
-      where: { userId: payload.id },
+      where: { userId: userId },
       include: {
         service: {
           select: { name: true, slug: true, icon: true },
@@ -37,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     // Get total count for pagination
     const total = await db.accessLog.count({
-      where: { userId: payload.id },
+      where: { userId: userId },
     });
 
     // Format the response

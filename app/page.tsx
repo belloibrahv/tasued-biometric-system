@@ -116,13 +116,24 @@ export default function Home() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-      window.location.reload(); // Refresh to update UI state
+      await fetch('/api/auth/logout', { method: 'POST' });
+      // Clear all stored data
+      localStorage.clear();
+      sessionStorage.clear();
+      // Clear all cookies except essential ones
+      document.cookie.split(";").forEach(function(c) {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      // Redirect to homepage
+      window.location.href = '/';
     } catch (error) {
-      console.error('Logout error:', error);
+      // Even if logout API fails, clear local data and redirect to homepage
+      localStorage.clear();
+      sessionStorage.clear();
+      document.cookie.split(";").forEach(function(c) {
+        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+      window.location.href = '/';
     }
   };
 
@@ -262,7 +273,7 @@ export default function Home() {
       <section className="relative min-h-[90vh] flex items-center overflow-hidden bg-mesh">
         {/* Cinematic Background Layer */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-surface-950/40 via-surface-950/20 to-surface-50 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-surface-950/50 via-surface-950/30 to-surface-50/30 z-10" />
           <motion.div
             initial={{ scale: 1.1, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -270,9 +281,9 @@ export default function Home() {
             className="w-full h-full"
           >
             <img
-              src="/images/biometric-hero.png"
+              src="/images/wallpaper.png"
               alt="TASUED Campus"
-              className="w-full h-full object-cover blur-[2px] opacity-90"
+              className="w-full h-full object-cover blur-[1px] opacity-90"
             />
           </motion.div>
           {/* Animated Mesh Gradients */}
@@ -515,6 +526,142 @@ export default function Home() {
                 <p className="text-surface-400">{item.desc}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* The Problem & Solution Section */}
+      <section className="py-20 bg-surface-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="text-brand-500 font-semibold text-sm uppercase tracking-wider">Why BioVault</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-surface-900 mt-2 mb-4">
+              Addressing Critical Identity Challenges in Education
+            </h2>
+            <p className="text-surface-600 max-w-3xl mx-auto">
+              BioVault solves the persistent problems of identity verification and access control that plague educational institutions worldwide, with a special focus on the Nigerian educational system.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <h3 className="text-2xl font-bold text-surface-900 mb-8">The Challenge</h3>
+
+              <div className="space-y-6">
+                <div className="flex items-start gap-4 p-6 bg-white rounded-2xl shadow-sm border border-surface-100">
+                  <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Shield className="text-red-600" size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-surface-900 text-lg mb-2">Security Gaps</h4>
+                    <p className="text-surface-600">
+                      Traditional ID cards can be forged, lost, or stolen, creating security vulnerabilities across campuses.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-6 bg-white rounded-2xl shadow-sm border border-surface-100">
+                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Activity className="text-orange-600" size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-surface-900 text-lg mb-2">Inefficient Verification</h4>
+                    <p className="text-surface-600">
+                      Manual verification processes are time-consuming and prone to human error, especially during high-traffic periods.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-6 bg-white rounded-2xl shadow-sm border border-surface-100">
+                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Users className="text-purple-600" size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-surface-900 text-lg mb-2">Access Control Issues</h4>
+                    <p className="text-surface-600">
+                      Managing access across multiple campus services requires complex administrative processes and multiple identity documents.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-2xl font-bold text-surface-900 mb-8">Our Solution</h3>
+
+              <div className="space-y-6">
+                <div className="flex items-start gap-4 p-6 bg-white rounded-2xl shadow-sm border border-surface-100">
+                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Fingerprint className="text-green-600" size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-surface-900 text-lg mb-2">Biometric Assurance</h4>
+                    <p className="text-surface-600">
+                      Advanced biometric verification ensures that only the legitimate user can access services, eliminating fraud and impersonation.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-6 bg-white rounded-2xl shadow-sm border border-surface-100">
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <QrCode className="text-blue-600" size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-surface-900 text-lg mb-2">Instant Verification</h4>
+                    <p className="text-surface-600">
+                      QR codes and biometric verification provide instantaneous identity confirmation, reducing wait times and improving user experience.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-6 bg-white rounded-2xl shadow-sm border border-surface-100">
+                  <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Globe className="text-indigo-600" size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-surface-900 text-lg mb-2">Scalable Impact</h4>
+                    <p className="text-surface-600">
+                      Designed to scale from a single institution to a national education system, promoting standardization across all educational levels.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-20 text-center">
+            <h3 className="text-2xl font-bold text-surface-900 mb-6">Value for Educational Institutions</h3>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="p-8 bg-white rounded-2xl shadow-sm border border-surface-100">
+                <div className="w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <GraduationCap className="text-brand-600" size={32} />
+                </div>
+                <h4 className="font-bold text-lg text-surface-900 mb-3">Enhanced Security</h4>
+                <p className="text-surface-600">
+                  Protect your institution from identity fraud and unauthorized access with multi-layered biometric verification.
+                </p>
+              </div>
+
+              <div className="p-8 bg-white rounded-2xl shadow-sm border border-surface-100">
+                <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Activity className="text-success-600" size={32} />
+                </div>
+                <h4 className="font-bold text-lg text-surface-900 mb-3">Operational Efficiency</h4>
+                <p className="text-surface-600">
+                  Reduce administrative overhead and manual processes, allowing staff to focus on core educational activities.
+                </p>
+              </div>
+
+              <div className="p-8 bg-white rounded-2xl shadow-sm border border-surface-100">
+                <div className="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Building2 className="text-accent-600" size={32} />
+                </div>
+                <h4 className="font-bold text-lg text-surface-900 mb-3">Institutional Trust</h4>
+                <p className="text-surface-600">
+                  Build confidence among students, parents, and government entities with robust identity management.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>

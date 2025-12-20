@@ -114,5 +114,9 @@ export async function register(formData: any, facialEmbedding: number[], facialP
 export async function logout() {
   const supabase = createClient()
   await supabase.auth.signOut()
+
+  // Clear the auth token cookie
+  cookies().delete('auth-token')
+
   redirect('/')
 }

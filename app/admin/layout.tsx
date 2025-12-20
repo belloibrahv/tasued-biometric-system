@@ -51,8 +51,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
-    localStorage.removeItem('token');
-    router.push('/login');
+    // Clear all stored data
+    localStorage.clear();
+    sessionStorage.clear();
+    // Clear all cookies except essential ones
+    document.cookie.split(";").forEach(function(c) {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    // Redirect to homepage
+    window.location.href = '/';
   };
 
   if (loading) {

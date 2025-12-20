@@ -2,27 +2,44 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import db from '@/lib/db';
 import crypto from 'crypto';
+import { createClient } from '@/utils/supabase/server';
 
 // GET - Get current QR code
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value ||
-                  request.headers.get('authorization')?.replace('Bearer ', '');
+    let token = request.cookies.get('auth-token')?.value ||
+                request.headers.get('authorization')?.replace('Bearer ', '');
+    let userId: string | null = null;
 
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (token) {
+      // Try custom token verification first
+      const payload = await verifyToken(token);
+      if (payload) {
+        userId = payload.id;
+      }
     }
 
-    const payload = await verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    // If custom token didn't work, try Supabase auth
+    if (!userId) {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      userId = user.id;
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get user info
     const user = await db.user.findUnique({
-      where: { id: payload.id },
+      where: { id: userId },
       select: {
         id: true,
         matricNumber: true,
@@ -41,7 +58,7 @@ export async function GET(request: NextRequest) {
     // Get or create active QR code
     let qrCode = await db.qRCode.findFirst({
       where: {
-        userId: payload.id,
+        userId: userId,
         isActive: true,
         expiresAt: { gt: new Date() },
       },
@@ -57,7 +74,7 @@ export async function GET(request: NextRequest) {
 
       qrCode = await db.qRCode.create({
         data: {
-          userId: payload.id,
+          userId: userId,
           code,
           isActive: true,
           expiresAt,
@@ -96,21 +113,37 @@ export async function GET(request: NextRequest) {
 // POST - Refresh QR code
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value ||
-                  request.headers.get('authorization')?.replace('Bearer ', '');
+    let token = request.cookies.get('auth-token')?.value ||
+                request.headers.get('authorization')?.replace('Bearer ', '');
+    let userId: string | null = null;
 
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (token) {
+      // Try custom token verification first
+      const payload = await verifyToken(token);
+      if (payload) {
+        userId = payload.id;
+      }
     }
 
-    const payload = await verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    // If custom token didn't work, try Supabase auth
+    if (!userId) {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+
+      userId = user.id;
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     // Get user
     const user = await db.user.findUnique({
-      where: { id: payload.id },
+      where: { id: userId },
       select: { matricNumber: true },
     });
 
@@ -120,7 +153,7 @@ export async function POST(request: NextRequest) {
 
     // Deactivate old QR codes
     await db.qRCode.updateMany({
-      where: { userId: payload.id, isActive: true },
+      where: { userId: userId, isActive: true },
       data: { isActive: false },
     });
 
@@ -132,7 +165,7 @@ export async function POST(request: NextRequest) {
 
     const qrCode = await db.qRCode.create({
       data: {
-        userId: payload.id,
+        userId: userId,
         code,
         isActive: true,
         expiresAt,
