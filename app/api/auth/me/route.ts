@@ -56,7 +56,19 @@ export async function GET(request: Request) {
     }
 
     if (!user) {
-      return NextResponse.json({ error: 'User profile not found' }, { status: 404 });
+      // User exists in Supabase but not in database - profile sync issue
+      console.error('Profile sync issue detected:', {
+        userId: payload.id,
+        email: payload.email,
+        role: payload.role
+      });
+      
+      return NextResponse.json({ 
+        error: 'User profile not found',
+        details: 'Your account exists but your profile needs to be synchronized. Please contact support or try logging out and back in.',
+        userId: payload.id,
+        suggestSync: true
+      }, { status: 404 });
     }
 
     if (isAdmin) {

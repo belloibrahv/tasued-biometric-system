@@ -38,16 +38,44 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           return;
         }
 
-        if (!res.ok || (data.user && data.user.type !== 'student')) {
-          // For 500 or unknown errors, we'll set loading to false but stay on the page
-          // so the user can see the error state or retry, avoiding the loop
+        // Handle 404 - User profile not found in database
+        if (res.status === 404) {
+          console.log('User profile not found, attempting to sync...');
+          // Try to sync profile automatically
+          const syncAttempt = await attemptProfileSync();
+          if (syncAttempt) {
+            // Retry fetching user after sync
+            const retryRes = await fetch('/api/auth/me');
+            const retryData = await retryRes.json();
+            if (retryRes.ok) {
+              setUser(retryData.user);
+              setNotifications(retryData.user.unreadNotificationsCount || 0);
+              setLoading(false);
+              return;
+            }
+          }
+          // If sync fails, show error
+          setLoading(false);
+          return;
+        }
+
+        if (!res.ok) {
+          console.error('Auth check failed:', data);
+          setLoading(false);
+          return;
+        }
+
+        // Ensure user is a student
+        if (data.user && data.user.type !== 'student') {
+          router.push('/admin');
           return;
         }
 
         setUser(data.user);
         setNotifications(data.user.unreadNotificationsCount || 0);
       } catch (error) {
-        router.push('/login');
+        console.error('Auth check error:', error);
+        setLoading(false);
       } finally {
         setLoading(false);
       }
@@ -55,6 +83,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     checkAuth();
   }, [router]);
+
+  const attemptProfileSync = async () => {
+    try {
+      // Get current user from Supabase
+      const supabaseRes = await fetch('/api/auth/me');
+      const supabaseData = await supabaseRes.json();
+      
+      // If we have error details about missing profile, try to create it
+      // This is a fallback for users who registered but profile sync failed
+      console.log('Attempting automatic profile sync...');
+      return false; // For now, manual intervention required
+    } catch (error) {
+      console.error('Profile sync attempt failed:', error);
+      return false;
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -90,20 +134,48 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="w-20 h-20 bg-error-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <Shield className="text-error-500" size={40} />
           </div>
-          <h2 className="text-2xl font-bold text-surface-900 mb-2">Sync Error</h2>
-          <p className="text-surface-600 mb-8">
-            We couldn't synchronize your secure profile. This might be due to a connection issue or a system update.
+          <h2 className="text-2xl font-bold text-surface-900 mb-2">Profile Sync Required</h2>
+          <p className="text-surface-600 mb-4">
+            Your account exists but your profile needs to be synchronized. This sometimes happens if registration was interrupted.
           </p>
+          <div className="bg-brand-50 border border-brand-200 rounded-xl p-4 mb-6 text-left">
+            <p className="text-sm text-surface-700 mb-2">
+              <strong>What to do:</strong>
+            </p>
+            <ol className="text-sm text-surface-600 space-y-1 list-decimal list-inside">
+              <li>Click "Sync Profile" below to retry</li>
+              <li>If that fails, sign out and register again</li>
+              <li>Contact support if issue persists</li>
+            </ol>
+          </div>
           <div className="space-y-3">
             <button
-              onClick={() => window.location.reload()}
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/auth/sync-profile-retry', { method: 'POST' });
+                  if (res.ok) {
+                    window.location.reload();
+                  } else {
+                    const data = await res.json();
+                    alert(data.error || 'Sync failed. Please try signing out and back in.');
+                  }
+                } catch (error) {
+                  alert('Network error. Please check your connection and try again.');
+                }
+              }}
               className="btn-primary w-full py-3 flex items-center justify-center gap-2 shadow-brand-lg"
             >
-              <RefreshCw size={18} /> Retry Connection
+              <RefreshCw size={18} /> Sync Profile
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="btn-outline w-full py-3"
+            >
+              Retry Connection
             </button>
             <button
               onClick={handleLogout}
-              className="btn-outline w-full py-3"
+              className="text-sm text-surface-500 hover:text-surface-700 w-full py-2"
             >
               Sign Out
             </button>
