@@ -269,11 +269,17 @@ export default function RegisterPage() {
       }
 
       toast.success('Registration successful! Redirecting to dashboard...');
-      console.log('Registration: Redirecting in 1s...');
+      console.log('Registration: Redirecting in 2s...');
+
+      // Ensure cookie is set before redirect
+      const rawToken = authData.session?.access_token;
+      if (rawToken) {
+        document.cookie = `auth-token=${rawToken}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax; ${window.location.protocol === 'https:' ? 'Secure;' : ''}`;
+      }
 
       setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 1000);
+        window.location.replace('/dashboard');
+      }, 2000); // Increased delay for background sync
 
     } catch (error: any) {
       console.error('Registration error details:', error);

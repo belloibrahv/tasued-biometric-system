@@ -98,15 +98,16 @@ function LoginForm() {
         localStorage.setItem('user', JSON.stringify(userObj));
         console.log('Login: User data saved to localStorage');
 
-        // Set cookie for middleware
-        document.cookie = `auth-token=${data.session.access_token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`;
+        // Set cookie for middleware with explicit domain and security flags
+        document.cookie = `auth-token=${data.session.access_token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax; ${window.location.protocol === 'https:' ? 'Secure;' : ''}`;
 
         const targetUrl = loginType === 'admin'
           ? ((userObj as any).role === 'OPERATOR' ? '/operator' : '/admin')
-          : redirect;
+          : (redirect === '/login' ? '/dashboard' : redirect); // Avoid self-redirect
 
         console.log(`Login: Redirecting to ${targetUrl}`);
-        window.location.href = targetUrl;
+        // Use replace to prevent back-button loops
+        window.location.replace(targetUrl);
       }
     } catch (err: any) {
       console.error('Login: Unexpected catch block error', err);

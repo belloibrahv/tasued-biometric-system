@@ -20,23 +20,25 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
     const tokenValue = token.startsWith('Bearer ') ? token.split(' ')[1] : token;
 
     // Strictly verify with Supabase
+    // Note: getUser() fetches the freshest data from the Supabase service, including metadata changes
     const { data: { user }, error } = await supabase.auth.getUser(tokenValue);
 
     if (error || !user) {
+      console.warn('Auth: Token verification failed or user not found', error);
       return null;
     }
 
     // Map Supabase User to JWTPayload
+    // We prioritize user_metadata for flags like role and biometricEnrolled
     const payload = {
       id: user.id,
       email: user.email || '',
-      role: user.user_metadata?.role || 'STUDENT',
-      matricNumber: user.user_metadata?.matric_number || '', // Include matricNumber
+      role: user.user_metadata?.role || user.user_metadata?.type?.toUpperCase() || 'STUDENT',
+      matricNumber: user.user_metadata?.matric_number || '',
       type: user.user_metadata?.type || 'student',
-      biometricEnrolled: user.user_metadata?.biometricEnrolled || false,
+      biometricEnrolled: user.user_metadata?.biometricEnrolled === true,
     };
 
-    console.log('Auth: Verified Supabase session for', payload.email);
     return payload;
   } catch (error: any) {
     console.error('Token verification error:', error.message || error);

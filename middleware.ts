@@ -40,7 +40,9 @@ export async function middleware(request: NextRequest) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    return NextResponse.redirect(new URL('/login', request.url));
+    const response = NextResponse.redirect(new URL('/login', request.url));
+    response.headers.set('x-middleware-auth', 'missing-token');
+    return response;
   }
 
   // Verify token
@@ -51,6 +53,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
     const response = NextResponse.redirect(new URL('/login', request.url));
+    response.headers.set('x-middleware-auth', 'invalid-token');
     response.cookies.delete('auth-token');
     return response;
   }
