@@ -3,7 +3,6 @@ import db from '@/lib/db';
 
 interface CreateUserInput {
   email: string;
-  password: string;
   firstName: string;
   lastName: string;
   matricNumber: string;
@@ -27,13 +26,11 @@ interface UpdateUserInput {
 class UserService {
   /**
    * Create a new user
-   * (Note: Auth is now handled by Supabase, this is mainly for profile data)
    */
   static async createUser(input: CreateUserInput): Promise<User> {
-    const user = await db.user.create({
+    return await db.user.create({
       data: {
         email: input.email.toLowerCase(),
-        password: input.password, // Plain text here as auth is handled by Supabase
         firstName: input.firstName,
         lastName: input.lastName,
         otherNames: input.otherNames || null,
@@ -45,23 +42,15 @@ class UserService {
         isActive: true,
       },
     });
-
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword as User;
   }
 
   /**
    * Get a user by ID
    */
-  static async getUserById(userId: string): Promise<Omit<User, 'password'> | null> {
-    const user = await db.user.findUnique({
+  static async getUserById(userId: string): Promise<User | null> {
+    return await db.user.findUnique({
       where: { id: userId },
     });
-
-    if (!user) return null;
-
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword as Omit<User, 'password'>;
   }
 
   /**
@@ -115,13 +104,10 @@ class UserService {
     if (input.profilePhoto) updateData.profilePhoto = input.profilePhoto;
     if (input.isActive !== undefined) updateData.isActive = input.isActive;
 
-    const user = await db.user.update({
+    return await db.user.update({
       where: { id: input.userId },
       data: updateData,
     });
-
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword as Omit<User, 'password'>;
   }
 
   /**
@@ -144,6 +130,66 @@ class UserService {
       console.error('Error deleting user:', error);
       return false;
     }
+  }
+
+  /**
+   * Idempotently syncs a user from Supabase Auth metadata to the database
+   */
+  static async syncUserFromAuth(authUser: any): Promise<User> {
+    const metadata = authUser.user_metadata || {};
+    const id = authUser.id;
+    const email = authUser.email?.toLowerCase();
+
+    // Check if user exists
+    let user = await db.user.findUnique({
+      where: { id },
+      include: { biometricData: true }
+    });
+
+    if (user) return user as User;
+
+    // Parse names
+    const fullName = metadata.full_name || metadata.firstName + ' ' + metadata.lastName || 'Student';
+    const nameParts = fullName.split(' ');
+    const firstName = metadata.firstName || nameParts[0] || 'First';
+    const lastName = metadata.lastName || nameParts[nameParts.length - 1] || 'Last';
+    const otherNames = nameParts.slice(1, -1).join(' ') || null;
+
+    // Create user in transaction
+    return await db.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          id,
+          email,
+          firstName,
+          lastName,
+          otherNames,
+          matricNumber: (metadata.matric_number || metadata.matricNumber || `TEMP-${Date.now()}`).toUpperCase(),
+          phoneNumber: metadata.phone_number || metadata.phoneNumber || '',
+          dateOfBirth: metadata.date_of_birth ? new Date(metadata.date_of_birth) : new Date('2000-01-01'),
+          department: metadata.department || 'General',
+          level: metadata.level || '100',
+          isActive: true,
+        },
+      });
+
+      // Initialize biometric data
+      await tx.biometricData.create({
+        data: { userId: newUser.id }
+      });
+
+      // Create initial QR code
+      await tx.qRCode.create({
+        data: {
+          userId: newUser.id,
+          code: `BV-${newUser.matricNumber}-${Math.random().toString(36).substring(7).toUpperCase()}`,
+          isActive: true,
+          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+        }
+      });
+
+      return newUser;
+    });
   }
 }
 

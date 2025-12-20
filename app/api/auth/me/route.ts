@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import db from '@/lib/db';
+import db, { connectDb } from '@/lib/db';
 import { createClient } from '@/utils/supabase/server';
+import UserService from '@/lib/services/user-service';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    // Ensure DB connection is active (important for pooling/cold starts)
+    await connectDb();
+
     const authHeader = request.headers.get('Authorization');
     let token = '';
 
@@ -19,6 +23,7 @@ export async function GET(request: Request) {
     }
 
     let payload: any = null;
+    let authUser: any = null;
 
     if (token) {
       payload = await verifyToken(token);
@@ -30,6 +35,7 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+      authUser = user;
       payload = {
         id: user.id,
         email: user.email,
@@ -53,21 +59,31 @@ export async function GET(request: Request) {
           biometricData: true
         }
       });
+
+      // If missing and not admin, try to sync from Supabase
+      if (!user && !isAdmin) {
+        if (!authUser) {
+          const supabase = createClient();
+          const { data: { user: foundUser } } = await supabase.auth.getUser();
+          authUser = foundUser;
+        }
+
+        if (authUser) {
+          console.log(`Syncing profile for user ${authUser.id} on /api/auth/me`);
+          user = await UserService.syncUserFromAuth(authUser);
+          // Re-fetch with includes if synchronized
+          user = await db.user.findUnique({
+            where: { id: user.id },
+            include: { biometricData: true }
+          });
+        }
+      }
     }
 
     if (!user) {
-      // User exists in Supabase but not in database - profile sync issue
-      console.error('Profile sync issue detected:', {
-        userId: payload.id,
-        email: payload.email,
-        role: payload.role
-      });
-      
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'User profile not found',
-        details: 'Your account exists but your profile needs to be synchronized. Please contact support or try logging out and back in.',
-        userId: payload.id,
-        suggestSync: true
+        details: 'Your account exists but your profile could not be synchronized.'
       }, { status: 404 });
     }
 
@@ -77,7 +93,7 @@ export async function GET(request: Request) {
           ...user,
           type: 'admin',
           role: payload.role || (user as any).role,
-          biometricEnrolled: true // Admins don't need biometric
+          biometricEnrolled: true
         }
       });
     }
@@ -106,11 +122,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error: any) {
-    console.error('Auth Me Route Error:', {
-      message: error.message,
-      stack: error.stack,
-      cause: error.cause
-    });
+    console.error('Auth Me Route Error:', error);
 
     return NextResponse.json({
       error: 'Internal server error',

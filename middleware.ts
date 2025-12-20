@@ -13,7 +13,6 @@ export async function middleware(request: NextRequest) {
     '/register',
     '/forgot-password',
     '/reset-password',
-    '/api/auth/sync-profile',
     '/api/health',
   ];
 

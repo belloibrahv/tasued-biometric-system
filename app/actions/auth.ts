@@ -65,29 +65,10 @@ export async function register(formData: any, facialEmbedding: number[], facialP
     // Still proceed with profile creation, but inform user
   }
 
-  // 2. Sync Profile to Public DB
+  // 2. Sync Profile to Public DB (Direct Service Call)
   try {
-    const syncRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/sync-profile`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: authData.user.id,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        otherNames: formData.otherNames || undefined,
-        matricNumber: formData.matricNumber.toUpperCase(),
-        email: formData.email.toLowerCase(),
-        phoneNumber: formData.phoneNumber,
-        dateOfBirth: formData.dateOfBirth,
-        department: formData.department,
-        level: formData.level,
-      }),
-    })
-
-    if (!syncRes.ok) {
-      const errorData = await syncRes.json()
-      return { error: errorData.error || 'Profile synchronization failed' }
-    }
+    const UserService = (await import('@/lib/services/user-service')).default
+    await UserService.syncUserFromAuth(authData.user)
   } catch (err) {
     console.error('Registration Sync Error:', err)
     return { error: 'Failed to create user profile. Please contact support.' }
@@ -121,11 +102,11 @@ export async function register(formData: any, facialEmbedding: number[], facialP
   if (authData.session) {
     return { success: true, target: '/dashboard', autoLogin: true }
   } else {
-    return { 
-      success: true, 
-      target: '/login', 
+    return {
+      success: true,
+      target: '/login',
       autoLogin: false,
-      message: 'Registration successful! Please check your email to verify your account.' 
+      message: 'Registration successful! Please check your email to verify your account.'
     }
   }
 }
