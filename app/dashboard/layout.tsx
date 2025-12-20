@@ -32,12 +32,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       try {
         const res = await fetch('/api/auth/me');
         const data = await res.json();
-        
-        if (!res.ok || data.user?.type !== 'student') {
+
+        if (res.status === 401) {
           router.push('/login');
           return;
         }
-        
+
+        if (!res.ok || (data.user && data.user.type !== 'student')) {
+          // For 500 or unknown errors, we'll set loading to false but stay on the page
+          // so the user can see the error state or retry, avoiding the loop
+          return;
+        }
+
         setUser(data.user);
         setNotifications(data.user.unreadNotificationsCount || 0);
       } catch (error) {
@@ -46,7 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setLoading(false);
       }
     };
-    
+
     checkAuth();
   }, [router]);
 
@@ -95,9 +101,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </AnimatePresence>
 
       {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 z-50 h-full w-72 bg-white border-r border-surface-200 transform transition-transform duration-300 lg:translate-x-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <aside className={`fixed top-0 left-0 z-50 h-full w-72 bg-white border-r border-surface-200 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 border-b border-surface-100">
@@ -244,9 +249,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-colors ${
-                    isActive ? 'text-brand-500 bg-brand-50' : 'text-surface-500'
-                  }`}
+                  className={`flex flex-col items-center gap-1 py-2 px-3 rounded-xl transition-colors ${isActive ? 'text-brand-500 bg-brand-50' : 'text-surface-500'
+                    }`}
                 >
                   <item.icon size={20} />
                   <span className="text-xs font-medium">{item.name}</span>

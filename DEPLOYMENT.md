@@ -37,7 +37,7 @@ This application can be deployed to Render (backend + database) and Vercel (fron
    - **Branch**: `main`
    - **Root Directory**: `./`
    - **Runtime**: Node
-   - **Build Command**: 
+   - **Build Command**:
      ```bash
      npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
      ```
@@ -132,6 +132,15 @@ SUPABASE_SERVICE_ROLE_KEY=<your_supabase_service_role_key>
 1. Click "Deploy"
 2. Wait for build (3-5 minutes)
 3. Once deployed, update environment variables with actual Vercel URL
+### Step 6: Verify Database Connection
+
+> [!CAUTION]
+> **Vercel Database Connection**: If you are using a database hosted on Render (PostgreSQL), you **MUST** use the **EXTERNAL Database URL** in Vercel's environment variables. The internal URL only works within Render's private network.
+> 
+> 1. In Render, go to your PostgreSQL settings.
+> 2. Copy the **External Database URL**.
+> 3. Paste it into Vercel's `DATABASE_URL` environment variable.
+
 4. Redeploy to apply changes
 
 ### Step 5: Run Database Migrations

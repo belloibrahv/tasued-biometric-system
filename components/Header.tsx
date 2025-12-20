@@ -22,9 +22,14 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
 
     const token = localStorage.getItem('token');
-    if (token) {
+    const savedUser = localStorage.getItem('user');
+    if (token && savedUser) {
       setIsLoggedIn(true);
-      setUser({ firstName: 'Admin', lastName: 'User', role: 'ADMIN' });
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        setUser(null);
+      }
     } else {
       setIsLoggedIn(false);
       setUser(null);
