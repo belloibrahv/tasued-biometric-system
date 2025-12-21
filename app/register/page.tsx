@@ -8,8 +8,8 @@ import {
   Fingerprint, User, Mail, Lock, Phone, Calendar, GraduationCap,
   Building2, Camera, RotateCcw, Check, AlertCircle, CheckCircle,
   Shield, ArrowRight, ArrowLeft, Loader2, Eye, EyeOff, Users,
-  BookOpen, GraduationCap as GraduationCapIcon, UserRound, 
-  ShieldCheck, LockIcon, Fingerprint as FingerPrintIcon, 
+  BookOpen, GraduationCap as GraduationCapIcon, UserRound,
+  ShieldCheck, LockIcon, Fingerprint as FingerPrintIcon,
   Camera as CameraIcon, User as UserIcon
 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
@@ -67,7 +67,7 @@ export default function RegisterPage() {
 
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.matricNumber.trim()) newErrors.matricNumber = 'Matric number is required';
@@ -76,7 +76,7 @@ export default function RegisterPage() {
     if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
     if (!formData.department) newErrors.department = 'Department is required';
     if (!formData.level) newErrors.level = 'Level is required';
-    
+
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.email && !emailRegex.test(formData.email)) {
@@ -101,7 +101,7 @@ export default function RegisterPage() {
 
   const validateStep3 = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.password) newErrors.password = 'Password is required';
     if (!formData.confirmPassword) newErrors.confirmPassword = 'Please confirm your password';
     if (formData.password && formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
@@ -164,7 +164,7 @@ export default function RegisterPage() {
     try {
       // Call the register action with facial embedding (mock for now)
       const result = await register(formData, [], capturedImage!);
-      
+
       if (result.error) {
         toast.error(result.error);
         setLoading(false);
@@ -182,352 +182,37 @@ export default function RegisterPage() {
     }
   };
 
-  // Step components
-  const PersonalInfoStep = () => (
-    <motion.div
-      key="step1"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="space-y-6"
-    >
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <UserIcon size={32} className="text-white" />
-        </div>
-        <h3 className="text-xl font-bold text-surface-950">Personal Information</h3>
-        <p className="text-surface-500 mt-1">Please provide your accurate details</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="input-label">First Name *</label>
-          <div className="relative">
-            <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-            <input
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              className={`input-field pl-11 ${errors.firstName ? 'border-error-500' : ''}`}
-              placeholder="John"
-            />
-          </div>
-          {errors.firstName && <p className="text-error-500 text-sm mt-1">{errors.firstName}</p>}
-        </div>
-
-        <div>
-          <label className="input-label">Last Name *</label>
-          <div className="relative">
-            <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-            <input
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              className={`input-field pl-11 ${errors.lastName ? 'border-error-500' : ''}`}
-              placeholder="Doe"
-            />
-          </div>
-          {errors.lastName && <p className="text-error-500 text-sm mt-1">{errors.lastName}</p>}
-        </div>
-
-        <div className="md:col-span-2">
-          <label className="input-label">Other Names</label>
-          <div className="relative">
-            <UserRound size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-            <input
-              type="text"
-              name="otherNames"
-              value={formData.otherNames}
-              onChange={handleChange}
-              className="input-field pl-11"
-              placeholder="Middle names (optional)"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="input-label">Matric Number *</label>
-          <div className="relative">
-            <GraduationCapIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-            <input
-              type="text"
-              name="matricNumber"
-              value={formData.matricNumber}
-              onChange={handleChange}
-              className={`input-field pl-11 font-mono uppercase ${errors.matricNumber ? 'border-error-500' : ''}`}
-              placeholder="CSC/2024/001"
-            />
-          </div>
-          {errors.matricNumber && <p className="text-error-500 text-sm mt-1">{errors.matricNumber}</p>}
-        </div>
-
-        <div>
-          <label className="input-label">Email Address *</label>
-          <div className="relative">
-            <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={`input-field pl-11 ${errors.email ? 'border-error-500' : ''}`}
-              placeholder="john.doe@tasued.edu.ng"
-            />
-          </div>
-          {errors.email && <p className="text-error-500 text-sm mt-1">{errors.email}</p>}
-        </div>
-
-        <div>
-          <label className="input-label">Phone Number *</label>
-          <div className="relative">
-            <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-            <input
-              type="tel"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              className={`input-field pl-11 ${errors.phoneNumber ? 'border-error-500' : ''}`}
-              placeholder="+234 80XXXXXXXXX"
-            />
-          </div>
-          {errors.phoneNumber && <p className="text-error-500 text-sm mt-1">{errors.phoneNumber}</p>}
-        </div>
-
-        <div>
-          <label className="input-label">Date of Birth *</label>
-          <div className="relative">
-            <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-            <input
-              type="date"
-              name="dateOfBirth"
-              value={formData.dateOfBirth}
-              onChange={handleChange}
-              className={`input-field pl-11 ${errors.dateOfBirth ? 'border-error-500' : ''}`}
-              max={new Date().toISOString().split('T')[0]}
-            />
-          </div>
-          {errors.dateOfBirth && <p className="text-error-500 text-sm mt-1">{errors.dateOfBirth}</p>}
-        </div>
-
-        <div>
-          <label className="input-label">Department *</label>
-          <div className="relative">
-            <Building2 size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-            <select
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              className={`input-field pl-11 ${errors.department ? 'border-error-500' : ''}`}
-            >
-              <option value="">Select Department</option>
-              {departments.map(dept => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-            </select>
-          </div>
-          {errors.department && <p className="text-error-500 text-sm mt-1">{errors.department}</p>}
-        </div>
-
-        <div>
-          <label className="input-label">Level *</label>
-          <div className="relative">
-            <GraduationCap size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-            <select
-              name="level"
-              value={formData.level}
-              onChange={handleChange}
-              className={`input-field pl-11 ${errors.level ? 'border-error-500' : ''}`}
-            >
-              <option value="">Select Level</option>
-              {levels.map(level => (
-                <option key={level} value={level}>{level} Level</option>
-              ))}
-            </select>
-          </div>
-          {errors.level && <p className="text-error-500 text-sm mt-1">{errors.level}</p>}
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const BiometricStep = () => (
-    <motion.div
-      key="step2"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="space-y-6"
-    >
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <FingerPrintIcon size={32} className="text-white" />
-        </div>
-        <h3 className="text-xl font-bold text-surface-950">Biometric Enrollment</h3>
-        <p className="text-surface-500 mt-1">Capture your facial features for verification</p>
-      </div>
-
-      <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-6 border border-purple-200">
-        <div className="aspect-square max-w-xs mx-auto">
-          <div className="relative w-full h-full rounded-xl overflow-hidden bg-surface-900 flex items-center justify-center">
-            {!capturedImage ? (
-              <>
-                <Webcam
-                  ref={webcamRef}
-                  audio={false}
-                  screenshotFormat="image/jpeg"
-                  onUserMedia={() => setCameraReady(true)}
-                  className="w-full h-full object-cover"
-                  videoConstraints={{
-                    width: 640,
-                    height: 640,
-                    facingMode: 'user',
-                  }}
-                />
-                {!cameraReady && (
-                  <div className="absolute inset-0 bg-surface-900 flex items-center justify-center">
-                    <Loader2 className="animate-spin text-white" size={32} />
-                  </div>
-                )}
-                <div className="absolute inset-0 border-4 border-white/30 rounded-xl"></div>
-              </>
-            ) : (
-              <img 
-                src={capturedImage} 
-                alt="Captured facial data" 
-                className="w-full h-full object-cover"
-              />
-            )}
-          </div>
-
-          {capturedImage ? (
-            <div className="mt-4 text-center">
-              <p className="text-sm text-green-600 font-medium flex items-center justify-center gap-2">
-                <CheckCircle size={16} /> Facial data captured successfully!
-              </p>
-              <div className="flex gap-3 mt-4 justify-center">
-                <button
-                  type="button"
-                  onClick={retakeFacialData}
-                  className="btn-outline flex items-center gap-2 px-4 py-2"
-                >
-                  <RotateCcw size={16} /> Retake
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setStep(3)}
-                  className="btn-primary flex items-center gap-2 px-4 py-2"
-                >
-                  Continue <ArrowRight size={16} />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-4 text-center">
-              <button
-                type="button"
-                onClick={captureFacialData}
-                disabled={!cameraReady}
-                className="btn-primary w-full py-3 flex items-center justify-center gap-2"
-              >
-                <CameraIcon size={18} />
-                Capture Face
-              </button>
-              <p className="text-xs text-surface-500 mt-2">
-                Position your face in the frame and click capture
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-4 p-3 bg-white/70 rounded-lg text-xs text-surface-700">
-          <div className="flex items-center gap-2 mb-1">
-            <ShieldCheck size={14} className="text-green-600" />
-            <strong>Security Notice:</strong>
-          </div>
-          <p>Your biometric data is encrypted using AES-256 encryption. The raw image is never stored - only a secure template that cannot be reversed to reconstruct your face.</p>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const SecurityStep = () => (
-    <motion.div
-      key="step3"
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      className="space-y-6"
-    >
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-          <LockIcon size={32} className="text-white" />
-        </div>
-        <h3 className="text-xl font-bold text-surface-950">Account Security</h3>
-        <p className="text-surface-500 mt-1">Set up your secure password</p>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <label className="input-label">Password *</label>
-          <div className="relative">
-            <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={`input-field pl-11 pr-11 ${errors.password ? 'border-error-500' : ''}`}
-              placeholder="Create a strong password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-          {errors.password && <p className="text-error-500 text-sm mt-1">{errors.password}</p>}
-          <p className="text-xs text-surface-400 mt-1">Use at least 8 characters with letters, numbers, and symbols</p>
-        </div>
-
-        <div>
-          <label className="input-label">Confirm Password *</label>
-          <div className="relative">
-            <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
-            <input
-              type={showConfirmPassword ? 'text' : 'password'}
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className={`input-field pl-11 pr-11 ${errors.confirmPassword ? 'border-error-500' : ''}`}
-              placeholder="Re-enter your password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
-            >
-              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-          {errors.confirmPassword && <p className="text-error-500 text-sm mt-1">{errors.confirmPassword}</p>}
-        </div>
-      </div>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-        <Shield className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
-        <div className="text-sm text-blue-800">
-          <p className="font-semibold mb-1">Your Data is Protected</p>
-          <p>All your information is encrypted and stored securely. We comply with Nigerian Data Protection Regulation (NDPR).</p>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const stepComponents = [<PersonalInfoStep key={1} />, <BiometricStep key={2} />, <SecurityStep key={3} />];
+  // Step components are now outside or handled via render functions that don't recreate component types
+  const stepComponents = [
+    <PersonalInfoStep
+      key={1}
+      formData={formData}
+      errors={errors}
+      handleChange={handleChange}
+      departments={departments}
+      levels={levels}
+    />,
+    <BiometricStep
+      key={2}
+      capturedImage={capturedImage}
+      webcamRef={webcamRef}
+      cameraReady={cameraReady}
+      setCameraReady={setCameraReady}
+      captureFacialData={captureFacialData}
+      retakeFacialData={retakeFacialData}
+      setStep={setStep}
+    />,
+    <SecurityStep
+      key={3}
+      formData={formData}
+      errors={errors}
+      showPassword={showPassword}
+      setShowPassword={setShowPassword}
+      showConfirmPassword={showConfirmPassword}
+      setShowConfirmPassword={setShowConfirmPassword}
+      handleChange={handleChange}
+    />
+  ];
 
   return (
     <div className="min-h-screen flex">
@@ -536,9 +221,9 @@ export default function RegisterPage() {
       {/* Left Panel with TASUED Logo as Background */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 relative overflow-hidden border-r border-white/10">
         {/* TASUED Logo as Background */}
-        <div 
+        <div
           className="absolute inset-0 opacity-10"
-          style={{ 
+          style={{
             backgroundImage: "url('/images/logo.png')",
             backgroundSize: 'contain',
             backgroundRepeat: 'no-repeat',
@@ -711,7 +396,7 @@ export default function RegisterPage() {
                   Previous
                 </button>
               )}
-              
+
               <button
                 type="button"
                 onClick={nextStep}
@@ -741,3 +426,382 @@ export default function RegisterPage() {
     </div>
   );
 }
+
+// Internal components moved outside to prevent re-renders losing focus
+interface PersonalInfoProps {
+  formData: any;
+  errors: any;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  departments: string[];
+  levels: string[];
+}
+
+const PersonalInfoStep = ({ formData, errors, handleChange, departments, levels }: PersonalInfoProps) => (
+  <motion.div
+    key="step1"
+    initial={{ opacity: 0, x: 20 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: -20 }}
+    className="space-y-6"
+  >
+    <div className="text-center mb-6">
+      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <UserIcon size={32} className="text-white" />
+      </div>
+      <h3 className="text-xl font-bold text-surface-950">Personal Information</h3>
+      <p className="text-surface-500 mt-1">Please provide your accurate details</p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label className="input-label">First Name *</label>
+        <div className="relative">
+          <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+          <input
+            type="text"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleChange}
+            className={`input-field pl-11 ${errors.firstName ? 'border-error-500' : ''}`}
+            placeholder="John"
+          />
+        </div>
+        {errors.firstName && <p className="text-error-500 text-sm mt-1">{errors.firstName}</p>}
+      </div>
+
+      <div>
+        <label className="input-label">Last Name *</label>
+        <div className="relative">
+          <UserIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+          <input
+            type="text"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            className={`input-field pl-11 ${errors.lastName ? 'border-error-500' : ''}`}
+            placeholder="Doe"
+          />
+        </div>
+        {errors.lastName && <p className="text-error-500 text-sm mt-1">{errors.lastName}</p>}
+      </div>
+
+      <div className="md:col-span-2">
+        <label className="input-label">Other Names</label>
+        <div className="relative">
+          <UserRound size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+          <input
+            type="text"
+            name="otherNames"
+            value={formData.otherNames}
+            onChange={handleChange}
+            className="input-field pl-11"
+            placeholder="Middle names (optional)"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="input-label">Matric Number *</label>
+        <div className="relative">
+          <GraduationCapIcon size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+          <input
+            type="text"
+            name="matricNumber"
+            value={formData.matricNumber}
+            onChange={handleChange}
+            className={`input-field pl-11 font-mono uppercase ${errors.matricNumber ? 'border-error-500' : ''}`}
+            placeholder="CSC/2024/001"
+          />
+        </div>
+        {errors.matricNumber && <p className="text-error-500 text-sm mt-1">{errors.matricNumber}</p>}
+      </div>
+
+      <div>
+        <label className="input-label">Email Address *</label>
+        <div className="relative">
+          <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className={`input-field pl-11 ${errors.email ? 'border-error-500' : ''}`}
+            placeholder="john.doe@tasued.edu.ng"
+          />
+        </div>
+        {errors.email && <p className="text-error-500 text-sm mt-1">{errors.email}</p>}
+      </div>
+
+      <div>
+        <label className="input-label">Phone Number *</label>
+        <div className="relative">
+          <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+          <input
+            type="tel"
+            name="phoneNumber"
+            value={formData.phoneNumber}
+            onChange={handleChange}
+            className={`input-field pl-11 ${errors.phoneNumber ? 'border-error-500' : ''}`}
+            placeholder="+234 80XXXXXXXXX"
+          />
+        </div>
+        {errors.phoneNumber && <p className="text-error-500 text-sm mt-1">{errors.phoneNumber}</p>}
+      </div>
+
+      <div>
+        <label className="input-label">Date of Birth *</label>
+        <div className="relative">
+          <Calendar size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+          <input
+            type="date"
+            name="dateOfBirth"
+            value={formData.dateOfBirth}
+            onChange={handleChange}
+            className={`input-field pl-11 ${errors.dateOfBirth ? 'border-error-500' : ''}`}
+            max={new Date().toISOString().split('T')[0]}
+          />
+        </div>
+        {errors.dateOfBirth && <p className="text-error-500 text-sm mt-1">{errors.dateOfBirth}</p>}
+      </div>
+
+      <div>
+        <label className="input-label">Department *</label>
+        <div className="relative">
+          <Building2 size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+          <select
+            name="department"
+            value={formData.department}
+            onChange={handleChange}
+            className={`input-field pl-11 ${errors.department ? 'border-error-500' : ''}`}
+          >
+            <option value="">Select Department</option>
+            {departments.map(dept => (
+              <option key={dept} value={dept}>{dept}</option>
+            ))}
+          </select>
+        </div>
+        {errors.department && <p className="text-error-500 text-sm mt-1">{errors.department}</p>}
+      </div>
+
+      <div>
+        <label className="input-label">Level *</label>
+        <div className="relative">
+          <GraduationCap size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+          <select
+            name="level"
+            value={formData.level}
+            onChange={handleChange}
+            className={`input-field pl-11 ${errors.level ? 'border-error-500' : ''}`}
+          >
+            <option value="">Select Level</option>
+            {levels.map(level => (
+              <option key={level} value={level}>{level} Level</option>
+            ))}
+          </select>
+        </div>
+        {errors.level && <p className="text-error-500 text-sm mt-1">{errors.level}</p>}
+      </div>
+    </div>
+  </motion.div>
+);
+
+interface BiometricStepProps {
+  capturedImage: string | null;
+  webcamRef: React.RefObject<Webcam>;
+  cameraReady: boolean;
+  setCameraReady: (ready: boolean) => void;
+  captureFacialData: () => void;
+  retakeFacialData: () => void;
+  setStep: (step: number) => void;
+}
+
+const BiometricStep = ({
+  capturedImage, webcamRef, cameraReady, setCameraReady,
+  captureFacialData, retakeFacialData, setStep
+}: BiometricStepProps) => (
+  <motion.div
+    key="step2"
+    initial={{ opacity: 0, x: 20 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: -20 }}
+    className="space-y-6"
+  >
+    <div className="text-center mb-6">
+      <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <FingerPrintIcon size={32} className="text-white" />
+      </div>
+      <h3 className="text-xl font-bold text-surface-950">Biometric Enrollment</h3>
+      <p className="text-surface-500 mt-1">Capture your facial features for verification</p>
+    </div>
+
+    <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-6 border border-purple-200">
+      <div className="aspect-square max-w-xs mx-auto">
+        <div className="relative w-full h-full rounded-xl overflow-hidden bg-surface-900 flex items-center justify-center">
+          {!capturedImage ? (
+            <>
+              <Webcam
+                ref={webcamRef}
+                audio={false}
+                screenshotFormat="image/jpeg"
+                onUserMedia={() => setCameraReady(true)}
+                className="w-full h-full object-cover"
+                videoConstraints={{
+                  width: 640,
+                  height: 640,
+                  facingMode: 'user',
+                }}
+              />
+              {!cameraReady && (
+                <div className="absolute inset-0 bg-surface-900 flex items-center justify-center">
+                  <Loader2 className="animate-spin text-white" size={32} />
+                </div>
+              )}
+              <div className="absolute inset-0 border-4 border-white/30 rounded-xl"></div>
+            </>
+          ) : (
+            <img
+              src={capturedImage}
+              alt="Captured facial data"
+              className="w-full h-full object-cover"
+            />
+          )}
+        </div>
+
+        {capturedImage ? (
+          <div className="mt-4 text-center">
+            <p className="text-sm text-green-600 font-medium flex items-center justify-center gap-2">
+              <CheckCircle size={16} /> Facial data captured successfully!
+            </p>
+            <div className="flex gap-3 mt-4 justify-center">
+              <button
+                type="button"
+                onClick={retakeFacialData}
+                className="btn-outline flex items-center gap-2 px-4 py-2"
+              >
+                <RotateCcw size={16} /> Retake
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="btn-primary flex items-center gap-2 px-4 py-2"
+              >
+                Continue <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={captureFacialData}
+              disabled={!cameraReady}
+              className="btn-primary w-full py-3 flex items-center justify-center gap-2"
+            >
+              <CameraIcon size={18} />
+              Capture Face
+            </button>
+            <p className="text-xs text-surface-500 mt-2">
+              Position your face in the frame and click capture
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 p-3 bg-white/70 rounded-lg text-xs text-surface-700">
+        <div className="flex items-center gap-2 mb-1">
+          <ShieldCheck size={14} className="text-green-600" />
+          <strong>Security Notice:</strong>
+        </div>
+        <p>Your biometric data is encrypted using AES-256 encryption. The raw image is never stored - only a secure template that cannot be reversed to reconstruct your face.</p>
+      </div>
+    </div>
+  </motion.div>
+);
+
+interface SecurityStepProps {
+  formData: any;
+  errors: any;
+  showPassword: boolean;
+  setShowPassword: (show: boolean) => void;
+  showConfirmPassword: boolean;
+  setShowConfirmPassword: (show: boolean) => void;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+const SecurityStep = ({
+  formData, errors, showPassword, setShowPassword,
+  showConfirmPassword, setShowConfirmPassword, handleChange
+}: SecurityStepProps) => (
+  <motion.div
+    key="step3"
+    initial={{ opacity: 0, x: 20 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: -20 }}
+    className="space-y-6"
+  >
+    <div className="text-center mb-6">
+      <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <LockIcon size={32} className="text-white" />
+      </div>
+      <h3 className="text-xl font-bold text-surface-950">Account Security</h3>
+      <p className="text-surface-500 mt-1">Set up your secure password</p>
+    </div>
+
+    <div className="space-y-4">
+      <div>
+        <label className="input-label">Password *</label>
+        <div className="relative">
+          <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            className={`input-field pl-11 pr-11 ${errors.password ? 'border-error-500' : ''}`}
+            placeholder="Create a strong password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+        {errors.password && <p className="text-error-500 text-sm mt-1">{errors.password}</p>}
+        <p className="text-xs text-surface-400 mt-1">Use at least 8 characters with letters, numbers, and symbols</p>
+      </div>
+
+      <div>
+        <label className="input-label">Confirm Password *</label>
+        <div className="relative">
+          <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+          <input
+            type={showConfirmPassword ? 'text' : 'password'}
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            className={`input-field pl-11 pr-11 ${errors.confirmPassword ? 'border-error-500' : ''}`}
+            placeholder="Re-enter your password"
+          />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
+          >
+            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+        {errors.confirmPassword && <p className="text-error-500 text-sm mt-1">{errors.confirmPassword}</p>}
+      </div>
+    </div>
+
+    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+      <Shield className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
+      <div className="text-sm text-blue-800">
+        <p className="font-semibold mb-1">Your Data is Protected</p>
+        <p>All your information is encrypted and stored securely. We comply with Nigerian Data Protection Regulation (NDPR).</p>
+      </div>
+    </div>
+  </motion.div>
+);
