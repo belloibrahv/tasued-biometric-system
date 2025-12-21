@@ -61,7 +61,7 @@ export async function GET(request: Request) {
               id: true,
               userId: true,
               enrolledAt: true,
-              updatedAt: true,
+              lastUpdated: true,
               // Note: facialPhoto and facialTemplate are excluded here to save memory (130kiB+)
               // They should be fetched separately when verifying biometrics
             }
