@@ -138,9 +138,12 @@ class UserService {
   static async syncUserFromAuth(authUser: any): Promise<User> {
     const metadata = authUser.user_metadata || {};
     const id = authUser.id;
-    const email = authUser.email?.toLowerCase();
+    const email = (authUser.email || metadata.email || '').toLowerCase();
+    const matricNumber = (metadata.matric_number || metadata.matricNumber || '').toUpperCase();
 
-    // Check if user exists
+    if (!email) throw new Error('Email is required for synchronization');
+
+    // 1. Check if user exists by ID
     let user = await db.user.findUnique({
       where: { id },
       include: { biometricData: true }
@@ -148,12 +151,37 @@ class UserService {
 
     if (user) return user as User;
 
+    // 2. Check if user exists by email (handle case where ID changed but email is same)
+    const existingByEmail = await db.user.findUnique({
+      where: { email },
+    });
+
+    if (existingByEmail) {
+      // If we found a user with the same email but different ID, we should update the ID 
+      // This happens if a user was deleted from Supabase but not DB, or vice versa
+      return await db.user.update({
+        where: { email },
+        data: { id } // Update to the new Supabase ID
+      });
+    }
+
+    // 3. Check if user exists by matric number (prevent P2002)
+    if (matricNumber) {
+      const existingByMatric = await db.user.findUnique({
+        where: { matricNumber },
+      });
+
+      if (existingByMatric) {
+        throw new Error(`Matric number ${matricNumber} is already registered to another account.`);
+      }
+    }
+
     // Parse names
     const fullName = metadata.full_name || metadata.firstName + ' ' + metadata.lastName || 'Student';
     const nameParts = fullName.split(' ');
     const firstName = metadata.firstName || nameParts[0] || 'First';
     const lastName = metadata.lastName || nameParts[nameParts.length - 1] || 'Last';
-    const otherNames = nameParts.slice(1, -1).join(' ') || null;
+    const otherNames = metadata.otherNames || (nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : null);
 
     // Create user in transaction
     return await db.$transaction(async (tx) => {
@@ -164,7 +192,7 @@ class UserService {
           firstName,
           lastName,
           otherNames,
-          matricNumber: (metadata.matric_number || metadata.matricNumber || `TEMP-${Date.now()}`).toUpperCase(),
+          matricNumber: matricNumber || `TEMP-${Date.now()}`,
           phoneNumber: metadata.phone_number || metadata.phoneNumber || '',
           dateOfBirth: metadata.date_of_birth ? new Date(metadata.date_of_birth) : new Date('2000-01-01'),
           department: metadata.department || 'General',

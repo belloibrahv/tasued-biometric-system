@@ -69,9 +69,11 @@ export async function register(formData: any, facialEmbedding: number[], facialP
   try {
     const UserService = (await import('@/lib/services/user-service')).default
     await UserService.syncUserFromAuth(authData.user)
-  } catch (err) {
+  } catch (err: any) {
     console.error('Registration Sync Error:', err)
-    return { error: 'Failed to create user profile. Please contact support.' }
+    // Return the specific error message if it's one we threw (e.g. matric number already exists)
+    const errorMessage = err.message || 'Failed to create user profile. Please contact support.'
+    return { error: errorMessage }
   }
 
   // 3. Enroll Biometric (Internal API call as we are on server)
