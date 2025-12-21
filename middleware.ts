@@ -55,7 +55,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Add user info to request headers for downstream use
-  // Note: We create a new response if we need to modify headers, 
+  // Note: We create a new response if we need to modify headers,
   // but we must preserve the cookies from supabaseResponse
   const response = NextResponse.next({
     request: {
@@ -64,13 +64,15 @@ export async function middleware(request: NextRequest) {
   });
 
   // Inject user info
-  response.headers.set('x-user-id', user.id);
+  response.headers.set('x-user-id', user?.id || '');
   response.headers.set('x-user-role', role);
 
   // Copy over the cookies from supabaseResponse (which contains the refreshed session)
-  supabaseResponse.cookies.getAll().forEach(cookie => {
-    response.cookies.set(cookie.name, cookie.value, cookie);
-  });
+  if (supabaseResponse && typeof supabaseResponse.cookies?.getAll === 'function') {
+    supabaseResponse.cookies.getAll().forEach(cookie => {
+      response.cookies.set(cookie.name, cookie.value, cookie);
+    });
+  }
 
   return response;
 }
