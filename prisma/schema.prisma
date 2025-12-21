@@ -75,6 +75,7 @@ model QRCode {
   id         String    @id @default(uuid())
   userId     String
   code       String    @unique
+  rawData    String?   // Stores the JSON payload for QR code content
   isActive   Boolean   @default(true)
   expiresAt  DateTime
   usageCount Int       @default(0)
