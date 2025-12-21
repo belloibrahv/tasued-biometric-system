@@ -14,6 +14,12 @@ export async function middleware(request: NextRequest) {
     '/forgot-password',
     '/reset-password',
     '/api/health',
+    '/api/biometric/facial-embed', // Whitelist biometric processing (stateless)
+    '/manifest.json',
+    '/sw.js',
+    '/favicon.ico',
+    '/robots.txt',
+    '/sitemap.xml',
   ];
 
   const isPublicRoute = publicRoutes.some(route =>
@@ -30,6 +36,11 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!user) {
+    // If this is an API request, return 401 instead of redirecting to HTML (which breaks JSON parsing)
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
@@ -79,6 +90,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|images|sounds).*)',
+    '/((?!_next/static|_next/image|favicon.ico|images|sounds|manifest.json|sw.js|robots.txt|sitemap.xml).*)',
   ],
 };
