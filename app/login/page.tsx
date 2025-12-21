@@ -215,12 +215,23 @@ export default function LoginPage() {
     <div className="min-h-screen flex">
       <Toaster position="top-center" richColors />
 
-      {/* Left Panel */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      {/* Left Panel with TASUED Logo as Background */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 relative overflow-hidden border-r border-white/10">
+        {/* TASUED Logo as Background */}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: "url('/images/logo.png')",
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center'
+          }}
+        />
+
         {/* Animated Background Elements */}
         <div className="absolute inset-0">
-          <div className="absolute top-20 left-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-20 right-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-500/5 rounded-full blur-3xl"></div>
         </div>
 
@@ -229,7 +240,7 @@ export default function LoginPage() {
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-12 w-full h-full">
-          {/* Top Content */}
+          {/* Header */}
           <div>
             <Link href="/" className="flex items-center gap-4 mb-16 group">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-500 to-success-500 flex items-center justify-center transition-transform group-hover:scale-105 shadow-2xl shadow-brand-500/30">
@@ -246,15 +257,17 @@ export default function LoginPage() {
                 initial={{ opacity: 0, x: -30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}
+                className="text-white"
               >
-                <h1 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight max-w-lg">
-                  <span className="block">Secure</span>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-success-400">Digital Identity</span>
-                  <span className="block">Platform</span>
+                <h1 className="text-4xl md:text-5xl font-black leading-tight max-w-lg">
+                  Welcome Back,<br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-success-400">
+                    Campus Community
+                  </span>
                 </h1>
-                <p className="text-white/80 text-lg max-w-lg leading-relaxed font-light">
-                  Advanced biometric authentication system for the modern university experience.
-                  Secure, efficient, and built for educational excellence.
+                <p className="text-white/80 text-lg max-w-lg leading-relaxed font-light mt-4">
+                  Secure access to all university services with your biometric identity.
+                  Fast, reliable, and always protected.
                 </p>
               </motion.div>
 
@@ -270,16 +283,16 @@ export default function LoginPage() {
                   { value: '99.9%', label: 'Uptime' },
                   { value: '256-bit', label: 'Encryption' },
                 ].map((item, idx) => (
-                  <div key={idx} className="text-center">
+                  <div key={idx} className="text-center p-3 bg-white/10 backdrop-blur-sm rounded-lg">
                     <div className="text-xl font-black text-brand-400 mb-1">{item.value}</div>
-                    <div className="text-xs text-white/60 uppercase tracking-wider">{item.label}</div>
+                    <div className="text-xs text-white/70 uppercase tracking-wider">{item.label}</div>
                   </div>
                 ))}
               </motion.div>
             </div>
           </div>
 
-          {/* Bottom Content */}
+          {/* Security Badge */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
