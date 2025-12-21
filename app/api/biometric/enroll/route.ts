@@ -38,8 +38,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Encrypt the biometric template
-    const encryptedFacialTemplate = facialTemplate ? encryptData(facialTemplate) : null;
-    const encryptedFingerprintTemplate = fingerprintTemplate ? encryptData(fingerprintTemplate) : null;
+    // For facialTemplate, it's an array of numbers that needs to be stringified before encryption
+    let encryptedFacialTemplate = null;
+    let encryptedFingerprintTemplate = null;
+
+    try {
+      if (facialTemplate) {
+        const facialData = typeof facialTemplate === 'string' ? facialTemplate : JSON.stringify(facialTemplate);
+        encryptedFacialTemplate = encryptData(facialData);
+      }
+
+      if (fingerprintTemplate) {
+        const fingerprintData = typeof fingerprintTemplate === 'string' ? fingerprintTemplate : JSON.stringify(fingerprintTemplate);
+        encryptedFingerprintTemplate = encryptData(fingerprintData);
+      }
+    } catch (encryptError) {
+      console.error('Encryption error:', encryptError);
+      return NextResponse.json(
+        { error: 'Encryption failed', details: encryptError instanceof Error ? encryptError.message : 'Unknown error' },
+        { status: 500 }
+      );
+    }
 
     // Initialize supabaseAdmin if possible
     let supabaseAdmin: any = null;
@@ -50,58 +69,70 @@ export async function POST(request: NextRequest) {
     }
 
     // Use a transaction for all database mutations
-    const [biometricData] = await db.$transaction([
-      db.biometricData.upsert({
-        where: { userId: payload.id },
-        update: {
-          facialTemplate: encryptedFacialTemplate || undefined,
-          facialQuality: facialTemplate ? 95 : undefined,
-          facialPhotos: facialPhoto ? [facialPhoto] : undefined,
-          fingerprintTemplate: encryptedFingerprintTemplate || undefined,
-          fingerprintQuality: fingerprintTemplate ? 95 : undefined,
-          lastUpdated: new Date(),
-        },
-        create: {
-          userId: payload.id,
-          facialTemplate: encryptedFacialTemplate,
-          facialQuality: facialTemplate ? 95 : null,
-          facialPhotos: facialPhoto ? [facialPhoto] : [],
-          fingerprintTemplate: encryptedFingerprintTemplate,
-          fingerprintQuality: fingerprintTemplate ? 95 : null,
-        },
-      }),
-      db.user.update({
-        where: { id: payload.id },
-        data: {
-          biometricEnrolled: true,
-          updatedAt: new Date(),
-        },
-      }),
-      db.auditLog.create({
-        data: {
-          userId: payload.id,
-          actorType: 'STUDENT',
-          actorId: payload.id,
-          actionType: 'BIOMETRIC_ENROLLMENT',
-          resourceType: 'BIOMETRIC',
-          resourceId: "PENDING", // Temporary ID, updated below if needed
-          status: 'SUCCESS',
-          details: {
-            facialEnrolled: !!facialTemplate,
-            fingerprintEnrolled: !!fingerprintTemplate,
+    let biometricData;
+    try {
+      biometricData = await db.$transaction(async (tx) => {
+        const updatedBiometricData = await tx.biometricData.upsert({
+          where: { userId: payload.id },
+          update: {
+            facialTemplate: encryptedFacialTemplate,
+            facialQuality: facialTemplate ? 95 : undefined,
+            facialPhotos: facialPhoto ? [facialPhoto] : undefined,
+            fingerprintTemplate: encryptedFingerprintTemplate,
+            fingerprintQuality: fingerprintTemplate ? 95 : undefined,
+            lastUpdated: new Date(),
           },
-          ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-          userAgent: request.headers.get('user-agent') || 'unknown',
-        },
-      })
-    ]);
+          create: {
+            userId: payload.id,
+            facialTemplate: encryptedFacialTemplate,
+            facialQuality: facialTemplate ? 95 : null,
+            facialPhotos: facialPhoto ? [facialPhoto] : [],
+            fingerprintTemplate: encryptedFingerprintTemplate,
+            fingerprintQuality: fingerprintTemplate ? 95 : null,
+          },
+        });
+
+        await tx.user.update({
+          where: { id: payload.id },
+          data: {
+            biometricEnrolled: true,
+            updatedAt: new Date(),
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            userId: payload.id,
+            actorType: 'STUDENT',
+            actorId: payload.id,
+            actionType: 'BIOMETRIC_ENROLLMENT',
+            resourceType: 'BIOMETRIC',
+            resourceId: updatedBiometricData.id,
+            status: 'SUCCESS',
+            details: {
+              facialEnrolled: !!facialTemplate,
+              fingerprintEnrolled: !!fingerprintTemplate,
+            },
+            ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
+            userAgent: request.headers.get('user-agent') || 'unknown',
+          },
+        });
+
+        return updatedBiometricData;
+      });
+    } catch (transactionError) {
+      console.error('Biometric enrollment transaction error:', transactionError);
+      return NextResponse.json(
+        { error: 'Database transaction failed', details: transactionError instanceof Error ? transactionError.message : 'Unknown error' },
+        { status: 500 }
+      );
+    }
 
     // Update Supabase Auth metadata asynchronously to avoid blocking the main result
     if (supabaseAdmin) {
-      supabaseAdmin.auth.admin.updateUserById(
-        payload.id,
-        { user_metadata: { biometricEnrolled: true } }
-      ).catch(err => console.warn('Enrollment: Async Auth metadata update failed', err));
+      supabaseAdmin.auth.admin.updateUserById(payload.id, {
+        data: { biometricEnrolled: true }
+      }).catch(err => console.warn('Enrollment: Async Auth metadata update failed', err));
     }
 
     return NextResponse.json({
@@ -110,7 +141,7 @@ export async function POST(request: NextRequest) {
         id: biometricData.id,
         facialEnrolled: !!biometricData.facialTemplate,
         fingerprintEnrolled: !!biometricData.fingerprintTemplate,
-        enrolledAt: biometricData.enrolledAt,
+        enrolledAt: biometricData.lastUpdated,
       },
       biometricEnrolled: true
     });

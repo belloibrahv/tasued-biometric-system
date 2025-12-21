@@ -56,7 +56,16 @@ export async function GET(request: Request) {
       user = await db.user.findUnique({
         where: { id: payload.id },
         include: {
-          biometricData: true
+          biometricData: {
+            select: {
+              id: true,
+              userId: true,
+              enrolledAt: true,
+              updatedAt: true,
+              // Note: facialPhoto and facialTemplate are excluded here to save memory (130kiB+)
+              // They should be fetched separately when verifying biometrics
+            }
+          }
         }
       });
 

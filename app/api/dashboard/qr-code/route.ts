@@ -70,7 +70,9 @@ export async function GET(request: NextRequest) {
       const expiresAt = new Date();
       expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5 minute expiry
 
-      const code = `BIOVAULT-${user.matricNumber}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+      // Generate a unique ID for this QR code session
+      const sessionId = crypto.randomBytes(8).toString('hex');
+      const code = `BIOVAULT-${user.matricNumber}-${Date.now()}-${sessionId}`;
 
       qrCode = await db.qRCode.create({
         data: {
@@ -91,6 +93,7 @@ export async function GET(request: NextRequest) {
       qrCode: {
         id: qrCode.id,
         code: qrCode.code,
+        url: `${request.nextUrl.origin}/api/verify-qr/${encodeURIComponent(qrCode.code)}`, // Public verification URL
         expiresAt: qrCode.expiresAt,
         secondsRemaining,
         usageCount: qrCode.usageCount,
@@ -161,7 +164,8 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date();
     expiresAt.setMinutes(expiresAt.getMinutes() + 5);
 
-    const code = `BIOVAULT-${user.matricNumber}-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    const sessionId = crypto.randomBytes(8).toString('hex');
+    const code = `BIOVAULT-${user.matricNumber}-${Date.now()}-${sessionId}`;
 
     const qrCode = await db.qRCode.create({
       data: {
@@ -176,6 +180,7 @@ export async function POST(request: NextRequest) {
       qrCode: {
         id: qrCode.id,
         code: qrCode.code,
+        url: `${request.nextUrl.origin}/api/verify-qr/${encodeURIComponent(qrCode.code)}`,
         expiresAt: qrCode.expiresAt,
         secondsRemaining: 300, // 5 minutes
       },

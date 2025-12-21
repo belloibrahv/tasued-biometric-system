@@ -28,7 +28,13 @@ export async function updateSession(request: NextRequest) {
   )
 
   // refreshing the auth token
-  const { data: { user } } = await supabase.auth.getUser()
-
-  return { supabaseResponse, user }
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    return { supabaseResponse, user }
+  } catch (error: any) {
+    // If we hit concurrency issues (refresh token already used by parallel request)
+    // we return the response as is; downstream middleware or API will re-verify
+    console.warn('Middleware Session Refresh Warning:', error.message);
+    return { supabaseResponse, user: null }
+  }
 }

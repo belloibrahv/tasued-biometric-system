@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import db from '@/lib/db';
 import { decryptData } from '@/lib/encryption';
+import { BiometricVerificationService } from '@/lib/services/biometric-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,15 +18,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { code, serviceSlug = 'library' } = await request.json();
+    const { code, serviceSlug = 'library', facialImage } = await request.json();
 
     if (!code) {
       return NextResponse.json({ error: 'QR code is required' }, { status: 400 });
     }
 
-    // Find QR code
-    const qrCode = await db.qRCode.findUnique({
-      where: { code },
+    // If code is a URL, extract the actual code part
+    let extractedCode = code;
+    if (code && code.includes('/')) {
+      try {
+        const url = new URL(code);
+        // Extract the code from the last part of the path
+        const pathParts = url.pathname.split('/');
+        extractedCode = pathParts[pathParts.length - 1] || code;
+        // Decode it in case it was encoded
+        extractedCode = decodeURIComponent(extractedCode);
+      } catch (e) {
+        // If not a valid URL, use the original value
+        extractedCode = code;
+      }
+    }
+
+    // Find the QR code by the extracted code
+    let qrCode = await db.qRCode.findUnique({
+      where: { code: extractedCode },
       include: {
         user: {
           select: {
@@ -93,16 +110,50 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
-    // Get biometric data for verification status
-    const biometricData = await db.biometricData.findUnique({
-      where: { userId: student.id },
-      select: {
-        facialTemplate: true,
-        fingerprintTemplate: true,
-        facialQuality: true,
-        fingerprintQuality: true,
+    // Perform biometric verification if facial image is provided
+    let biometricResult: any = null;
+    if (facialImage) {
+      // Get stored biometric data
+      const biometricData = await db.biometricData.findUnique({
+        where: { userId: student.id },
+      });
+
+      if (biometricData && biometricData.facialTemplate) {
+        try {
+          // Initialize biometric service
+          const biometricService = BiometricVerificationService.getInstance();
+
+          // Get the stored template and verify it's a valid JSON string
+          const decryptedTemplate = decryptData(biometricData.facialTemplate);
+          const storedEmbedding = JSON.parse(decryptedTemplate);
+
+          // Perform enhanced verification
+          biometricResult = await biometricService.enhancedVerifyFacialImage(
+            facialImage,
+            storedEmbedding
+          );
+        } catch (parseError) {
+          console.error('Error parsing stored embedding:', parseError);
+          biometricResult = {
+            verified: false,
+            matchScore: 0,
+            confidence: 0,
+            qualityScore: 0,
+            livenessCheck: false,
+            details: 'Failed to parse stored biometric template'
+          };
+        }
+      } else {
+        biometricResult = {
+          verified: false,
+          matchScore: 0,
+          confidence: 0,
+          qualityScore: 0,
+          livenessCheck: false,
+          details: 'No biometric template found for user'
+        };
       }
-    });
+    }
 
     // Update QR code usage
     await db.qRCode.update({
@@ -113,18 +164,24 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Determine verification method based on biometric check
+    const verificationMethod = biometricResult
+      ? (biometricResult.verified ? 'QR_CODE+BIOMETRIC' : 'QR_CODE+BIOMETRIC_FAILED')
+      : 'QR_CODE';
+
     // Create access log
     const accessLog = await db.accessLog.create({
       data: {
         userId: student.id,
         serviceId: service.id,
-        verificationMethod: 'QR_CODE',
-        status: 'SUCCESS',
+        verificationMethod: verificationMethod as any,
+        status: biometricResult ? (biometricResult.verified ? 'SUCCESS' : 'FAILED') : 'SUCCESS',
         operatorId: payload.id,
         location: service.name,
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         userAgent: request.headers.get('user-agent') || 'unknown',
         timestamp: new Date(),
+        biometricMatchScore: biometricResult?.matchScore,
       },
     });
 
@@ -137,11 +194,15 @@ export async function POST(request: NextRequest) {
         actionType: 'QR_VERIFICATION',
         resourceType: 'ACCESS_LOG',
         resourceId: accessLog.id,
-        status: 'SUCCESS',
+        status: biometricResult ? (biometricResult.verified ? 'SUCCESS' : 'FAILED') : 'SUCCESS',
         details: {
           qrCodeId: qrCode.id,
           service: service.name,
-          verificationMethod: 'QR_CODE',
+          verificationMethod: verificationMethod,
+          biometricVerified: biometricResult?.verified,
+          biometricMatchScore: biometricResult?.matchScore,
+          biometricQualityScore: biometricResult?.qualityScore,
+          biometricLivenessCheck: biometricResult?.livenessCheck,
           biometricEnrolled: student.biometricEnrolled,
           ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         },
@@ -155,14 +216,16 @@ export async function POST(request: NextRequest) {
         userId: student.id,
         type: 'VERIFICATION',
         title: `Access Granted: ${service.name}`,
-        message: `Your QR code was successfully scanned at ${service.name} on ${new Date().toLocaleString()}.`,
+        message: `Your ${verificationMethod.includes('BIOMETRIC') ? 'biometric' : 'QR'} verification was ${biometricResult?.verified ? 'successful' : 'with biometric failure'} at ${service.name} on ${new Date().toLocaleString()}.`,
         createdAt: new Date(),
       },
     });
 
     return NextResponse.json({
-      success: true,
-      message: 'Verification successful',
+      success: biometricResult ? biometricResult.verified : true,
+      message: biometricResult
+        ? (biometricResult.verified ? 'Biometric verification successful' : 'Biometric verification failed, but QR verification passed')
+        : 'Verification successful',
       student: {
         id: student.id,
         matricNumber: student.matricNumber,
@@ -182,16 +245,18 @@ export async function POST(request: NextRequest) {
         facialQuality: biometricData?.facialQuality,
         fingerprintQuality: biometricData?.fingerprintQuality,
       },
+      biometricResult,
       service: {
         id: service.id,
         name: service.name,
         slug: service.slug,
       },
       verification: {
-        method: 'QR_CODE',
+        method: verificationMethod,
         timestamp: accessLog.timestamp,
         location: service.name,
         verifiedBy: payload.id,
+        status: biometricResult ? (biometricResult.verified ? 'SUCCESS' : 'PARTIAL') : 'SUCCESS',
       },
     });
 

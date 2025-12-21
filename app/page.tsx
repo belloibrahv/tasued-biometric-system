@@ -8,7 +8,8 @@ import {
   Fingerprint, Shield, QrCode, Activity, Download, ShieldCheck,
   ArrowRight, Eye, Lock, BookOpen, GraduationCap, Building2,
   Utensils, Bus, Heart, CreditCard, Users, CheckCircle, Menu, X,
-  Play, ChevronRight, Smartphone, Globe, Zap, Award, LogOut
+  Play, ChevronRight, Smartphone, Globe, Zap, Award, LogOut,
+  RefreshCw, Clock
 } from 'lucide-react';
 import { Toaster } from 'sonner';
 import TeamSlider from '@/components/TeamSlider';
@@ -659,6 +660,151 @@ export default function Home() {
                 <h4 className="font-bold text-lg text-surface-900 mb-3">Institutional Trust</h4>
                 <p className="text-surface-600">
                   Build confidence among students, parents, and government entities with robust identity management.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* QR Code Features Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="text-brand-500 font-semibold text-sm uppercase tracking-wider">QR Code Verification</span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-surface-900 mt-2 mb-4">
+              Smart QR Codes for Instant Verification
+            </h2>
+            <p className="text-surface-600 max-w-3xl mx-auto">
+              Our secure QR code system provides instant verification for educational institutions and services. Each QR code contains encrypted verification information that can be quickly scanned and validated.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <h3 className="text-2xl font-bold text-surface-900 mb-6">Secure & Scannable</h3>
+
+              <div className="space-y-6">
+                <div className="flex items-start gap-4 p-6 bg-surface-50 rounded-2xl border border-surface-200">
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <QrCode className="text-blue-600" size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-surface-900 text-lg mb-2">Scannable Format</h4>
+                    <p className="text-surface-600">
+                      QR codes contain a secure URL that redirects to our verification API, making them scannable by any QR reader while protecting sensitive information.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-6 bg-surface-50 rounded-2xl border border-surface-200">
+                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Shield className="text-green-600" size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-surface-900 text-lg mb-2">Real-Time Validation</h4>
+                    <p className="text-surface-600">
+                      Each scan is validated in real-time against our secure database. QR codes expire after 5 minutes for enhanced security.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-4 p-6 bg-surface-50 rounded-2xl border border-surface-200">
+                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Activity className="text-purple-600" size={24} />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-surface-900 text-lg mb-2">Instant Information</h4>
+                    <p className="text-surface-600">
+                      Scanners receive immediate information about the student's identity, department, and level, without exposing sensitive data.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-surface-50 rounded-2xl p-8 border border-surface-200">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-surface-900 mb-2">How QR Verification Works</h3>
+                <p className="text-surface-600">Simple 3-step process for operators and students</p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-10 h-10 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold">1</div>
+                    <div className="h-full w-0.5 bg-surface-200 mt-2"></div>
+                  </div>
+                  <div className="pb-6">
+                    <h4 className="font-bold text-surface-900">Student Generates QR</h4>
+                    <p className="text-surface-600 text-sm">Student accesses their dashboard and displays the auto-refreshing QR code</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-10 h-10 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold">2</div>
+                    <div className="h-full w-0.5 bg-surface-200 mt-2"></div>
+                  </div>
+                  <div className="pb-6">
+                    <h4 className="font-bold text-surface-900">Operator Scans QR</h4>
+                    <p className="text-surface-600 text-sm">Operator uses scanner or phone camera to scan the student's QR code</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-10 h-10 rounded-full bg-brand-500 text-white flex items-center justify-center font-bold">3</div>
+                  </div>
+                  <div className="pb-6">
+                    <h4 className="font-bold text-surface-900">Verification Confirmed</h4>
+                    <p className="text-surface-600 text-sm">System instantly verifies the student and grants access to services</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-20 text-center">
+            <h3 className="text-2xl font-bold text-surface-900 mb-6">Technical Features</h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="p-6 bg-surface-50 rounded-2xl border border-surface-200">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <RefreshCw className="text-blue-600" size={32} />
+                </div>
+                <h4 className="font-bold text-lg text-surface-900 mb-3">Auto-Refresh</h4>
+                <p className="text-surface-600">
+                  QR codes automatically refresh every 5 minutes to prevent replay attacks and maintain security.
+                </p>
+              </div>
+
+              <div className="p-6 bg-surface-50 rounded-2xl border border-surface-200">
+                <div className="w-16 h-16 bg-success-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lock className="text-success-600" size={32} />
+                </div>
+                <h4 className="font-bold text-lg text-surface-900 mb-3">Encrypted Data</h4>
+                <p className="text-surface-600">
+                  All QR code contents are secured with military-grade encryption for maximum protection.
+                </p>
+              </div>
+
+              <div className="p-6 bg-surface-50 rounded-2xl border border-surface-200">
+                <div className="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Globe className="text-accent-600" size={32} />
+                </div>
+                <h4 className="font-bold text-lg text-surface-900 mb-3">Universal Scanner</h4>
+                <p className="text-surface-600">
+                  Compatible with any QR scanning device or camera application without special equipment.
+                </p>
+              </div>
+
+              <div className="p-6 bg-surface-50 rounded-2xl border border-surface-200">
+                <div className="w-16 h-16 bg-warning-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Clock className="text-warning-600" size={32} />
+                </div>
+                <h4 className="font-bold text-lg text-surface-900 mb-3">Time-Based</h4>
+                <p className="text-surface-600">
+                  Timestamp validation ensures QR codes are valid only during the current session.
                 </p>
               </div>
             </div>

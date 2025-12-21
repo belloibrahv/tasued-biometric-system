@@ -71,30 +71,60 @@ export default function EnrollBiometricPage() {
     setLoading(true);
 
     try {
-      const biometricRes = await fetch('/api/biometric/enroll', {
+      const response = await fetch('/api/biometric/enroll', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${document.cookie.replace(/(?:(?:^|.*;\s*)auth-token\s*=\s*([^;]*).*$)|^.*$/, '$1')}`
+          // Don't send cookies directly, let the middleware handle authentication
         },
+        credentials: 'include', // Include credentials (cookies) in the request
         body: JSON.stringify({
-          facialTemplate: JSON.stringify(facialEmbedding),
+          facialTemplate: facialEmbedding,  // Don't stringify the embedding, it's already an array of numbers
           facialPhoto: capturedImage,
         }),
       });
 
-      const data = await biometricRes.json();
-
-      if (!biometricRes.ok) {
-        throw new Error(data.error || 'Biometric enrollment failed');
+      // Check if the response has content
+      const contentLength = response.headers.get('content-length');
+      if (response.status === 204 || (contentLength && contentLength === '0')) {
+        throw new Error('No content returned from server');
       }
+
+      // Check if response is OK first
+      if (!response.ok) {
+        let errorMessage = 'Biometric enrollment failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          // If JSON parsing fails, get text response
+          try {
+            const errorText = await response.text();
+            errorMessage = errorText || errorMessage;
+          } catch (textError) {
+            // If both fail, use default message
+            console.error('Could not parse error response:', textError);
+          }
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Parse the successful response
+      const data = await response.json();
 
       // Update metadata on client side as a fallback/reinforcement
       // This ensures the current session is immediately updated
       console.log('Enrollment: Updating local Supabase Auth metadata...');
-      await supabase.auth.updateUser({
-        data: { biometricEnrolled: true }
-      });
+      try {
+        const { error } = await supabase.auth.updateUser({
+          data: { biometricEnrolled: true }
+        });
+        if (error) {
+          console.warn('Enrollment: Local Supabase metadata update failed', error);
+        }
+      } catch (updateError) {
+        console.warn('Enrollment: Local Supabase metadata update failed', updateError);
+      }
 
       toast.success('Biometric enrollment successful! Redirecting to dashboard...');
 
