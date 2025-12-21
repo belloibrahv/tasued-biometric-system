@@ -80,21 +80,21 @@ export async function register(formData: any, facialEmbedding: number[], facialP
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authData.session?.access_token}`
+        'Authorization': `Bearer ${authData.session?.access_token || ''}`  // Use Supabase token which is now supported by the API
       },
       body: JSON.stringify({
-        facialTemplate: JSON.stringify(facialEmbedding),
+        facialTemplate: facialEmbedding,  // Send as array
         facialPhoto: facialPhoto,
       }),
-    })
+    });
 
     if (!biometricRes.ok) {
-      const errorData = await biometricRes.json()
-      return { error: errorData.error || 'Biometric enrollment failed' }
+      // Don't fail registration on biometric enrollment failure - user can do it later
+      console.warn('Biometric enrollment failed during registration, continuing anyway');
     }
   } catch (err) {
-    console.error('Biometric Enrollment Error:', err)
-    return { error: 'Failed to enroll biometric data. Please try again from your dashboard.' }
+    console.warn('Biometric enrollment failed during registration:', err);
+    // Don't fail the entire registration since biometric enrollment can be done later
   }
 
   // 4. If session exists, user is auto-logged in

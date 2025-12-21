@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import db from '@/lib/db';
 import { encryptData } from '@/lib/encryption';
-import { createClient } from '@supabase/supabase-js';
+import { createClient as createSupabaseClientJS } from '@supabase/supabase-js';
+import { createClient as getSupabaseServerClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,20 +13,44 @@ export async function POST(request: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    const token = request.cookies.get('auth-token')?.value ||
-      request.headers.get('authorization')?.replace('Bearer ', '');
+    // Try to get user ID from either custom token or Supabase session
+    let userId: string | null = null;
+    let payload: any = null;
 
-    if (!token) {
-      console.warn('Enrollment: No token found');
+    const token = request.cookies.get('auth-token')?.value ||
+      request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
+
+    if (token) {
+      // Try custom token verification first
+      const customPayload = await verifyToken(token);
+      if (customPayload) {
+        userId = customPayload.id;
+        payload = customPayload;
+      }
+    }
+
+    // If custom token didn't work, try Supabase session
+    if (!userId) {
+      try {
+        const supabase = getSupabaseServerClient();
+        const { data: { user }, error } = await supabase.auth.getUser();
+
+        if (error) {
+          console.warn('Supabase auth error:', error);
+        } else if (user) {
+          userId = user.id;
+          payload = { id: user.id, email: user.email, type: 'student' }; // Create a minimal payload
+        }
+      } catch (e) {
+        console.warn('Failed to verify Supabase token:', e);
+      }
+    }
+
+    if (!userId || !payload) {
+      console.warn('Enrollment: No valid token found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const payload = await verifyToken(token);
-    if (!payload) {
-      console.warn('Enrollment: Invalid token');
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-    }
-    console.log(`Enrollment: Processing for user ${payload.id}`);
+    console.log(`Enrollment: Processing for user ${userId}`);
 
     const body = await request.json();
     const { facialTemplate, facialPhoto, fingerprintTemplate } = body;
@@ -34,6 +59,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'At least one biometric template is required' },
         { status: 400 }
+      );
+    }
+
+    // Check if encryption key is available before proceeding
+    if (!process.env.ENCRYPTION_KEY) {
+      console.error('Encryption error: ENCRYPTION_KEY is not set');
+      return NextResponse.json(
+        { error: 'Server configuration error: Encryption key is not set' },
+        { status: 500 }
       );
     }
 
@@ -63,7 +97,7 @@ export async function POST(request: NextRequest) {
     // Initialize supabaseAdmin if possible
     let supabaseAdmin: any = null;
     if (supabaseUrl && supabaseServiceKey) {
-      supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+      supabaseAdmin = createSupabaseClientJS(supabaseUrl, supabaseServiceKey);
     } else {
       console.warn('Enrollment: SUPABASE_SERVICE_ROLE_KEY is missing. Auth metadata will not be updated.');
     }
@@ -71,9 +105,9 @@ export async function POST(request: NextRequest) {
     // Use a transaction for all database mutations
     let biometricData;
     try {
-      biometricData = await db.$transaction(async (tx) => {
-        const updatedBiometricData = await tx.biometricData.upsert({
-          where: { userId: payload.id },
+      biometricData = await db.$transaction(async (prisma) => {
+        const updatedBiometricData = await prisma.biometricData.upsert({
+          where: { userId: userId },
           update: {
             facialTemplate: encryptedFacialTemplate,
             facialQuality: facialTemplate ? 95 : undefined,
@@ -83,7 +117,7 @@ export async function POST(request: NextRequest) {
             lastUpdated: new Date(),
           },
           create: {
-            userId: payload.id,
+            userId: userId,
             facialTemplate: encryptedFacialTemplate,
             facialQuality: facialTemplate ? 95 : null,
             facialPhotos: facialPhoto ? [facialPhoto] : [],
@@ -92,19 +126,19 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        await tx.user.update({
-          where: { id: payload.id },
+        await prisma.user.update({
+          where: { id: userId },
           data: {
             biometricEnrolled: true,
             updatedAt: new Date(),
           },
         });
 
-        await tx.auditLog.create({
+        await prisma.auditLog.create({
           data: {
-            userId: payload.id,
+            userId: userId,
             actorType: 'STUDENT',
-            actorId: payload.id,
+            actorId: userId,
             actionType: 'BIOMETRIC_ENROLLMENT',
             resourceType: 'BIOMETRIC',
             resourceId: updatedBiometricData.id,
@@ -130,7 +164,7 @@ export async function POST(request: NextRequest) {
 
     // Update Supabase Auth metadata asynchronously to avoid blocking the main result
     if (supabaseAdmin) {
-      supabaseAdmin.auth.admin.updateUserById(payload.id, {
+      supabaseAdmin.auth.admin.updateUserById(userId, {
         data: { biometricEnrolled: true }
       }).catch(err => console.warn('Enrollment: Async Auth metadata update failed', err));
     }
