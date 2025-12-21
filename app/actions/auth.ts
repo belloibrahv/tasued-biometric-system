@@ -76,24 +76,14 @@ export async function register(formData: any, facialEmbedding: number[], facialP
     return { error: errorMessage }
   }
 
-  // 3. Enroll Biometric (Internal API call as we are on server)
+  // 3. Enroll Biometric (Direct Service Call - No more ECONNREFUSED)
   try {
-    const biometricRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/biometric/enroll`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authData.session?.access_token || ''}`  // Use Supabase token which is now supported by the API
-      },
-      body: JSON.stringify({
-        facialTemplate: facialEmbedding,  // Send as array
-        facialPhoto: facialPhoto,
-      }),
-    });
-
-    if (!biometricRes.ok) {
-      // Don't fail registration on biometric enrollment failure - user can do it later
-      console.warn('Biometric enrollment failed during registration, continuing anyway');
-    }
+    const BiometricService = (await import('@/lib/services/biometric-service')).default
+    await BiometricService.enroll({
+      userId: authData.user.id,
+      facialTemplate: facialEmbedding,
+      facialPhoto: facialPhoto,
+    }, 'system-register', 'server-action');
   } catch (err) {
     console.warn('Biometric enrollment failed during registration:', err);
     // Don't fail the entire registration since biometric enrollment can be done later

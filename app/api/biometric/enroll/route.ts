@@ -62,121 +62,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if encryption key is available before proceeding
-    if (!process.env.ENCRYPTION_KEY) {
-      console.error('Encryption error: ENCRYPTION_KEY is not set');
-      return NextResponse.json(
-        { error: 'Server configuration error: Encryption key is not set' },
-        { status: 500 }
-      );
-    }
-
-    // Encrypt the biometric template
-    // For facialTemplate, it's an array of numbers that needs to be stringified before encryption
-    let encryptedFacialTemplate = null;
-    let encryptedFingerprintTemplate = null;
-
-    try {
-      if (facialTemplate) {
-        const facialData = typeof facialTemplate === 'string' ? facialTemplate : JSON.stringify(facialTemplate);
-        encryptedFacialTemplate = encryptData(facialData);
-      }
-
-      if (fingerprintTemplate) {
-        const fingerprintData = typeof fingerprintTemplate === 'string' ? fingerprintTemplate : JSON.stringify(fingerprintTemplate);
-        encryptedFingerprintTemplate = encryptData(fingerprintData);
-      }
-    } catch (encryptError) {
-      console.error('Encryption error:', encryptError);
-      return NextResponse.json(
-        { error: 'Encryption failed', details: encryptError instanceof Error ? encryptError.message : 'Unknown error' },
-        { status: 500 }
-      );
-    }
-
-    // Initialize supabaseAdmin if possible
-    let supabaseAdmin: any = null;
-    if (supabaseUrl && supabaseServiceKey) {
-      supabaseAdmin = createSupabaseClientJS(supabaseUrl, supabaseServiceKey);
-    } else {
-      console.warn('Enrollment: SUPABASE_SERVICE_ROLE_KEY is missing. Auth metadata will not be updated.');
-    }
-
-    // Use a transaction for all database mutations
-    let biometricData;
-    try {
-      biometricData = await db.$transaction(async (prisma) => {
-        const updatedBiometricData = await prisma.biometricData.upsert({
-          where: { userId: userId },
-          update: {
-            facialTemplate: encryptedFacialTemplate,
-            facialQuality: facialTemplate ? 95 : undefined,
-            facialPhotos: facialPhoto ? [facialPhoto] : undefined,
-            fingerprintTemplate: encryptedFingerprintTemplate,
-            fingerprintQuality: fingerprintTemplate ? 95 : undefined,
-            lastUpdated: new Date(),
-          },
-          create: {
-            userId: userId,
-            facialTemplate: encryptedFacialTemplate,
-            facialQuality: facialTemplate ? 95 : null,
-            facialPhotos: facialPhoto ? [facialPhoto] : [],
-            fingerprintTemplate: encryptedFingerprintTemplate,
-            fingerprintQuality: fingerprintTemplate ? 95 : null,
-          },
-        });
-
-        await prisma.user.update({
-          where: { id: userId },
-          data: {
-            biometricEnrolled: true,
-            updatedAt: new Date(),
-          },
-        });
-
-        await prisma.auditLog.create({
-          data: {
-            userId: userId,
-            actorType: 'STUDENT',
-            actorId: userId,
-            actionType: 'BIOMETRIC_ENROLLMENT',
-            resourceType: 'BIOMETRIC',
-            resourceId: updatedBiometricData.id,
-            status: 'SUCCESS',
-            details: {
-              facialEnrolled: !!facialTemplate,
-              fingerprintEnrolled: !!fingerprintTemplate,
-            },
-            ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-            userAgent: request.headers.get('user-agent') || 'unknown',
-          },
-        });
-
-        return updatedBiometricData;
-      });
-    } catch (transactionError) {
-      console.error('Biometric enrollment transaction error:', transactionError);
-      return NextResponse.json(
-        { error: 'Database transaction failed', details: transactionError instanceof Error ? transactionError.message : 'Unknown error' },
-        { status: 500 }
-      );
-    }
-
-    // Update Supabase Auth metadata asynchronously to avoid blocking the main result
-    if (supabaseAdmin) {
-      supabaseAdmin.auth.admin.updateUserById(userId, {
-        data: { biometricEnrolled: true }
-      }).catch(err => console.warn('Enrollment: Async Auth metadata update failed', err));
-    }
+    const BiometricService = (await import('@/lib/services/biometric-service')).default;
+    const enrollment = await BiometricService.enroll({
+      userId,
+      facialTemplate,
+      facialPhoto,
+      fingerprintTemplate
+    },
+      request.headers.get('x-forwarded-for') || 'unknown',
+      request.headers.get('user-agent') || 'unknown'
+    );
 
     return NextResponse.json({
       message: 'Biometric enrollment successful',
-      biometricData: {
-        id: biometricData.id,
-        facialEnrolled: !!biometricData.facialTemplate,
-        fingerprintEnrolled: !!biometricData.fingerprintTemplate,
-        enrolledAt: biometricData.lastUpdated,
-      },
+      biometricData: enrollment,
       biometricEnrolled: true
     });
 
