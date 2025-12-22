@@ -180,9 +180,13 @@ class UserService {
 
     if (!email) throw new Error('Email is required for synchronization');
     
-    // For students, matric number is required
+    // For students, matric number is required. For admins, generate a temporary one if missing
+    let finalMatricNumber = matricNumber;
     if (!isAdmin && !matricNumber) {
       throw new Error('Matric number is required for students');
+    } else if (isAdmin && !matricNumber) {
+      // Generate a temporary matric number for admin users
+      finalMatricNumber = `ADMIN-${Date.now()}`;
     }
 
     // 1. Check if user exists by ID
@@ -228,16 +232,16 @@ class UserService {
       });
     }
 
-    // 3. Check by matric number (prevent duplicates)
-    if (matricNumber) {
+    // 3. Check by matric number (prevent duplicates) - only for students
+    if (!isAdmin && finalMatricNumber) {
       const existingByMatric = await db.user.findUnique({
-        where: { matricNumber },
+        where: { matricNumber: finalMatricNumber },
       });
 
       if (existingByMatric) {
         // If email matches, we already handled it. 
         // If email differs, it's a conflict.
-        throw new Error(`Matric Number ${matricNumber} is already in use.`);
+        throw new Error(`Matric Number ${finalMatricNumber} is already in use.`);
       }
     }
 
@@ -249,7 +253,7 @@ class UserService {
         firstName,
         lastName,
         otherNames,
-        matricNumber: matricNumber || `TEMP-${Date.now()}`,
+        matricNumber: finalMatricNumber,
         phoneNumber,
         department,
         level,

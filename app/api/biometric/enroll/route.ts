@@ -4,6 +4,7 @@ import db from '@/lib/db';
 import { encryptData } from '@/lib/encryption';
 import { createClient as createSupabaseClientJS } from '@supabase/supabase-js';
 import { createClient as getSupabaseServerClient } from '@/utils/supabase/server';
+import UserService from '@/lib/services/user-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,7 @@ export async function POST(request: NextRequest) {
     // Try to get user ID from either custom token or Supabase session
     let userId: string | null = null;
     let payload: any = null;
+    let supabaseUser: any = null;
 
     const token = request.cookies.get('auth-token')?.value ||
       request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
@@ -39,6 +41,7 @@ export async function POST(request: NextRequest) {
           console.warn('Supabase auth error:', error);
         } else if (user) {
           userId = user.id;
+          supabaseUser = user;
           payload = { id: user.id, email: user.email, type: 'student' }; // Create a minimal payload
         }
       } catch (e) {
@@ -51,6 +54,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     console.log(`Enrollment: Processing for user ${userId}`);
+
+    // CRITICAL: Ensure user exists in our database before creating biometric data
+    try {
+      let dbUser = await UserService.getUserById(userId);
+      
+      if (!dbUser && supabaseUser) {
+        console.log('Enrollment: User not found in DB, syncing from Supabase Auth...');
+        dbUser = await UserService.syncUserFromAuth(supabaseUser);
+        console.log(`Enrollment: User synced successfully: ${dbUser.email}`);
+      } else if (!dbUser) {
+        console.error('Enrollment: User not found and no Supabase user data available');
+        return NextResponse.json({ 
+          error: 'User not found in database. Please register first.' 
+        }, { status: 404 });
+      }
+
+      console.log(`Enrollment: User verified in database: ${dbUser.email}`);
+    } catch (syncError: any) {
+      console.error('Enrollment: User sync failed:', syncError);
+      return NextResponse.json({ 
+        error: `User synchronization failed: ${syncError.message}` 
+      }, { status: 500 });
+    }
 
     const body = await request.json();
     const { facialTemplate, facialPhoto, fingerprintTemplate } = body;
