@@ -12,24 +12,25 @@ const DEFAULT_ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || process.env.BIOMETR
  */
 export function encryptData(data: string, key?: string): string {
   try {
-    console.log('Encryption: Starting encryption process');
-    console.log('Encryption: Data type:', typeof data);
-    console.log('Encryption: Data length:', data?.length || 0);
-    
     if (!data) {
       throw new Error('No data provided for encryption');
     }
     
     const encryptionKey = key || DEFAULT_ENCRYPTION_KEY;
-    console.log('Encryption: Using key length:', encryptionKey.length);
+    
+    if (!encryptionKey || encryptionKey.length < 8) {
+      throw new Error('Invalid encryption key - must be at least 8 characters');
+    }
     
     const result = CryptoJS.AES.encrypt(data, encryptionKey).toString();
-    console.log('Encryption: Success, result length:', result.length);
+    
+    if (!result) {
+      throw new Error('Encryption failed - no result generated');
+    }
     
     return result;
   } catch (error) {
     console.error('Encryption error:', error);
-    console.error('Encryption error stack:', error instanceof Error ? error.stack : 'No stack trace');
     throw new Error(`Failed to encrypt data: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
@@ -42,18 +43,27 @@ export function encryptData(data: string, key?: string): string {
  */
 export function decryptData(encryptedData: string, key?: string): string {
   try {
+    if (!encryptedData) {
+      throw new Error('No encrypted data provided for decryption');
+    }
+    
     const encryptionKey = key || DEFAULT_ENCRYPTION_KEY;
+    
+    if (!encryptionKey || encryptionKey.length < 8) {
+      throw new Error('Invalid encryption key - must be at least 8 characters');
+    }
+    
     const decrypted = CryptoJS.AES.decrypt(encryptedData, encryptionKey);
     const result = decrypted.toString(CryptoJS.enc.Utf8);
     
     if (!result) {
-      throw new Error('Decryption resulted in empty string - possibly wrong key');
+      throw new Error('Decryption resulted in empty string - possibly wrong key or corrupted data');
     }
     
     return result;
   } catch (error) {
     console.error('Decryption error:', error);
-    throw new Error('Failed to decrypt data');
+    throw new Error(`Failed to decrypt data: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -88,4 +98,13 @@ export function generateDataHash(data: string): string {
     console.error('Hash generation error:', error);
     throw new Error('Failed to generate data hash');
   }
+}
+
+/**
+ * Validate encryption key strength
+ * @returns boolean indicating if the key is strong enough
+ */
+export function validateEncryptionKey(): boolean {
+  const key = DEFAULT_ENCRYPTION_KEY;
+  return !!(key && key.length >= 32 && key !== 'tasued-biovault-default-key-2024');
 }

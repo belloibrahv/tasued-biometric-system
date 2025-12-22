@@ -17,15 +17,6 @@ class BiometricService {
    * Handles encryption, DB transaction, and Supabase metadata sync
    */
   static async enroll(input: EnrollmentInput, clientIp: string = 'unknown', userAgent: string = 'unknown') {
-    console.log('BiometricService.enroll: Starting enrollment process');
-    console.log('BiometricService.enroll: Input:', {
-      userId: input.userId,
-      hasFacialTemplate: !!input.facialTemplate,
-      facialTemplateType: typeof input.facialTemplate,
-      hasPhoto: !!input.facialPhoto,
-      hasFingerprint: !!input.fingerprintTemplate
-    });
-    
     const { userId, facialTemplate, facialPhoto, fingerprintTemplate, facialQuality, fingerprintQuality } = input;
 
     // Prepare encrypted data
@@ -34,29 +25,24 @@ class BiometricService {
     const facialPhotos: string[] = [];
 
     if (facialTemplate) {
-      console.log('BiometricService.enroll: Processing facial template');
       const templateData = typeof facialTemplate === 'string' 
         ? facialTemplate 
         : JSON.stringify(facialTemplate);
-      console.log('BiometricService.enroll: Template data prepared, length:', templateData.length);
       
       try {
         encryptedFacialTemplate = encryptData(templateData);
-        console.log('BiometricService.enroll: Facial template encrypted successfully');
       } catch (encryptError) {
         console.error('BiometricService.enroll: Facial template encryption failed:', encryptError);
-        throw encryptError;
+        throw new Error(`Failed to encrypt facial template: ${encryptError.message}`);
       }
     }
 
     if (fingerprintTemplate) {
-      console.log('BiometricService.enroll: Processing fingerprint template');
       try {
         encryptedFingerprintTemplate = encryptData(fingerprintTemplate);
-        console.log('BiometricService.enroll: Fingerprint template encrypted successfully');
       } catch (encryptError) {
         console.error('BiometricService.enroll: Fingerprint template encryption failed:', encryptError);
-        throw encryptError;
+        throw new Error(`Failed to encrypt fingerprint template: ${encryptError.message}`);
       }
     }
 
