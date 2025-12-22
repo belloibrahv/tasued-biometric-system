@@ -25,10 +25,10 @@ class BiometricService {
     const facialPhotos: string[] = [];
 
     if (facialTemplate) {
-      const templateData = typeof facialTemplate === 'string' 
-        ? facialTemplate 
+      const templateData = typeof facialTemplate === 'string'
+        ? facialTemplate
         : JSON.stringify(facialTemplate);
-      
+
       try {
         encryptedFacialTemplate = encryptData(templateData);
       } catch (encryptError) {
@@ -241,7 +241,7 @@ export class BiometricVerificationService {
     // For simulation, generate a pseudo-random embedding based on image hash
     const hash = this.simpleHash(imageData);
     const embedding: number[] = [];
-    
+
     for (let i = 0; i < 128; i++) {
       // Generate deterministic but varied values
       const value = Math.sin(hash * (i + 1)) * 0.5 + 0.5;
@@ -304,7 +304,7 @@ export class BiometricVerificationService {
     try {
       // Extract embedding from captured image
       const capturedEmbedding = await this.extractFacialEmbedding(imageData);
-      
+
       // Calculate similarity
       const similarity = this.cosineSimilarity(capturedEmbedding, storedEmbedding);
       const matchScore = Math.round(similarity * 100);
@@ -328,8 +328,8 @@ export class BiometricVerificationService {
         confidence,
         qualityScore: Math.round(qualityScore),
         livenessCheck,
-        details: verified 
-          ? 'Verification successful' 
+        details: verified
+          ? 'Verification successful'
           : `Verification failed: ${!livenessCheck ? 'Liveness check failed' : similarity < threshold ? 'Match score too low' : 'Quality too low'}`,
       };
     } catch (error: any) {
@@ -357,13 +357,13 @@ export class BiometricVerificationService {
     try {
       // Extract embedding
       const embedding = await this.extractFacialEmbedding(imageData);
-      
+
       // Simulate quality assessment
       const qualityScore = 85 + Math.random() * 15; // 85-100%
-      
+
       // Simulate liveness detection
       const livenessCheck = Math.random() > 0.05; // 95% pass rate
-      
+
       // Validate embedding
       const isValid = embedding.length === 128 && qualityScore >= 70;
 

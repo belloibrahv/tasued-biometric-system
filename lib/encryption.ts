@@ -15,19 +15,19 @@ export function encryptData(data: string, key?: string): string {
     if (!data) {
       throw new Error('No data provided for encryption');
     }
-    
+
     const encryptionKey = key || DEFAULT_ENCRYPTION_KEY;
-    
+
     if (!encryptionKey || encryptionKey.length < 8) {
       throw new Error('Invalid encryption key - must be at least 8 characters');
     }
-    
+
     const result = CryptoJS.AES.encrypt(data, encryptionKey).toString();
-    
+
     if (!result) {
       throw new Error('Encryption failed - no result generated');
     }
-    
+
     return result;
   } catch (error) {
     console.error('Encryption error:', error);
@@ -46,20 +46,20 @@ export function decryptData(encryptedData: string, key?: string): string {
     if (!encryptedData) {
       throw new Error('No encrypted data provided for decryption');
     }
-    
+
     const encryptionKey = key || DEFAULT_ENCRYPTION_KEY;
-    
+
     if (!encryptionKey || encryptionKey.length < 8) {
       throw new Error('Invalid encryption key - must be at least 8 characters');
     }
-    
+
     const decrypted = CryptoJS.AES.decrypt(encryptedData, encryptionKey);
     const result = decrypted.toString(CryptoJS.enc.Utf8);
-    
+
     if (!result) {
       throw new Error('Decryption resulted in empty string - possibly wrong key or corrupted data');
     }
-    
+
     return result;
   } catch (error) {
     console.error('Decryption error:', error);

@@ -78,14 +78,14 @@ openssl rand -base64 32
 
 ### Step 5: Post-Deployment Verification
 
-1. **Test Database Connection**: 
+1. **Test Database Connection**:
    ```bash
    npx prisma db push --force-reset
    npx prisma db seed
    ```
 
 2. **Test Authentication**: Try logging in with seeded accounts
-3. **Test Biometric Enrollment**: 
+3. **Test Biometric Enrollment**:
    - Register a new user or login as admin
    - Navigate to `/enroll-biometric`
    - Capture facial data (should work without "Failed to encrypt data" error)

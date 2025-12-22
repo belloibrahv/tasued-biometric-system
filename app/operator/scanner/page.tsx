@@ -77,7 +77,7 @@ export default function QRScannerPage() {
         {/* Facial capture */}
         <div className="pt-4 border-t border-gray-100">
           <label className="block text-sm font-medium text-gray-700 mb-2">Facial Verification (Optional)</label>
-          
+
           {facialImage ? (
             <div className="relative">
               <img src={facialImage} alt="Captured" className="w-full h-48 object-cover rounded-lg" />

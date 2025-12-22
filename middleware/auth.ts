@@ -13,7 +13,7 @@ const prisma = new PrismaClient();
 export async function authenticateUser(req: NextApiRequest, requireAdmin: boolean = false) {
   try {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader) {
       return { authenticated: false, error: 'Missing authorization header' };
     }
@@ -80,7 +80,7 @@ async function checkAdminStatus(userId: string): Promise<boolean> {
   // In a real implementation, you would check user roles in the database
   // For now, we'll assume certain users are admins based on configuration
   // This would be replaced with proper role checking in production
-  
+
   // Example implementation:
   const adminUsers = process.env.ADMIN_USER_IDS?.split(',') || [];
   return adminUsers.includes(userId);

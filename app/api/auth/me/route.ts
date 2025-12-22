@@ -72,7 +72,7 @@ export async function GET(request: Request) {
         console.log(`Syncing profile for user ${authUser.id} on /api/auth/me`);
         try {
           const syncedUser = await UserService.syncUserFromAuth(authUser);
-          
+
           // Fetch again with biometric data
           user = await db.user.findUnique({
             where: { id: syncedUser.id },
@@ -116,14 +116,14 @@ export async function GET(request: Request) {
     }
 
     // Determine if user is admin/staff
-    const isAdmin = authUser?.user_metadata?.type === 'admin' || 
+    const isAdmin = authUser?.user_metadata?.type === 'admin' ||
                     authUser?.user_metadata?.role === 'ADMIN' ||
                     authUser?.user_metadata?.role === 'SUPER_ADMIN' ||
                     authUser?.user_metadata?.role === 'OPERATOR';
 
     // Check biometric enrollment status
     const hasBiometric = user.biometricData && (
-      !!user.biometricData.facialTemplate || 
+      !!user.biometricData.facialTemplate ||
       !!user.biometricData.fingerprintTemplate
     );
 

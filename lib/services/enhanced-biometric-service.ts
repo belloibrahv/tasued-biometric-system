@@ -58,7 +58,7 @@ export class EnhancedBiometricService {
     await this.initialize();
 
     const { width, height, data } = imageData;
-    
+
     // Calculate brightness
     let totalBrightness = 0;
     for (let i = 0; i < data.length; i += 4) {
@@ -75,7 +75,7 @@ export class EnhancedBiometricService {
     // Simple face detection heuristic (center region has skin tones)
     const centerRegion = this.getCenterRegion(imageData);
     const faceDetected = this.detectSkinTone(centerRegion);
-    
+
     // Check if face is centered (within middle 60% of image)
     const faceCentered = faceDetected;
 
@@ -103,29 +103,29 @@ export class EnhancedBiometricService {
     return tf.tidy(() => {
       // Convert image to tensor
       let tensor = tf.browser.fromPixels(imageElement);
-      
+
       // Resize to standard size (224x224 is common for face recognition)
       tensor = tf.image.resizeBilinear(tensor, [224, 224]);
-      
+
       // Normalize pixel values to [0, 1]
       tensor = tensor.div(255.0);
-      
+
       // Add batch dimension
       tensor = tensor.expandDims(0);
 
       // Generate embedding using a simple CNN-style feature extraction
       // In production, you'd use a pre-trained model like FaceNet or ArcFace
       let features = tensor;
-      
+
       // Apply convolution-like transformations
       features = this.applyFeatureExtraction(features);
-      
+
       // Global average pooling to get fixed-size embedding
       const embedding = this.globalAveragePooling(features);
-      
+
       // Normalize embedding to unit length (L2 normalization)
       const normalized = this.l2Normalize(embedding);
-      
+
       // Convert to array
       const embeddingArray = Array.from(normalized.dataSync());
 
@@ -136,7 +136,7 @@ export class EnhancedBiometricService {
       const ctx = canvas.getContext('2d')!;
       ctx.drawImage(imageElement, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      
+
       return {
         embedding: embeddingArray,
         quality: this.analyzeImageQualitySync(imageData),
@@ -208,13 +208,13 @@ export class EnhancedBiometricService {
   private applyFeatureExtraction(tensor: tf.Tensor): tf.Tensor {
     // Simulate feature extraction with multiple transformations
     // In production, use pre-trained CNN layers
-    
+
     // Average pooling to reduce dimensions
     let features = tf.avgPool(tensor, 2, 2, 'same');
-    
+
     // Apply another pooling layer
     features = tf.avgPool(features, 2, 2, 'same');
-    
+
     return features;
   }
 
@@ -231,7 +231,7 @@ export class EnhancedBiometricService {
 
   private calculateSharpness(imageData: ImageData): number {
     const { width, height, data } = imageData;
-    
+
     // Convert to grayscale and calculate Laplacian
     let variance = 0;
     let count = 0;
@@ -240,14 +240,14 @@ export class EnhancedBiometricService {
       for (let x = 1; x < width - 1; x++) {
         const idx = (y * width + x) * 4;
         const gray = (data[idx] + data[idx + 1] + data[idx + 2]) / 3;
-        
+
         // Simple Laplacian approximation
         const laplacian = Math.abs(
           4 * gray -
           (data[((y - 1) * width + x) * 4] + data[((y + 1) * width + x) * 4] +
            data[(y * width + (x - 1)) * 4] + data[(y * width + (x + 1)) * 4]) / 4
         );
-        
+
         variance += laplacian;
         count++;
       }
@@ -283,7 +283,7 @@ export class EnhancedBiometricService {
       const b = data[i + 2];
 
       // Simple skin tone detection (works for various skin tones)
-      if (r > 60 && g > 40 && b > 20 && r > g && r > b && 
+      if (r > 60 && g > 40 && b > 20 && r > g && r > b &&
           Math.abs(r - g) > 15 && r - b > 15) {
         skinPixels++;
       }
@@ -302,7 +302,7 @@ export class EnhancedBiometricService {
 
   private analyzeImageQualitySync(imageData: ImageData): BiometricQualityMetrics {
     const { width, height, data } = imageData;
-    
+
     let totalBrightness = 0;
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];

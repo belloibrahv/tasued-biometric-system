@@ -135,15 +135,15 @@ export function calculateSimilarity(descriptor1: number[], descriptor2: number[]
   if (descriptor1.length !== descriptor2.length) {
     throw new Error('Face descriptors have different dimensions');
   }
-  
+
   let sum = 0;
   for (let i = 0; i < descriptor1.length; i++) {
     const diff = descriptor1[i] - descriptor2[i];
     sum += diff * diff;
   }
-  
+
   const distance = Math.sqrt(sum);
-  
+
   // Convert distance to similarity (0-1 scale)
   return Math.max(0, 1 - distance);
 }
@@ -159,44 +159,44 @@ export async function performLivenessDetection(imageData: string | HTMLImageElem
     // This is a simplified version - in a production system, you'd want more sophisticated liveness detection
     const detections = await faceapi.detectAllFaces(imageData)
       .withFaceLandmarks();
-    
+
     if (!detections || detections.length === 0) {
-      return { 
-        isLive: false, 
-        confidence: 0, 
-        message: 'No face detected' 
+      return {
+        isLive: false,
+        confidence: 0,
+        message: 'No face detected'
       };
     }
-    
+
     // Basic check: ensure the face has proper landmark points
     const landmarks = detections[0].landmarks;
     if (!landmarks) {
-      return { 
-        isLive: false, 
-        confidence: 0, 
-        message: 'No facial landmarks detected' 
+      return {
+        isLive: false,
+        confidence: 0,
+        message: 'No facial landmarks detected'
       };
     }
-    
+
     // In a more advanced system, you could check for:
     // - Micro-expressions
     // - 3D depth information
     // - Texture analysis for photo detection
     // - Eye movement patterns
-    
+
     // For now, we'll return a positive result with high confidence
     // as a placeholder - this should be enhanced in production
-    return { 
-      isLive: true, 
-      confidence: 95, 
-      message: 'Liveness check passed' 
+    return {
+      isLive: true,
+      confidence: 95,
+      message: 'Liveness check passed'
     };
   } catch (error) {
     console.error('Liveness detection error:', error);
-    return { 
-      isLive: false, 
-      confidence: 0, 
-      message: `Liveness detection failed: ${(error as Error).message}` 
+    return {
+      isLive: false,
+      confidence: 0,
+      message: `Liveness detection failed: ${(error as Error).message}`
     };
   }
 }

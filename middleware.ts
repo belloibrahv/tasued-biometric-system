@@ -30,11 +30,11 @@ export async function middleware(request: NextRequest) {
   if (user && (pathname === '/login' || pathname === '/register')) {
     const userType = user.user_metadata?.type || 'student';
     const role = user.user_metadata?.role || 'STUDENT';
-    const isAdmin = userType === 'admin' || 
-                    role === 'ADMIN' || 
-                    role === 'SUPER_ADMIN' || 
+    const isAdmin = userType === 'admin' ||
+                    role === 'ADMIN' ||
+                    role === 'SUPER_ADMIN' ||
                     role === 'OPERATOR';
-    
+
     if (isAdmin) {
       return NextResponse.redirect(new URL('/admin', request.url));
     } else {
@@ -63,9 +63,9 @@ export async function middleware(request: NextRequest) {
   const biometricEnrolled = user.user_metadata?.biometricEnrolled === true;
 
   // Check if user is admin/staff
-  const isAdmin = userType === 'admin' || 
-                  role === 'ADMIN' || 
-                  role === 'SUPER_ADMIN' || 
+  const isAdmin = userType === 'admin' ||
+                  role === 'ADMIN' ||
+                  role === 'SUPER_ADMIN' ||
                   role === 'OPERATOR';
 
   // If admin tries to access dashboard, redirect to admin panel

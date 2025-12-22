@@ -13,20 +13,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { 
-      studentNumber, 
-      fullName, 
-      email, 
-      phone, 
-      department, 
-      level, 
-      biometricData 
+    const {
+      studentNumber,
+      fullName,
+      email,
+      phone,
+      department,
+      level,
+      biometricData
     } = req.body;
 
     // Validate required fields
     if (!studentNumber || !fullName || !email || !biometricData) {
-      return res.status(400).json({ 
-        message: 'Missing required fields: studentNumber, fullName, email, or biometricData' 
+      return res.status(400).json({
+        message: 'Missing required fields: studentNumber, fullName, email, or biometricData'
       });
     }
 
@@ -41,8 +41,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (existingUser) {
-      return res.status(409).json({ 
-        message: 'User with this student number or email already exists' 
+      return res.status(409).json({
+        message: 'User with this student number or email already exists'
       });
     }
 
@@ -80,17 +80,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
 
-    res.status(201).json({ 
-      message: 'User enrolled successfully', 
+    res.status(201).json({
+      message: 'User enrolled successfully',
       userId: user.id,
-      studentNumber: user.studentNumber 
+      studentNumber: user.studentNumber
     });
 
   } catch (error: any) {
     console.error('User enrollment error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Internal server error during enrollment',
-      error: error.message 
+      error: error.message
     });
   } finally {
     await prisma.$disconnect();
