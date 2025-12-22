@@ -1,220 +1,161 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import {
-  Upload, Users, CheckCircle, XCircle, Loader2, Download,
-  FileText, AlertTriangle
-} from 'lucide-react';
-import { toast, Toaster } from 'sonner';
+import { Users, Upload, CheckCircle, XCircle, Loader2, FileText } from 'lucide-react';
 
-export default function BulkVerificationPage() {
-  const [matricNumbers, setMatricNumbers] = useState('');
+export default function BulkVerifyPage() {
+  const [codes, setCodes] = useState('');
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [serviceSlug, setServiceSlug] = useState('library');
+  const [processed, setProcessed] = useState(false);
 
-  const handleBulkVerify = async () => {
-    const numbers = matricNumbers
-      .split('\n')
-      .map(n => n.trim())
-      .filter(n => n.length > 0);
-
-    if (numbers.length === 0) {
-      toast.error('Please enter at least one matric number');
-      return;
-    }
+  const verifyBulk = async () => {
+    const codeList = codes.split('\n').map(c => c.trim()).filter(c => c);
+    if (codeList.length === 0) return;
 
     setLoading(true);
     setResults([]);
+    setProcessed(false);
 
-    const verificationResults = [];
-
-    for (const matricNumber of numbers) {
-      try {
-        // Search for student
-        const searchRes = await fetch(`/api/operator/search?q=${encodeURIComponent(matricNumber)}`);
-        
-        if (!searchRes.ok) {
-          verificationResults.push({
-            matricNumber,
-            status: 'NOT_FOUND',
-            message: 'Student not found',
-          });
-          continue;
-        }
-
-        const searchData = await searchRes.json();
-        
-        // Verify student
-        const verifyRes = await fetch('/api/operator/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            studentId: searchData.student.id,
-            method: 'MANUAL',
-            serviceSlug,
-          }),
-        });
-
-        const verifyData = await verifyRes.json();
-
-        verificationResults.push({
-          matricNumber,
-          studentName: `${searchData.student.firstName} ${searchData.student.lastName}`,
-          status: verifyRes.ok ? 'SUCCESS' : 'FAILED',
-          message: verifyData.message || verifyData.error,
-        });
-      } catch (error) {
-        verificationResults.push({
-          matricNumber,
-          status: 'ERROR',
-          message: 'Network error',
-        });
-      }
+    try {
+      const res = await fetch('/api/operator/verify-qr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codes: codeList, bulk: true }),
+      });
+      const data = await res.json();
+      setResults(data.results || []);
+      setProcessed(true);
+    } catch (error) {
+      console.error('Bulk verification failed:', error);
+    } finally {
+      setLoading(false);
     }
-
-    setResults(verificationResults);
-    setLoading(false);
-
-    const successCount = verificationResults.filter(r => r.status === 'SUCCESS').length;
-    toast.success(`Verified ${successCount} of ${numbers.length} students`);
   };
 
-  const exportResults = () => {
-    const csv = [
-      'Matric Number,Student Name,Status,Message',
-      ...results.map(r => `${r.matricNumber},${r.studentName || ''},${r.status},${r.message}`),
-    ].join('\n');
-
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `bulk-verification-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-  };
+  const successCount = results.filter(r => r.success).length;
+  const failCount = results.filter(r => !r.success).length;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <Toaster position="top-center" richColors />
-
+    <div className="max-w-2xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-surface-950">Bulk Verification</h1>
-        <p className="text-surface-500 mt-1">Verify multiple students at once</p>
+        <h1 className="text-2xl font-semibold text-gray-900">Bulk Verification</h1>
+        <p className="text-gray-500 mt-1">Verify multiple students at once</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Input Section */}
-        <div className="glass-card p-6">
-          <h3 className="font-bold text-surface-900 mb-4">Enter Matric Numbers</h3>
-          <p className="text-sm text-surface-500 mb-4">
-            Enter one matric number per line
-          </p>
-
-          <div className="mb-4">
-            <label className="input-label">Service</label>
-            <select
-              value={serviceSlug}
-              onChange={(e) => setServiceSlug(e.target.value)}
-              className="input-field"
-            >
-              <option value="library">Library</option>
-              <option value="exam-hall">Exam Hall</option>
-              <option value="hostel">Hostel</option>
-              <option value="cafeteria">Cafeteria</option>
-            </select>
-          </div>
-
+      {/* Input */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            QR Codes (one per line)
+          </label>
           <textarea
-            value={matricNumbers}
-            onChange={(e) => setMatricNumbers(e.target.value)}
-            placeholder="CSC/2020/001&#10;CSC/2020/015&#10;CSC/2020/023"
-            className="input-field h-48 font-mono text-sm resize-none"
+            value={codes}
+            onChange={(e) => setCodes(e.target.value)}
+            placeholder="BIOVAULT-CSC/2020/001-abc123&#10;BIOVAULT-CSC/2020/002-def456&#10;..."
+            rows={8}
+            className="w-full px-4 py-3 border border-gray-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
           />
+        </div>
 
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            {codes.split('\n').filter(c => c.trim()).length} codes entered
+          </p>
           <button
-            onClick={handleBulkVerify}
-            disabled={loading || !matricNumbers.trim()}
-            className="btn-primary w-full mt-4"
+            onClick={verifyBulk}
+            disabled={loading || !codes.trim()}
+            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading ? (
-              <><Loader2 className="animate-spin mr-2" size={18} /> Verifying...</>
+              <Loader2 size={18} className="animate-spin" />
             ) : (
-              <><Users size={18} className="mr-2" /> Verify All</>
+              <Users size={18} />
             )}
+            Verify All
           </button>
         </div>
-
-        {/* Results Section */}
-        <div className="glass-card p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-surface-900">Results</h3>
-            {results.length > 0 && (
-              <button onClick={exportResults} className="btn-outline py-2 px-4 text-sm">
-                <Download size={16} className="mr-2" /> Export CSV
-              </button>
-            )}
-          </div>
-
-          {results.length === 0 ? (
-            <div className="text-center py-12 text-surface-400">
-              <FileText size={48} className="mx-auto mb-4 opacity-50" />
-              <p>Results will appear here</p>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {results.map((result, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className={`p-3 rounded-xl flex items-center gap-3 ${
-                    result.status === 'SUCCESS' ? 'bg-success-50' :
-                    result.status === 'NOT_FOUND' ? 'bg-warning-50' : 'bg-error-50'
-                  }`}
-                >
-                  {result.status === 'SUCCESS' ? (
-                    <CheckCircle size={20} className="text-success-500" />
-                  ) : result.status === 'NOT_FOUND' ? (
-                    <AlertTriangle size={20} className="text-warning-500" />
-                  ) : (
-                    <XCircle size={20} className="text-error-500" />
-                  )}
-                  <div className="flex-1">
-                    <p className="font-mono text-sm font-medium">{result.matricNumber}</p>
-                    {result.studentName && (
-                      <p className="text-xs text-surface-500">{result.studentName}</p>
-                    )}
-                  </div>
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full ${
-                    result.status === 'SUCCESS' ? 'bg-success-100 text-success-700' :
-                    result.status === 'NOT_FOUND' ? 'bg-warning-100 text-warning-700' : 'bg-error-100 text-error-700'
-                  }`}>
-                    {result.status}
-                  </span>
-                </motion.div>
-              ))}
-            </div>
-          )}
-
-          {results.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-surface-200 flex justify-between text-sm">
-              <span className="text-success-600">
-                ✓ {results.filter(r => r.status === 'SUCCESS').length} Success
-              </span>
-              <span className="text-warning-600">
-                ⚠ {results.filter(r => r.status === 'NOT_FOUND').length} Not Found
-              </span>
-              <span className="text-error-600">
-                ✗ {results.filter(r => r.status === 'FAILED' || r.status === 'ERROR').length} Failed
-              </span>
-            </div>
-          )}
-        </div>
       </div>
+
+      {/* Results summary */}
+      {processed && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle size={24} className="text-green-600" />
+              <div>
+                <p className="text-2xl font-semibold text-green-800">{successCount}</p>
+                <p className="text-sm text-green-600">Verified</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-center gap-3">
+              <XCircle size={24} className="text-red-600" />
+              <div>
+                <p className="text-2xl font-semibold text-red-800">{failCount}</p>
+                <p className="text-sm text-red-600">Failed</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Results list */}
+      {results.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <h2 className="font-medium text-gray-900">Results</h2>
+          </div>
+          <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+            {results.map((result, idx) => (
+              <div key={idx} className="px-4 py-3 flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  result.success ? 'bg-green-50' : 'bg-red-50'
+                }`}>
+                  {result.success ? (
+                    <CheckCircle size={16} className="text-green-600" />
+                  ) : (
+                    <XCircle size={16} className="text-red-600" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  {result.student ? (
+                    <>
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {result.student.firstName} {result.student.lastName}
+                      </p>
+                      <p className="text-xs text-gray-500 font-mono truncate">{result.code}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-medium text-gray-900 truncate font-mono">{result.code}</p>
+                      <p className="text-xs text-red-500">{result.message || 'Invalid code'}</p>
+                    </>
+                  )}
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  result.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                }`}>
+                  {result.success ? 'Verified' : 'Failed'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!processed && results.length === 0 && (
+        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <FileText size={32} className="text-gray-400" />
+          </div>
+          <h3 className="font-medium text-gray-900 mb-1">No verifications yet</h3>
+          <p className="text-sm text-gray-500">Enter QR codes above to verify multiple students</p>
+        </div>
+      )}
     </div>
   );
 }
