@@ -74,19 +74,19 @@ export default function QRCodePage() {
         {qrCode?.qrCodeImage ? (
           <div className="space-y-4">
             <div className="aspect-square bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-center">
-              <img 
-                src={qrCode.qrCodeImage} 
-                alt="QR Code" 
+              <img
+                src={qrCode.qrCodeImage}
+                alt="QR Code"
                 className="w-full h-full object-contain"
               />
             </div>
-            
+
             {/* Code display */}
             <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-3">
               <code className="flex-1 text-sm font-mono text-gray-700 truncate">
                 {qrCode.code}
               </code>
-              <button 
+              <button
                 onClick={copyCode}
                 className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
               >
@@ -148,7 +148,7 @@ export default function QRCodePage() {
       {/* Info */}
       <div className="bg-blue-50 rounded-xl p-4">
         <p className="text-sm text-blue-800">
-          <strong>Tip:</strong> Show this QR code at verification points for quick identity confirmation. 
+          <strong>Tip:</strong> Show this QR code at verification points for quick identity confirmation.
           The code is linked to your biometric data for secure verification.
         </p>
       </div>

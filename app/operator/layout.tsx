@@ -124,8 +124,8 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
           </nav>
 
           <div className="p-3 border-t border-gray-100">
-            <button 
-              onClick={handleLogout} 
+            <button
+              onClick={handleLogout}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
             >
               <LogOut size={20} />

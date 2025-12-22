@@ -77,14 +77,14 @@ export function validateBiometricRecord(data: {
   } else {
     const validTypes = [
       'FINGERPRINT',
-      'FACE_RECOGNITION', 
+      'FACE_RECOGNITION',
       'IRIS_SCAN',
       'RETINA_SCAN',
       'VOICE_RECOGNITION',
       'HAND_GEOMETRY',
       'SIGNATURE'
     ];
-    
+
     if (!validTypes.includes(data.biometricType)) {
       errors.push(`Invalid biometric type. Must be one of: ${validTypes.join(', ')}`);
     }
@@ -101,8 +101,8 @@ export function validateBiometricRecord(data: {
 
   // Validate confidence score if provided
   if (data.confidenceScore !== undefined) {
-    if (typeof data.confidenceScore !== 'number' || 
-        data.confidenceScore < 0 || 
+    if (typeof data.confidenceScore !== 'number' ||
+        data.confidenceScore < 0 ||
         data.confidenceScore > 100) {
       errors.push('Confidence score must be a number between 0 and 100');
     }
@@ -207,14 +207,14 @@ export function validateVerificationRequest(data: {
   } else {
     const validTypes = [
       'FINGERPRINT',
-      'FACE_RECOGNITION', 
+      'FACE_RECOGNITION',
       'IRIS_SCAN',
       'RETINA_SCAN',
       'VOICE_RECOGNITION',
       'HAND_GEOMETRY',
       'SIGNATURE'
     ];
-    
+
     if (!validTypes.includes(data.biometricType)) {
       errors.push(`Invalid biometric type. Must be one of: ${validTypes.join(', ')}`);
     }
@@ -227,8 +227,8 @@ export function validateVerificationRequest(data: {
 
   // Validate threshold if provided
   if (data.threshold !== undefined) {
-    if (typeof data.threshold !== 'number' || 
-        data.threshold < 0 || 
+    if (typeof data.threshold !== 'number' ||
+        data.threshold < 0 ||
         data.threshold > 1) {
       errors.push('Threshold must be a number between 0 and 1');
     }

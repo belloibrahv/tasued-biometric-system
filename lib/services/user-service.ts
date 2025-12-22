@@ -144,42 +144,42 @@ class UserService {
 
     // Extract user data from metadata - support multiple field name formats
     const matricNumber = (
-      metadata.studentNumber || 
-      metadata.matricNumber || 
-      metadata.matric_number || 
+      metadata.studentNumber ||
+      metadata.matricNumber ||
+      metadata.matric_number ||
       ''
     ).toUpperCase();
-    
+
     // Support both combined fullName and separate firstName/lastName
     let firstName = metadata.firstName || metadata.first_name || '';
     let lastName = metadata.lastName || metadata.last_name || '';
-    
+
     if (!firstName && !lastName && metadata.fullName) {
       const nameParts = metadata.fullName.split(' ');
       firstName = nameParts[0] || 'Unknown';
       lastName = nameParts.slice(1).join(' ') || 'User';
     }
-    
+
     if (!firstName) firstName = 'Unknown';
     if (!lastName) lastName = 'User';
 
     const otherNames = metadata.otherNames || metadata.other_names || null;
     const phoneNumber = metadata.phone || metadata.phoneNumber || metadata.phone_number || null;
     const department = metadata.department || null;
-    
+
     // CRITICAL: Preserve the level exactly as provided - this fixes the consistency issue
     const level = metadata.level ? String(metadata.level) : '100';
 
     // Determine user type from metadata
     const metadataType = (metadata.type || '').toLowerCase();
     const metadataRole = (metadata.role || '').toUpperCase();
-    const isAdmin = metadataType === 'admin' || 
-                    metadataRole === 'ADMIN' || 
-                    metadataRole === 'SUPER_ADMIN' || 
+    const isAdmin = metadataType === 'admin' ||
+                    metadataRole === 'ADMIN' ||
+                    metadataRole === 'SUPER_ADMIN' ||
                     metadataRole === 'OPERATOR';
 
     if (!email) throw new Error('Email is required for synchronization');
-    
+
     // For students, matric number is required. For admins, generate a temporary one if missing
     let finalMatricNumber = matricNumber;
     if (!isAdmin && !matricNumber) {
@@ -219,7 +219,7 @@ class UserService {
       // Update ID to match new Auth ID and sync all fields
       return await db.user.update({
         where: { email },
-        data: { 
+        data: {
           id,
           firstName,
           lastName,
@@ -239,7 +239,7 @@ class UserService {
       });
 
       if (existingByMatric) {
-        // If email matches, we already handled it. 
+        // If email matches, we already handled it.
         // If email differs, it's a conflict.
         throw new Error(`Matric Number ${finalMatricNumber} is already in use.`);
       }

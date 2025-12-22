@@ -77,8 +77,8 @@ export default function ServicesPage() {
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium text-gray-900">{service.name}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      service.isActive 
-                        ? 'bg-green-50 text-green-700' 
+                      service.isActive
+                        ? 'bg-green-50 text-green-700'
                         : 'bg-gray-100 text-gray-500'
                     }`}>
                       {service.isActive ? 'Active' : 'Inactive'}
@@ -89,8 +89,8 @@ export default function ServicesPage() {
                 <button
                   onClick={() => toggleService(service.id, service.isActive)}
                   className={`p-2 rounded-lg transition-colors ${
-                    service.isActive 
-                      ? 'text-green-600 hover:bg-green-50' 
+                    service.isActive
+                      ? 'text-green-600 hover:bg-green-50'
                       : 'text-gray-400 hover:bg-gray-100'
                   }`}
                 >
