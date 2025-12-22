@@ -26,9 +26,20 @@ export async function middleware(request: NextRequest) {
     pathname === route || pathname.startsWith('/_next') || pathname.startsWith('/static')
   );
 
-  // If user is already logged in, don't allow them to go to login/register
+  // If user is already logged in, redirect to appropriate dashboard
   if (user && (pathname === '/login' || pathname === '/register')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const userType = user.user_metadata?.type || 'student';
+    const role = user.user_metadata?.role || 'STUDENT';
+    const isAdmin = userType === 'admin' || 
+                    role === 'ADMIN' || 
+                    role === 'SUPER_ADMIN' || 
+                    role === 'OPERATOR';
+    
+    if (isAdmin) {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    } else {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
   }
 
   if (isPublicRoute) {
@@ -48,7 +59,19 @@ export async function middleware(request: NextRequest) {
 
   // Dashboard / Enrollment check
   const role = user.user_metadata?.role || 'STUDENT';
+  const userType = user.user_metadata?.type || 'student';
   const biometricEnrolled = user.user_metadata?.biometricEnrolled === true;
+
+  // Check if user is admin/staff
+  const isAdmin = userType === 'admin' || 
+                  role === 'ADMIN' || 
+                  role === 'SUPER_ADMIN' || 
+                  role === 'OPERATOR';
+
+  // If admin tries to access dashboard, redirect to admin panel
+  if (isAdmin && (pathname.startsWith('/dashboard') || pathname.startsWith('/student'))) {
+    return NextResponse.redirect(new URL('/admin', request.url));
+  }
 
   if (pathname.startsWith('/dashboard') || pathname.startsWith('/student')) {
     if (!biometricEnrolled && pathname !== '/enroll-biometric' && pathname !== '/api/auth/me') {
@@ -56,12 +79,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Role-based access control
-  if (pathname.startsWith('/admin') && role !== 'ADMIN') {
+  // Role-based access control - allow multiple admin roles
+  if (pathname.startsWith('/admin') && !isAdmin) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  if (pathname.startsWith('/operator') && role !== 'OPERATOR' && role !== 'ADMIN') {
+  if (pathname.startsWith('/operator') && !isAdmin && role !== 'OPERATOR') {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 

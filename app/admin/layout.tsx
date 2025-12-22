@@ -4,19 +4,16 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Fingerprint, LayoutDashboard, Users, Settings, LogOut, Menu,
-  Bell, Shield, BarChart3, Server, FileText, UserCog
+  Fingerprint, LayoutDashboard, Users, Server, Shield,
+  LogOut, Menu, X, Bell, Eye
 } from 'lucide-react';
 
-const sidebarItems = [
+const navItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Services', href: '/admin/services', icon: Server },
-  { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
-  { name: 'Attendance', href: '/admin/attendance', icon: FileText },
-  { name: 'Audit Logs', href: '/admin/audit', icon: FileText },
-  { name: 'Operators', href: '/admin/operators', icon: UserCog },
-  { name: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: 'Audit Logs', href: '/admin/audit', icon: Shield },
+  { name: 'Verification', href: '/operator/verify', icon: Eye },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -30,151 +27,162 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const checkAuth = async () => {
       try {
         const res = await fetch('/api/auth/me');
-        const data = await res.json();
-        
-        if (!res.ok || data.user?.type !== 'admin' || 
-            (data.user?.role !== 'SUPER_ADMIN' && data.user?.role !== 'ADMIN')) {
-          router.push('/login?redirect=/admin');
+        if (res.status === 401) {
+          router.push('/login');
           return;
         }
-        
+        const data = await res.json();
+        if (data.user?.type === 'student') {
+          router.push('/dashboard');
+          return;
+        }
         setUser(data.user);
       } catch (error) {
-        router.push('/login?redirect=/admin');
+        console.error('Auth error:', error);
       } finally {
         setLoading(false);
       }
     };
-    
     checkAuth();
   }, [router]);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
-    // Clear all stored data
     localStorage.clear();
-    sessionStorage.clear();
-    // Clear all cookies except essential ones
-    document.cookie.split(";").forEach(function(c) {
-      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-    });
-    // Redirect to homepage
     window.location.href = '/';
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-gray-500 text-sm">Loading...</p>
+        </div>
       </div>
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <div className="bg-white rounded-2xl shadow-sm border p-8 text-center max-w-sm w-full">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield className="text-red-500" size={32} />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+          <p className="text-gray-500 text-sm mb-6">You don't have admin permissions.</p>
+          <button onClick={handleLogout} className="w-full bg-gray-100 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+            Sign out
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-surface-900">
-      {/* Mobile Sidebar Overlay */}
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile overlay */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black/20 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-surface-950 text-white transform transition-transform duration-300 lg:translate-x-0 ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-surface-800">
-            <Link href="/admin" className="flex items-center gap-3">
-              <div className="bg-brand-500 p-2 rounded-xl">
-                <Fingerprint size={24} />
+          <div className="h-16 flex items-center px-4 border-b border-gray-100">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Fingerprint size={20} className="text-white" />
               </div>
               <div>
-                <span className="text-lg font-bold">BioVault</span>
-                <span className="ml-1 text-xs text-brand-400">Admin</span>
+                <span className="font-semibold text-gray-900">BioVault</span>
+                <span className="text-xs text-gray-500 block">Admin</span>
               </div>
             </Link>
+            <button onClick={() => setSidebarOpen(false)} className="ml-auto lg:hidden p-1">
+              <X size={20} className="text-gray-500" />
+            </button>
           </div>
 
-          {/* User Info */}
-          <div className="p-4 border-b border-surface-800">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-brand-500/20 flex items-center justify-center">
-                <Shield size={20} className="text-brand-400" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">{user.fullName}</p>
-                <p className="text-xs text-surface-400">{user.role}</p>
+          {/* User card */}
+          <div className="p-4">
+            <div className="bg-blue-50 rounded-xl p-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm">
+                    {user.firstName?.[0]}{user.lastName?.[0]}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 text-sm truncate">{user.firstName} {user.lastName}</p>
+                  <p className="text-xs text-blue-600 font-medium">Administrator</p>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {sidebarItems.map((item) => {
+          <nav className="flex-1 px-3 py-2">
+            {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                    isActive
-                      ? 'bg-brand-500 text-white'
-                      : 'text-surface-300 hover:bg-surface-800 hover:text-white'
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors ${
+                    isActive 
+                      ? 'bg-blue-50 text-blue-600' 
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   <item.icon size={20} />
-                  <span>{item.name}</span>
+                  <span className="font-medium text-sm">{item.name}</span>
                 </Link>
               );
             })}
           </nav>
 
           {/* Logout */}
-          <div className="p-4 border-t border-surface-800">
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-surface-300 hover:bg-error-500/20 hover:text-error-400 w-full transition-all"
+          <div className="p-3 border-t border-gray-100">
+            <button 
+              onClick={handleLogout} 
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
             >
               <LogOut size={20} />
-              <span>Logout</span>
+              <span className="font-medium text-sm">Sign out</span>
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Main content */}
       <div className="lg:pl-64">
-        {/* Top Header */}
-        <header className="sticky top-0 z-30 bg-surface-900/80 backdrop-blur-lg border-b border-surface-800">
-          <div className="flex items-center justify-between px-4 lg:px-8 h-16">
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-xl text-surface-400 hover:bg-surface-800"
-            >
-              <Menu size={24} />
+        {/* Header */}
+        <header className="h-16 bg-white border-b border-gray-200 sticky top-0 z-30">
+          <div className="flex items-center justify-between h-full px-4 lg:px-6">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-gray-100">
+              <Menu size={20} className="text-gray-600" />
             </button>
-
-            <div className="flex items-center gap-4">
-              <button className="relative p-2 rounded-xl text-surface-400 hover:bg-surface-800">
-                <Bell size={20} />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-error-500 rounded-full" />
-              </button>
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-semibold text-white">{user.fullName}</p>
-                <p className="text-xs text-surface-400">Admin Portal</p>
+            
+            <div className="flex-1 lg:flex-none" />
+            
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs font-medium text-green-700">System Online</span>
               </div>
+              <button className="p-2 rounded-lg hover:bg-gray-100 relative">
+                <Bell size={20} className="text-gray-600" />
+              </button>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="p-4 lg:p-8">
+        {/* Page content */}
+        <main className="p-4 lg:p-6">
           {children}
         </main>
       </div>

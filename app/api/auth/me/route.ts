@@ -60,7 +60,7 @@ export async function GET(request: Request) {
       }
     });
 
-    // If missing, try to sync from Supabase
+    // If missing, try to sync from Supabase (but with timeout protection)
     if (!user) {
       if (!authUser) {
         const supabase = createClient();
@@ -70,24 +70,41 @@ export async function GET(request: Request) {
 
       if (authUser) {
         console.log(`Syncing profile for user ${authUser.id} on /api/auth/me`);
-        const syncedUser = await UserService.syncUserFromAuth(authUser);
-        
-        // Fetch again with biometric data
-        user = await db.user.findUnique({
-          where: { id: syncedUser.id },
-          include: {
-            biometricData: {
-              select: {
-                id: true,
-                facialTemplate: true,
-                fingerprintTemplate: true,
-                facialQuality: true,
-                fingerprintQuality: true,
-                enrolledAt: true,
+        try {
+          const syncedUser = await UserService.syncUserFromAuth(authUser);
+          
+          // Fetch again with biometric data
+          user = await db.user.findUnique({
+            where: { id: syncedUser.id },
+            include: {
+              biometricData: {
+                select: {
+                  id: true,
+                  facialTemplate: true,
+                  fingerprintTemplate: true,
+                  facialQuality: true,
+                  fingerprintQuality: true,
+                  enrolledAt: true,
+                }
               }
             }
-          }
-        });
+          });
+        } catch (syncError: any) {
+          console.error('User sync failed:', syncError);
+          // Return a minimal user object to prevent infinite loops
+          return NextResponse.json({
+            error: 'User sync failed',
+            details: syncError.message,
+            user: {
+              id: authUser.id,
+              email: authUser.email,
+              firstName: authUser.user_metadata?.firstName || 'Unknown',
+              lastName: authUser.user_metadata?.lastName || 'User',
+              type: authUser.user_metadata?.type || 'student',
+              biometricEnrolled: false,
+            }
+          }, { status: 200 });
+        }
       }
     }
 

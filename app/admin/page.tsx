@@ -2,15 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import {
-  Users, CheckCircle, Server, Activity, TrendingUp, TrendingDown,
-  UserPlus, Shield, AlertTriangle, Clock
-} from 'lucide-react';
-import {
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell
-} from 'recharts';
+import { Users, Shield, CheckCircle, Server, ChevronRight, TrendingUp, Clock } from 'lucide-react';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -19,12 +11,10 @@ export default function AdminDashboard() {
     totalVerifications: 0,
     activeServices: 0,
     newUsersToday: 0,
-    verificationsTrend: 0,
     totalEnrollment: 0,
     successRate: 0,
   });
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [serviceData, setServiceData] = useState<any[]>([]);
+  const [recentUsers, setRecentUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,9 +23,8 @@ export default function AdminDashboard() {
         const res = await fetch('/api/admin/stats');
         if (res.ok) {
           const data = await res.json();
-          setStats(data.stats);
-          setChartData(data.chartData || []);
-          setServiceData(data.serviceData || []);
+          setStats(data.stats || {});
+          setRecentUsers(data.recentUsers || []);
         }
       } catch (error) {
         console.error('Failed to fetch stats:', error);
@@ -43,221 +32,142 @@ export default function AdminDashboard() {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
   const statCards = [
-    {
-      label: 'Total Users',
-      value: stats.totalUsers,
-      icon: Users,
-      color: 'bg-brand-500',
-      change: `+${stats.newUsersToday} today`,
-      positive: true,
-    },
-    {
-      label: 'Biometric Enrollment',
-      value: stats.totalEnrollment,
-      icon: Shield,
-      color: 'bg-success-500',
-      change: `${stats.totalUsers > 0 ? Math.round((stats.totalEnrollment / stats.totalUsers) * 100) : 0}% enrolled`,
-      positive: true,
-    },
-    {
-      label: 'Total Verifications',
-      value: stats.totalVerifications,
-      icon: CheckCircle,
-      color: 'bg-purple-500',
-      change: `${stats.verificationsTrend > 0 ? '+' : ''}${stats.verificationsTrend}%`,
-      positive: stats.verificationsTrend >= 0,
-    },
-    {
-      label: 'Success Rate',
-      value: `${stats.successRate}%`,
-      icon: Activity,
-      color: 'bg-accent-500',
-      change: 'System optimal',
-      positive: true,
-    },
+    { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'blue', change: `+${stats.newUsersToday} today` },
+    { label: 'Enrolled', value: stats.totalEnrollment, icon: Shield, color: 'green', change: `${stats.totalUsers > 0 ? Math.round((stats.totalEnrollment / stats.totalUsers) * 100) : 0}%` },
+    { label: 'Verifications', value: stats.totalVerifications, icon: CheckCircle, color: 'purple', change: 'All time' },
+    { label: 'Services', value: stats.activeServices, icon: Server, color: 'orange', change: 'Active' },
   ];
 
-  const COLORS = ['#0066CC', '#059669', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4'];
+  const colorMap: Record<string, { bg: string; text: string; icon: string }> = {
+    blue: { bg: 'bg-blue-50', text: 'text-blue-600', icon: 'bg-blue-100' },
+    green: { bg: 'bg-green-50', text: 'text-green-600', icon: 'bg-green-100' },
+    purple: { bg: 'bg-purple-50', text: 'text-purple-600', icon: 'bg-purple-100' },
+    orange: { bg: 'bg-orange-50', text: 'text-orange-600', icon: 'bg-orange-100' },
+  };
+
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-6">
+        <div className="h-24 bg-gray-200 rounded-2xl"></div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-28 bg-gray-200 rounded-xl"></div>)}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-[32px] bg-mesh p-8 md:p-12 border border-white/40 shadow-xl">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 blur-[80px] rounded-full" />
-        <div className="relative z-10">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="inline-flex items-center gap-2 bg-brand-500/10 px-3 py-1 rounded-full mb-4"
-          >
-            <Shield size={14} className="text-brand-600" />
-            <span className="text-[10px] font-black text-brand-700 uppercase tracking-widest">System Controller Active</span>
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-3xl md:text-5xl font-black text-white tracking-tight"
-          >
-            Administrative <span className="text-brand-400">Command Center</span>
-          </motion.h1>
-          <p className="text-surface-400 mt-4 text-lg max-w-lg font-medium">Real-time oversight of TASUED&apos;s biometric identity ecosystem and service nodes.</p>
-        </div>
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Admin Dashboard</h1>
+        <p className="text-gray-500 mt-1">Overview of the biometric system</p>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statCards.map((stat, idx) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: idx * 0.1 }}
-            className="glass-card-dark p-6 group hover:translate-y-[-4px] transition-all duration-300"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-2xl ${stat.color} text-white group-hover:scale-110 transition-transform shadow-lg shadow-${stat.color.split('-')[1]}-500/20`}>
-                <stat.icon size={24} />
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((stat) => {
+          const colors = colorMap[stat.color];
+          return (
+            <div key={stat.label} className="bg-white rounded-xl border border-gray-200 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`w-10 h-10 ${colors.icon} rounded-lg flex items-center justify-center`}>
+                  <stat.icon size={20} className={colors.text} />
+                </div>
+                <span className="text-xs text-gray-500 font-medium">{stat.change}</span>
               </div>
-              <span className={`text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest bg-white/5 text-white/70 border border-white/10`}>
-                {stat.change}
-              </span>
+              <p className="text-2xl font-semibold text-gray-900">{stat.value.toLocaleString()}</p>
+              <p className="text-sm text-gray-500 mt-1">{stat.label}</p>
             </div>
-            <div className="text-3xl font-black text-white">{stat.value.toLocaleString()}</div>
-            <div className="text-xs text-surface-400 font-bold uppercase tracking-widest mt-2">{stat.label}</div>
-          </motion.div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Verifications Chart */}
-        <div className="glass-card-dark p-8 border border-white/5">
-          <div className="flex items-center justify-between mb-10">
-            <div>
-              <h3 className="text-xl font-black text-white uppercase tracking-tight">Access Velocity</h3>
-              <p className="text-[10px] font-bold text-surface-500 uppercase tracking-widest mt-1">Verification Trends • Last 24 Hours</p>
+      {/* Quick actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Link href="/admin/users" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all group">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+              <Users size={24} className="text-blue-600" />
             </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-gray-900">Manage Users</h3>
+              <p className="text-sm text-gray-500">View and edit users</p>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
           </div>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="colorVerifications" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0066CC" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#0066CC" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="4 4" stroke="#ffffff10" vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  stroke="#ffffff40"
-                  fontSize={10}
-                  fontWeight={800}
-                  tickLine={false}
-                  axisLine={false}
-                  dy={10}
-                />
-                <YAxis
-                  stroke="#ffffff40"
-                  fontSize={10}
-                  fontWeight={800}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#0F172A',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '20px',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                  }}
-                  itemStyle={{ color: '#fff', fontWeight: 'bold' }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="count"
-                  stroke="#0066CC"
-                  strokeWidth={4}
-                  fillOpacity={1}
-                  fill="url(#colorVerifications)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        </Link>
 
-        {/* Service Usage */}
-        <div className="bg-surface-800 rounded-2xl p-6 border border-surface-700">
-          <h3 className="font-bold text-white mb-6">Service Usage</h3>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={serviceData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {serviceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#1e293b',
-                    border: '1px solid #334155',
-                    borderRadius: '12px',
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+        <Link href="/admin/services" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all group">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center group-hover:bg-green-100 transition-colors">
+              <Server size={24} className="text-green-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-gray-900">Services</h3>
+              <p className="text-sm text-gray-500">Configure services</p>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
           </div>
-          <div className="flex flex-wrap gap-4 justify-center mt-4">
-            {serviceData.map((entry, index) => (
-              <div key={entry.name} className="flex items-center gap-2">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                />
-                <span className="text-sm text-surface-300">{entry.name}</span>
-              </div>
-            ))}
+        </Link>
+
+        <Link href="/admin/audit" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all group">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+              <Shield size={24} className="text-purple-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-gray-900">Audit Logs</h3>
+              <p className="text-sm text-gray-500">View system logs</p>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
           </div>
-        </div>
+        </Link>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {[
-          { href: '/admin/users', title: 'User Management', desc: 'Control student identities', icon: UserPlus, color: 'from-brand-500 to-brand-700' },
-          { href: '/admin/services', title: 'Node Config', desc: 'Secure service terminals', icon: Server, color: 'from-success-500 to-success-700' },
-          { href: '/admin/audit', title: 'Audit Engine', desc: 'Unified security logs', icon: Shield, color: 'from-accent-500 to-accent-700' },
-        ].map((action, idx) => (
-          <Link
-            key={action.title}
-            href={action.href}
-            className="glass-card-dark p-8 group hover:scale-[1.05] transition-all duration-500 overflow-hidden relative"
-          >
-            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${action.color} opacity-10 blur-[40px] rounded-full`} />
-            <div className="flex items-center gap-6 relative z-10">
-              <div className={`p-5 bg-gradient-to-br ${action.color} rounded-[24px] text-white shadow-xl`}>
-                <action.icon size={32} />
-              </div>
-              <div>
-                <h3 className="text-lg font-black text-white uppercase tracking-tight">{action.title}</h3>
-                <p className="text-xs text-surface-500 font-bold uppercase tracking-widest mt-1">{action.desc}</p>
-              </div>
-            </div>
+      {/* Recent users */}
+      <div className="bg-white rounded-xl border border-gray-200">
+        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+          <h2 className="font-medium text-gray-900">Recent Users</h2>
+          <Link href="/admin/users" className="text-sm text-blue-600 font-medium hover:underline">
+            View all
           </Link>
-        ))}
+        </div>
+        <div className="divide-y divide-gray-100">
+          {recentUsers.length > 0 ? (
+            recentUsers.slice(0, 5).map((user, idx) => (
+              <div key={idx} className="px-4 py-3 flex items-center gap-3">
+                <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center">
+                  <span className="text-gray-600 font-medium text-sm">
+                    {user.firstName?.[0]}{user.lastName?.[0]}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {user.biometricEnrolled ? (
+                    <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full font-medium">Enrolled</span>
+                  ) : (
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-medium">Pending</span>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="px-4 py-8 text-center">
+              <Users size={32} className="text-gray-300 mx-auto mb-2" />
+              <p className="text-sm text-gray-500">No users yet</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
