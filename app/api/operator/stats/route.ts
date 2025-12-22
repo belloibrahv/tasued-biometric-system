@@ -1,21 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { createClient } from '@/utils/supabase/server';
 import db from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value ||
-      request.headers.get('authorization')?.replace('Bearer ', '');
+    // Use Supabase auth
+    const supabase = createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (!token) {
+    if (error || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = await verifyToken(token);
-    if (!payload || (payload.type !== 'admin' && payload.type !== 'operator')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Check if user is admin/operator
+    const userType = user.user_metadata?.type || 'student';
+    const role = user.user_metadata?.role || 'STUDENT';
+    const isOperator = userType === 'admin' || role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OPERATOR';
+
+    if (!isOperator) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Get today's date range
@@ -36,22 +41,6 @@ export async function GET(request: NextRequest) {
       where: {
         timestamp: { gte: today, lt: tomorrow },
         status: 'SUCCESS',
-      },
-    });
-
-    // Failed attempts today
-    const failedToday = await db.accessLog.count({
-      where: {
-        timestamp: { gte: today, lt: tomorrow },
-        status: 'FAILED',
-      },
-    });
-
-    // Pending verifications (if any)
-    const pendingVerifications = await db.accessLog.count({
-      where: {
-        timestamp: { gte: today, lt: tomorrow },
-        status: 'PENDING',
       },
     });
 
@@ -82,20 +71,20 @@ export async function GET(request: NextRequest) {
     });
 
     const recentVerifications = recentLogs.map(log => ({
-      studentName: `${log.user.firstName} ${log.user.lastName}`,
-      matricNumber: log.user.matricNumber,
-      service: log.service?.name || 'Unknown',
+      user: {
+        firstName: log.user.firstName,
+        lastName: log.user.lastName,
+        matricNumber: log.user.matricNumber,
+      },
       status: log.status,
-      method: log.method,
-      time: formatTimeAgo(log.timestamp),
+      timestamp: log.timestamp,
     }));
 
     return NextResponse.json({
       stats: {
         todayVerifications,
         successRate,
-        pendingVerifications,
-        failedAttempts: failedToday,
+        pendingVerifications: 0,
       },
       recentVerifications,
     });
@@ -104,18 +93,4 @@ export async function GET(request: NextRequest) {
     console.error('Operator stats error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
-function formatTimeAgo(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} min ago`;
-
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-
-  return date.toLocaleDateString();
 }

@@ -1,19 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { createClient } from '@/utils/supabase/server';
 import db from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value ||
-      request.headers.get('authorization')?.replace('Bearer ', '');
+    // Use Supabase auth
+    const supabase = createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
 
-    if (!token) {
+    if (error || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = await verifyToken(token);
-    if (!payload || payload.type !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Check if user is admin
+    const userType = user.user_metadata?.type || 'student';
+    const role = user.user_metadata?.role || 'STUDENT';
+    const isAdmin = userType === 'admin' || role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OPERATOR';
+
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const searchParams = request.nextUrl.searchParams;
@@ -36,18 +43,14 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    if (filter === 'active') {
-      where.isActive = true;
-    } else if (filter === 'inactive') {
-      where.isActive = false;
-    } else if (filter === 'enrolled') {
+    if (filter === 'enrolled') {
       where.biometricEnrolled = true;
     } else if (filter === 'pending') {
       where.biometricEnrolled = false;
     }
 
-    // Get users and stats in parallel
-    const [users, total, enrolledCount, totalStudents] = await Promise.all([
+    // Get users and total count
+    const [users, total] = await Promise.all([
       db.user.findMany({
         where,
         select: {
@@ -61,32 +64,19 @@ export async function GET(request: NextRequest) {
           isActive: true,
           biometricEnrolled: true,
           createdAt: true,
-          lastLoginAt: true,
-          profilePhoto: true,
         },
         orderBy: { createdAt: 'desc' },
         skip,
         take: limit,
       }),
       db.user.count({ where }),
-      db.user.count({ where: { biometricEnrolled: true } }),
-      db.user.count(),
     ]);
 
     return NextResponse.json({
       users,
-      stats: {
-        total: totalStudents,
-        enrolled: enrolledCount,
-        pending: totalStudents - enrolledCount,
-        enrollmentRate: totalStudents > 0 ? Math.round((enrolledCount / totalStudents) * 100) : 0,
-      },
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
     });
 
   } catch (error) {
