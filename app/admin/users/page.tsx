@@ -23,10 +23,14 @@ export default function UsersPage() {
           ...(filter !== 'all' && { filter }),
         });
         const res = await fetch(`/api/admin/users?${params}`);
+        console.log('Users API response status:', res.status);
+        const data = await res.json();
+        console.log('Users API response data:', data);
         if (res.ok) {
-          const data = await res.json();
           setUsers(data.users || []);
           setTotal(data.total || 0);
+        } else {
+          console.error('Users API error:', data);
         }
       } catch (error) {
         console.error('Failed to fetch users:', error);

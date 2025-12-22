@@ -3,6 +3,7 @@ import { verifyToken } from '@/lib/auth';
 import db from '@/lib/db';
 import crypto from 'crypto';
 import { createClient } from '@/utils/supabase/server';
+import QRCode from 'qrcode';
 
 // GET - Get current QR code
 export const dynamic = 'force-dynamic';
@@ -65,6 +66,9 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
 
+    let qrCodeImage: string | null = null;
+    let qrCodeUrl: string | null = null;
+
     // If no valid QR code, create a new one
     if (!qrCode) {
       const expiresAt = new Date();
@@ -84,6 +88,20 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Generate QR code image
+    qrCodeUrl = `${request.nextUrl.origin}/api/verify-qr/${encodeURIComponent(qrCode.code)}`;
+    qrCodeImage = await QRCode.toDataURL(qrCodeUrl, {
+      errorCorrectionLevel: 'M',
+      type: 'image/png',
+      quality: 0.92,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      },
+      width: 256
+    });
+
     // Calculate time remaining
     const now = new Date();
     const expiresAt = new Date(qrCode.expiresAt);
@@ -93,7 +111,8 @@ export async function GET(request: NextRequest) {
       qrCode: {
         id: qrCode.id,
         code: qrCode.code,
-        url: `${request.nextUrl.origin}/api/verify-qr/${encodeURIComponent(qrCode.code)}`, // Public verification URL
+        qrCodeImage: qrCodeImage,
+        url: qrCodeUrl,
         expiresAt: qrCode.expiresAt,
         secondsRemaining,
         usageCount: qrCode.usageCount,
@@ -176,11 +195,26 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Generate QR code image
+    const qrCodeUrl = `${request.nextUrl.origin}/api/verify-qr/${encodeURIComponent(code)}`;
+    const qrCodeImage = await QRCode.toDataURL(qrCodeUrl, {
+      errorCorrectionLevel: 'M',
+      type: 'image/png',
+      quality: 0.92,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      },
+      width: 256
+    });
+
     return NextResponse.json({
       qrCode: {
         id: qrCode.id,
         code: qrCode.code,
-        url: `${request.nextUrl.origin}/api/verify-qr/${encodeURIComponent(qrCode.code)}`,
+        qrCodeImage: qrCodeImage,
+        url: qrCodeUrl,
         expiresAt: qrCode.expiresAt,
         secondsRemaining: 300, // 5 minutes
       },

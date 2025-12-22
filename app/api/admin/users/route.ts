@@ -10,8 +10,11 @@ export async function GET(request: NextRequest) {
     const supabase = createClient();
     const { data: { user }, error } = await supabase.auth.getUser();
 
+    console.log('Admin users API - User:', user?.id, 'Error:', error?.message);
+    console.log('Admin users API - Metadata:', user?.user_metadata);
+
     if (error || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized', details: error?.message }, { status: 401 });
     }
 
     // Check if user is admin
@@ -19,8 +22,10 @@ export async function GET(request: NextRequest) {
     const role = user.user_metadata?.role || 'STUDENT';
     const isAdmin = userType === 'admin' || role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OPERATOR';
 
+    console.log('Admin users API - userType:', userType, 'role:', role, 'isAdmin:', isAdmin);
+
     if (!isAdmin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return NextResponse.json({ error: 'Forbidden', userType, role }, { status: 403 });
     }
 
     const searchParams = request.nextUrl.searchParams;
