@@ -3,18 +3,39 @@ import { verifyToken } from '@/lib/auth';
 import db from '@/lib/db';
 import { decryptData } from '@/lib/encryption';
 import { BiometricVerificationService } from '@/lib/services/biometric-service';
+import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value ||
       request.headers.get('authorization')?.replace('Bearer ', '');
 
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let isAuthorized = false;
+    let operatorId: string | null = null;
+
+    if (token) {
+      const payload = await verifyToken(token);
+      if (payload && (payload.type === 'admin' || payload.role === 'ADMIN' || payload.role === 'SUPER_ADMIN' || payload.role === 'OPERATOR')) {
+        isAuthorized = true;
+        operatorId = payload.id;
+      }
     }
 
-    const payload = await verifyToken(token);
-    if (!payload || payload.type !== 'admin') {
+    // Fallback to Supabase session check
+    if (!isAuthorized) {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const userType = user.user_metadata?.type;
+        const userRole = user.user_metadata?.role;
+        if (userType === 'admin' || userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || userRole === 'OPERATOR') {
+          isAuthorized = true;
+          operatorId = user.id;
+        }
+      }
+    }
+
+    if (!isAuthorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -29,18 +50,15 @@ export async function POST(request: NextRequest) {
     if (code && code.includes('/')) {
       try {
         const url = new URL(code);
-        // Extract the code from the last part of the path
         const pathParts = url.pathname.split('/');
         extractedCode = pathParts[pathParts.length - 1] || code;
-        // Decode it in case it was encoded
         extractedCode = decodeURIComponent(extractedCode);
       } catch (e) {
-        // If not a valid URL, use the original value
         extractedCode = code;
       }
     }
 
-    // Find the QR code by the extracted code
+    // Find the QR code
     let qrCode = await db.qRCode.findUnique({
       where: { code: extractedCode },
       include: {
@@ -110,24 +128,20 @@ export async function POST(request: NextRequest) {
       }, { status: 404 });
     }
 
+    // Get biometric data for status
+    const biometricData = await db.biometricData.findUnique({
+      where: { userId: student.id },
+    });
+
     // Perform biometric verification if facial image is provided
     let biometricResult: any = null;
     if (facialImage) {
-      // Get stored biometric data
-      const biometricData = await db.biometricData.findUnique({
-        where: { userId: student.id },
-      });
-
       if (biometricData && biometricData.facialTemplate) {
         try {
-          // Initialize biometric service
           const biometricService = BiometricVerificationService.getInstance();
-
-          // Get the stored template and verify it's a valid JSON string
           const decryptedTemplate = decryptData(biometricData.facialTemplate);
           const storedEmbedding = JSON.parse(decryptedTemplate);
 
-          // Perform enhanced verification
           biometricResult = await biometricService.enhancedVerifyFacialImage(
             facialImage,
             storedEmbedding
@@ -160,13 +174,13 @@ export async function POST(request: NextRequest) {
       where: { id: qrCode.id },
       data: {
         usageCount: { increment: 1 },
-        lastUsedAt: new Date(),
+        usedAt: new Date(),
       },
     });
 
-    // Determine verification method based on biometric check
+    // Determine verification method
     const verificationMethod = biometricResult
-      ? (biometricResult.verified ? 'QR_CODE+BIOMETRIC' : 'QR_CODE+BIOMETRIC_FAILED')
+      ? (biometricResult.verified ? 'QR_CODE' : 'QR_CODE')
       : 'QR_CODE';
 
     // Create access log
@@ -174,14 +188,13 @@ export async function POST(request: NextRequest) {
       data: {
         userId: student.id,
         serviceId: service.id,
-        verificationMethod: verificationMethod as any,
+        action: 'OPERATOR_QR_VERIFICATION',
+        method: verificationMethod as any,
         status: biometricResult ? (biometricResult.verified ? 'SUCCESS' : 'FAILED') : 'SUCCESS',
-        operatorId: payload.id,
+        confidenceScore: biometricResult?.matchScore,
         location: service.name,
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
-        timestamp: new Date(),
-        biometricMatchScore: biometricResult?.matchScore,
+        deviceInfo: request.headers.get('user-agent') || 'unknown',
       },
     });
 
@@ -189,8 +202,7 @@ export async function POST(request: NextRequest) {
     await db.auditLog.create({
       data: {
         userId: student.id,
-        actorType: 'OPERATOR',
-        actorId: payload.id,
+        adminId: operatorId,
         actionType: 'QR_VERIFICATION',
         resourceType: 'ACCESS_LOG',
         resourceId: accessLog.id,
@@ -201,23 +213,8 @@ export async function POST(request: NextRequest) {
           verificationMethod: verificationMethod,
           biometricVerified: biometricResult?.verified,
           biometricMatchScore: biometricResult?.matchScore,
-          biometricQualityScore: biometricResult?.qualityScore,
-          biometricLivenessCheck: biometricResult?.livenessCheck,
           biometricEnrolled: student.biometricEnrolled,
-          ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         },
-        timestamp: new Date(),
-      },
-    });
-
-    // Create notification
-    await db.notification.create({
-      data: {
-        userId: student.id,
-        type: 'VERIFICATION',
-        title: `Access Granted: ${service.name}`,
-        message: `Your ${verificationMethod.includes('BIOMETRIC') ? 'biometric' : 'QR'} verification was ${biometricResult?.verified ? 'successful' : 'with biometric failure'} at ${service.name} on ${new Date().toLocaleString()}.`,
-        createdAt: new Date(),
       },
     });
 
@@ -255,7 +252,7 @@ export async function POST(request: NextRequest) {
         method: verificationMethod,
         timestamp: accessLog.timestamp,
         location: service.name,
-        verifiedBy: payload.id,
+        verifiedBy: operatorId,
         status: biometricResult ? (biometricResult.verified ? 'SUCCESS' : 'PARTIAL') : 'SUCCESS',
       },
     });

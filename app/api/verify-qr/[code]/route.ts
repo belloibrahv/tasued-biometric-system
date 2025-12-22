@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
-import { verifyToken } from '@/lib/auth';
-import { createClient } from '@/utils/supabase/server';
 
 // Get the QR code from the dynamic route parameter
 export async function GET(
@@ -24,7 +22,7 @@ export async function GET(
       where: {
         code: code,
         isActive: true,
-        expiresAt: { gt: new Date() }, // Ensure it hasn't expired
+        expiresAt: { gt: new Date() },
       },
       include: {
         user: {
@@ -65,7 +63,7 @@ export async function GET(
       where: { id: qrRecord.id },
       data: {
         usageCount: { increment: 1 },
-        lastUsedAt: new Date(),
+        usedAt: new Date(),
       },
     });
 
@@ -73,14 +71,13 @@ export async function GET(
     await db.accessLog.create({
       data: {
         userId: qrRecord.user.id,
-        serviceId: null, // No specific service for public QR scans
-        verificationMethod: 'QR_CODE_PUBLIC_SCAN',
+        serviceId: null,
+        action: 'QR_CODE_PUBLIC_SCAN',
+        method: 'QR_CODE',
         status: 'SUCCESS',
-        operatorId: 'PUBLIC_SCANNER', // Indicate it was a public scan
         location: 'Public Verification',
         ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
-        timestamp: new Date(),
+        deviceInfo: request.headers.get('user-agent') || 'unknown',
       },
     });
 
@@ -88,8 +85,6 @@ export async function GET(
     await db.auditLog.create({
       data: {
         userId: qrRecord.user.id,
-        actorType: 'SYSTEM',
-        actorId: 'PUBLIC_QR_SCANNER',
         actionType: 'PUBLIC_QR_VERIFICATION',
         resourceType: 'USER',
         resourceId: qrRecord.user.id,
@@ -100,11 +95,10 @@ export async function GET(
           scannerInfo: request.headers.get('user-agent') || 'unknown',
           ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
         },
-        timestamp: new Date(),
       },
     });
 
-    // Return the user information in a formatted way
+    // Return the user information
     return NextResponse.json({
       success: true,
       student: {
@@ -146,8 +140,6 @@ export async function GET(
 }
 
 export async function POST(request: NextRequest) {
-  // POST requests to the dynamic route are not supported
-  // Use the main /api/verify-qr endpoint for POST requests
   return NextResponse.json(
     { error: 'POST requests to this endpoint are not supported. Use /api/verify-qr instead.' },
     { status: 405 }

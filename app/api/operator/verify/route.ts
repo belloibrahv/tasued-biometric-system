@@ -1,18 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import db from '@/lib/db';
+import { createClient } from '@/utils/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
     const token = request.cookies.get('auth-token')?.value ||
       request.headers.get('authorization')?.replace('Bearer ', '');
 
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let isAuthorized = false;
+    let operatorId: string | null = null;
+
+    if (token) {
+      const payload = await verifyToken(token);
+      if (payload && (payload.type === 'admin' || payload.role === 'ADMIN' || payload.role === 'SUPER_ADMIN' || payload.role === 'OPERATOR')) {
+        isAuthorized = true;
+        operatorId = payload.id;
+      }
     }
 
-    const payload = await verifyToken(token);
-    if (!payload || (payload.type !== 'admin' && payload.type !== 'operator')) {
+    // Fallback to Supabase session check
+    if (!isAuthorized) {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const userType = user.user_metadata?.type;
+        const userRole = user.user_metadata?.role;
+        if (userType === 'admin' || userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || userRole === 'OPERATOR') {
+          isAuthorized = true;
+          operatorId = user.id;
+        }
+      }
+    }
+
+    if (!isAuthorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -22,7 +43,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Student ID and method are required' }, { status: 400 });
     }
 
-    // Fetch student and service in parallel for better performance
+    // Fetch student and service in parallel
     const [student, service] = await Promise.all([
       db.user.findUnique({ where: { id: studentId } }),
       db.service.findUnique({ where: { slug: serviceSlug } })
@@ -52,7 +73,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Student has not enrolled biometrics' }, { status: 400 });
       }
 
-      // Simulate biometric verification (in production, use actual biometric matching)
       const hasTemplate = method === 'FINGERPRINT'
         ? !!biometric.fingerprintTemplate
         : !!biometric.facialTemplate;
@@ -64,68 +84,33 @@ export async function POST(request: NextRequest) {
       matchScore = 92 + Math.random() * 6; // 92-98% match score
     }
 
-    // Use a single transaction for all mutations to minimize db round-trips
-    const [accessLog] = await db.$transaction([
-      db.accessLog.create({
-        data: {
-          userId: studentId,
-          serviceId: service.id,
-          verificationMethod: method,
-          status: 'SUCCESS',
-          biometricMatchScore: matchScore,
-          operatorId: payload.id,
-          location: 'Main Campus',
-          ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        },
-      }),
-      db.serviceConnection.updateMany({
-        where: {
-          userId: studentId,
-          serviceId: service.id,
-        },
-        data: {
-          accessCount: { increment: 1 },
-          lastAccessedAt: new Date(),
-        },
-      }),
-      db.notification.create({
-        data: {
-          userId: studentId,
-          type: 'VERIFICATION',
-          title: 'Identity Verified',
-          message: `Your identity was verified at ${service.name} using ${method.toLowerCase().replace('_', ' ')}.`,
-        },
-      })
-    ]);
+    // Create access log
+    const accessLog = await db.accessLog.create({
+      data: {
+        userId: studentId,
+        serviceId: service.id,
+        action: 'OPERATOR_VERIFICATION',
+        method: method as any,
+        status: 'SUCCESS',
+        confidenceScore: matchScore,
+        location: 'Main Campus',
+        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
+        deviceInfo: request.headers.get('user-agent') || 'unknown',
+      },
+    });
 
-    // Async Audit Log (Non-blocking)
+    // Create audit log (non-blocking)
     db.auditLog.create({
       data: {
         userId: studentId,
-        actorType: 'OPERATOR',
-        actorId: payload.id,
+        adminId: operatorId,
         actionType: 'VERIFICATION',
         resourceType: 'ACCESS_LOG',
         resourceId: accessLog.id,
         status: 'SUCCESS',
         details: { method, service: service.name, matchScore },
       },
-    }).catch(err => console.error('Failed to create async audit log:', err));
-
-    return NextResponse.json({
-      message: 'Verification successful',
-      verification: {
-        id: accessLog.id,
-        student: {
-          name: `${student.firstName} ${student.lastName}`,
-          matricNumber: student.matricNumber,
-        },
-        service: service.name,
-        method,
-        matchScore,
-        timestamp: accessLog.timestamp,
-      },
-    });
+    }).catch(err => console.error('Failed to create audit log:', err));
 
     return NextResponse.json({
       message: 'Verification successful',

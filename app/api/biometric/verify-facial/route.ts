@@ -69,8 +69,6 @@ export async function POST(request: NextRequest) {
     await db.auditLog.create({
       data: {
         userId: payload.id,
-        actorType: payload.type === 'admin' ? 'ADMIN' : 'STUDENT',
-        actorId: payload.id,
         actionType: 'BIOMETRIC_VERIFICATION',
         resourceType: 'BIOMETRIC',
         resourceId: biometricData.id,

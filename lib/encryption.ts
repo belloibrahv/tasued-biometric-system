@@ -1,74 +1,53 @@
-import { createHash, createCipheriv, createDecipheriv } from 'crypto';
+// lib/encryption.ts
+import { AES, enc } from 'crypto-js';
 
 /**
- * Utility functions for encrypting/decrypting biometric data
- */
-
-const ALGORITHM = 'aes-256-cbc';
-const IV_LENGTH = 16; // For AES, this is always 16
-
-/**
- * Encrypt biometric data
- * @param text Plain biometric data to encrypt
+ * Encrypt biometric template data
+ * @param data - Data to encrypt
+ * @param key - Encryption key
  * @returns Encrypted string
  */
-export const encryptData = (text: string): string => {
-  const iv = Buffer.alloc(IV_LENGTH, 0); // In production, use random IV
-  const key = process.env.ENCRYPTION_KEY;
-  
-  if (!key) {
-    throw new Error('ENCRYPTION_KEY environment variable is not set');
+export function encryptData(data: string, key: string): string {
+  try {
+    return AES.encrypt(data, key).toString();
+  } catch (error) {
+    console.error('Encryption error:', error);
+    throw new Error('Failed to encrypt data');
   }
-
-  // Pad the key to 32 bytes for AES-256
-  const paddedKey = key.padEnd(32, '0').substring(0, 32);
-  const hashKey = createHash('sha256').update(paddedKey).digest();
-  
-  const cipher = createCipheriv(ALGORITHM, hashKey, iv);
-  let encrypted = cipher.update(text, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  
-  return encrypted;
-};
+}
 
 /**
- * Decrypt biometric data
- * @param text Encrypted biometric data to decrypt
- * @returns Decrypted plain text
+ * Decrypt biometric template data
+ * @param encryptedData - Encrypted string to decrypt
+ * @param key - Encryption key
+ * @returns Decrypted string
  */
-export const decryptData = (text: string): string => {
-  const iv = Buffer.alloc(IV_LENGTH, 0); // In production, get IV from stored data
-  const key = process.env.ENCRYPTION_KEY;
-  
-  if (!key) {
-    throw new Error('ENCRYPTION_KEY environment variable is not set');
+export function decryptData(encryptedData: string, key: string): string {
+  try {
+    const decrypted = AES.decrypt(encryptedData, key);
+    return decrypted.toString(enc.Utf8);
+  } catch (error) {
+    console.error('Decryption error:', error);
+    throw new Error('Failed to decrypt data');
   }
-
-  // Pad the key to 32 bytes for AES-256
-  const paddedKey = key.padEnd(32, '0').substring(0, 32);
-  const hashKey = createHash('sha256').update(paddedKey).digest();
-  
-  const decipher = createDecipheriv(ALGORITHM, hashKey, iv);
-  let decrypted = decipher.update(text, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-  
-  return decrypted;
-};
+}
 
 /**
- * Hash biometric data for storage
- * @param data Raw biometric data to hash
- * @returns Hashed representation
+ * Encrypt biometric template with environment key
+ * @param templateString - Biometric template as JSON string
+ * @returns Encrypted template
  */
-export const hashBiometricData = (data: string): string => {
-  return createHash('sha256').update(data).digest('hex');
-};
+export function encryptBiometricTemplate(templateString: string): string {
+  const encryptionKey = process.env.BIOMETRIC_ENCRYPTION_KEY || 'default-key-change-in-production';
+  return encryptData(templateString, encryptionKey);
+}
 
 /**
- * Generate a unique biometric template ID
- * @returns Unique identifier for the biometric template
+ * Decrypt biometric template with environment key
+ * @param encryptedTemplate - Encrypted template from database
+ * @returns Decrypted template as JSON string
  */
-export const generateBiometricId = (): string => {
-  return Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15);
-};
+export function decryptBiometricTemplate(encryptedTemplate: string): string {
+  const encryptionKey = process.env.BIOMETRIC_ENCRYPTION_KEY || 'default-key-change-in-production';
+  return decryptData(encryptedTemplate, encryptionKey);
+}

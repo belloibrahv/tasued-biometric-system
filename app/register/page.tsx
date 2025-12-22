@@ -171,9 +171,9 @@ export default function RegisterPage() {
         return;
       }
 
-      toast.success('Registration successful! Redirecting to dashboard...');
+      toast.success(result.message || 'Registration successful! Redirecting to dashboard...');
       setTimeout(() => {
-        router.push(result.target);
+        router.push(result.target || '/dashboard');
       }, 1500);
     } catch (error: any) {
       toast.error(error.message || 'Registration failed');

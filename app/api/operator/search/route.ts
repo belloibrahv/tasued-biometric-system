@@ -78,9 +78,9 @@ export async function GET(request: NextRequest) {
         biometricEnrolled: !!(biometric?.fingerprintTemplate || biometric?.facialTemplate),
         biometricEnrolledAt: biometric?.enrolledAt,
         recentAccess: recentAccess.map(log => ({
-          service: log.service.name,
+          service: log.service?.name || 'Unknown',
           status: log.status,
-          method: log.verificationMethod,
+          method: log.method,
           timestamp: log.timestamp,
         })),
       },

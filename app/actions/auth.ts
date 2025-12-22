@@ -40,14 +40,21 @@ export async function login(formData: FormData) {
 export async function register(formData: any, facialEmbedding: number[], facialPhoto: string) {
   const supabase = createClient()
 
-  // 1. Supabase Auth Sign Up
+  // 1. Supabase Auth Sign Up - Store ALL user data in metadata for consistency
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email: formData.email,
     password: formData.password,
     options: {
       data: {
-        matric_number: formData.matricNumber.toUpperCase(),
-        full_name: `${formData.firstName} ${formData.lastName}`,
+        // Store all user fields in metadata to ensure consistency
+        matricNumber: formData.matricNumber.toUpperCase(),
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        otherNames: formData.otherNames || null,
+        phoneNumber: formData.phoneNumber || null,
+        department: formData.department || null,
+        level: formData.level || '100', // CRITICAL: Store level as string
+        dateOfBirth: formData.dateOfBirth || null,
         type: 'student',
         role: 'STUDENT',
         biometricEnrolled: true

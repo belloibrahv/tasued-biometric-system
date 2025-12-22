@@ -1,20 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import db from '@/lib/db';
+import { createClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    // Check authentication
     const token = request.cookies.get('auth-token')?.value ||
       request.headers.get('authorization')?.replace('Bearer ', '');
 
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let isAuthorized = false;
+
+    if (token) {
+      const payload = await verifyToken(token);
+      if (payload && (payload.type === 'admin' || payload.role === 'ADMIN' || payload.role === 'SUPER_ADMIN' || payload.role === 'OPERATOR')) {
+        isAuthorized = true;
+      }
     }
 
-    const payload = await verifyToken(token);
-    if (!payload || payload.type !== 'admin') {
+    // Fallback to Supabase session check
+    if (!isAuthorized) {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const userType = user.user_metadata?.type;
+        const userRole = user.user_metadata?.role;
+        if (userType === 'admin' || userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || userRole === 'OPERATOR') {
+          isAuthorized = true;
+        }
+      }
+    }
+
+    if (!isAuthorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -28,7 +47,7 @@ export async function GET(request: NextRequest) {
     const lastWeekStart = new Date();
     lastWeekStart.setDate(lastWeekStart.getDate() - 14);
 
-    // Execute independent counts in parallel
+    // Execute independent counts in parallel using correct model names
     const [
       totalUsers,
       activeUsers,

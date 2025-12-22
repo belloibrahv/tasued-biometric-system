@@ -44,7 +44,9 @@
     "@tensorflow/tfjs-backend-webgl": "^4.22.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "crypto-js": "^4.2.0",
     "date-fns": "^3.0.6",
+    "face-api.js": "^0.22.2",
     "framer-motion": "^10.18.0",
     "lucide-react": "^0.303.0",
     "next": "14.2.15",
@@ -64,6 +66,7 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18",

@@ -5,12 +5,11 @@ interface CreateUserInput {
   email: string;
   firstName: string;
   lastName: string;
-  matricNumber: string;
-  phoneNumber: string;
-  dateOfBirth: Date;
-  department: string;
-  level: string;
   otherNames?: string;
+  matricNumber: string;
+  phoneNumber?: string;
+  department?: string;
+  level?: string;
 }
 
 interface UpdateUserInput {
@@ -18,8 +17,10 @@ interface UpdateUserInput {
   email?: string;
   firstName?: string;
   lastName?: string;
+  otherNames?: string;
   phoneNumber?: string;
-  profilePhoto?: string;
+  department?: string;
+  level?: string;
   isActive?: boolean;
 }
 
@@ -35,11 +36,11 @@ class UserService {
         lastName: input.lastName,
         otherNames: input.otherNames || null,
         matricNumber: input.matricNumber.toUpperCase(),
-        phoneNumber: input.phoneNumber,
-        dateOfBirth: input.dateOfBirth,
-        department: input.department,
-        level: input.level,
+        phoneNumber: input.phoneNumber || null,
+        department: input.department || null,
+        level: input.level || '100',
         isActive: true,
+        biometricEnrolled: false,
       },
     });
   }
@@ -94,14 +95,16 @@ class UserService {
   /**
    * Update user information
    */
-  static async updateUser(input: UpdateUserInput): Promise<Omit<User, 'password'> | null> {
+  static async updateUser(input: UpdateUserInput): Promise<User | null> {
     const updateData: any = {};
 
     if (input.email) updateData.email = input.email.toLowerCase();
     if (input.firstName) updateData.firstName = input.firstName;
     if (input.lastName) updateData.lastName = input.lastName;
+    if (input.otherNames !== undefined) updateData.otherNames = input.otherNames;
     if (input.phoneNumber) updateData.phoneNumber = input.phoneNumber;
-    if (input.profilePhoto) updateData.profilePhoto = input.profilePhoto;
+    if (input.department) updateData.department = input.department;
+    if (input.level) updateData.level = input.level;
     if (input.isActive !== undefined) updateData.isActive = input.isActive;
 
     return await db.user.update({
@@ -116,10 +119,8 @@ class UserService {
   static async deleteUser(userId: string): Promise<boolean> {
     try {
       // Delete in order due to foreign key constraints
-      await db.notification.deleteMany({ where: { userId } });
-      await db.dataExport.deleteMany({ where: { userId } });
       await db.accessLog.deleteMany({ where: { userId } });
-      await db.serviceConnection.deleteMany({ where: { userId } });
+      await db.session.deleteMany({ where: { userId } });
       await db.qRCode.deleteMany({ where: { userId } });
       await db.biometricData.deleteMany({ where: { userId } });
       await db.auditLog.deleteMany({ where: { userId } });
@@ -134,89 +135,149 @@ class UserService {
 
   /**
    * Idempotently syncs a user from Supabase Auth metadata to the database
+   * This is the critical function that ensures data consistency between auth and DB
    */
   static async syncUserFromAuth(authUser: any): Promise<User> {
     const metadata = authUser.user_metadata || {};
     const id = authUser.id;
     const email = (authUser.email || metadata.email || '').toLowerCase();
-    const matricNumber = (metadata.matric_number || metadata.matricNumber || '').toUpperCase();
+
+    // Extract user data from metadata - support multiple field name formats
+    const matricNumber = (
+      metadata.studentNumber || 
+      metadata.matricNumber || 
+      metadata.matric_number || 
+      ''
+    ).toUpperCase();
+    
+    // Support both combined fullName and separate firstName/lastName
+    let firstName = metadata.firstName || metadata.first_name || '';
+    let lastName = metadata.lastName || metadata.last_name || '';
+    
+    if (!firstName && !lastName && metadata.fullName) {
+      const nameParts = metadata.fullName.split(' ');
+      firstName = nameParts[0] || 'Unknown';
+      lastName = nameParts.slice(1).join(' ') || 'User';
+    }
+    
+    if (!firstName) firstName = 'Unknown';
+    if (!lastName) lastName = 'User';
+
+    const otherNames = metadata.otherNames || metadata.other_names || null;
+    const phoneNumber = metadata.phone || metadata.phoneNumber || metadata.phone_number || null;
+    const department = metadata.department || null;
+    
+    // CRITICAL: Preserve the level exactly as provided - this fixes the consistency issue
+    const level = metadata.level ? String(metadata.level) : '100';
+
+    // Determine user type from metadata
+    const metadataType = (metadata.type || '').toLowerCase();
+    const metadataRole = (metadata.role || '').toUpperCase();
+    const isAdmin = metadataType === 'admin' || 
+                    metadataRole === 'ADMIN' || 
+                    metadataRole === 'SUPER_ADMIN' || 
+                    metadataRole === 'OPERATOR';
 
     if (!email) throw new Error('Email is required for synchronization');
+    
+    // For students, matric number is required
+    if (!isAdmin && !matricNumber) {
+      throw new Error('Matric number is required for students');
+    }
 
     // 1. Check if user exists by ID
     let user = await db.user.findUnique({
       where: { id },
-      include: { biometricData: true }
     });
 
-    if (user) return user as User;
+    if (user) {
+      // User exists - update with latest metadata to ensure consistency
+      return await db.user.update({
+        where: { id },
+        data: {
+          firstName,
+          lastName,
+          otherNames,
+          phoneNumber,
+          department,
+          level,
+          updatedAt: new Date(),
+        },
+      });
+    }
 
-    // 2. Check if user exists by email (handle case where ID changed but email is same)
+    // 2. Check by email (handle deleted/recreated users)
     const existingByEmail = await db.user.findUnique({
       where: { email },
     });
 
     if (existingByEmail) {
-      // If we found a user with the same email but different ID, we should update the ID 
-      // This happens if a user was deleted from Supabase but not DB, or vice versa
+      // Update ID to match new Auth ID and sync all fields
       return await db.user.update({
         where: { email },
-        data: { id } // Update to the new Supabase ID
+        data: { 
+          id,
+          firstName,
+          lastName,
+          otherNames,
+          phoneNumber,
+          department,
+          level,
+          updatedAt: new Date(),
+        }
       });
     }
 
-    // 3. Check if user exists by matric number (prevent P2002)
+    // 3. Check by matric number (prevent duplicates)
     if (matricNumber) {
       const existingByMatric = await db.user.findUnique({
         where: { matricNumber },
       });
 
       if (existingByMatric) {
-        throw new Error(`Matric number ${matricNumber} is already registered to another account.`);
+        // If email matches, we already handled it. 
+        // If email differs, it's a conflict.
+        throw new Error(`Matric Number ${matricNumber} is already in use.`);
       }
     }
 
-    // Parse names
-    const fullName = metadata.full_name || metadata.firstName + ' ' + metadata.lastName || 'Student';
-    const nameParts = fullName.split(' ');
-    const firstName = metadata.firstName || nameParts[0] || 'First';
-    const lastName = metadata.lastName || nameParts[nameParts.length - 1] || 'Last';
-    const otherNames = metadata.otherNames || (nameParts.length > 2 ? nameParts.slice(1, -1).join(' ') : null);
+    // 4. Create new user with all metadata
+    return await db.user.create({
+      data: {
+        id,
+        email,
+        firstName,
+        lastName,
+        otherNames,
+        matricNumber: matricNumber || `TEMP-${Date.now()}`,
+        phoneNumber,
+        department,
+        level,
+        isActive: true,
+        biometricEnrolled: metadata.biometricEnrolled === true,
+      },
+    });
+  }
 
-    // Create user in transaction
-    return await db.$transaction(async (tx) => {
-      const newUser = await tx.user.create({
-        data: {
-          id,
-          email,
-          firstName,
-          lastName,
-          otherNames,
-          matricNumber: matricNumber || `TEMP-${Date.now()}`,
-          phoneNumber: metadata.phone_number || metadata.phoneNumber || '',
-          dateOfBirth: metadata.date_of_birth ? new Date(metadata.date_of_birth) : new Date('2000-01-01'),
-          department: metadata.department || 'General',
-          level: metadata.level || '100',
-          isActive: true,
-        },
-      });
+  /**
+   * Get user with biometric data
+   */
+  static async getUserWithBiometric(userId: string) {
+    return await db.user.findUnique({
+      where: { id: userId },
+      include: {
+        biometricData: true,
+      },
+    });
+  }
 
-      // Initialize biometric data
-      await tx.biometricData.create({
-        data: { userId: newUser.id }
-      });
-
-      // Create initial QR code
-      await tx.qRCode.create({
-        data: {
-          userId: newUser.id,
-          code: `BV-${newUser.matricNumber}-${Math.random().toString(36).substring(7).toUpperCase()}`,
-          isActive: true,
-          expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-        }
-      });
-
-      return newUser;
+  /**
+   * Update user's biometric enrollment status
+   */
+  static async updateBiometricStatus(userId: string, enrolled: boolean): Promise<User | null> {
+    return await db.user.update({
+      where: { id: userId },
+      data: { biometricEnrolled: enrolled },
     });
   }
 }

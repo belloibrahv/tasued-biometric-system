@@ -1,6 +1,13 @@
 import { PrismaClient, AdminRole } from '@prisma/client';
+import { createClient } from '@supabase/supabase-js';
 
 const prisma = new PrismaClient();
+
+// Initialize Supabase client with service role key for admin operations
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 async function main() {
   console.log('Seeding database...');
@@ -12,22 +19,45 @@ async function main() {
       fullName: 'System Administrator',
       role: AdminRole.SUPER_ADMIN,
       permissions: ['all'],
+      password: 'adminPassword123!',
     },
     {
       email: 'ogunsanwo@tasued.edu.ng',
       fullName: 'Dr. Ogunsanwo',
       role: AdminRole.ADMIN,
       permissions: ['users', 'reports', 'services'],
+      password: 'adminPassword123!',
     },
     {
       email: 'operator@tasued.edu.ng',
       fullName: 'Verification Operator',
       role: AdminRole.OPERATOR,
       permissions: ['verify', 'search'],
+      password: 'operatorPassword123!',
     },
   ];
 
   for (const admin of adminsSetup) {
+    // Create Supabase Auth user first
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: admin.email,
+      password: admin.password,
+      email_confirm: true,
+      user_metadata: {
+        fullName: admin.fullName,
+        type: 'admin',
+        role: admin.role,
+      }
+    });
+
+    if (authError) {
+      console.error(`Failed to create Supabase user for ${admin.email}:`, authError.message);
+      continue;
+    }
+
+    console.log(`Created Supabase auth user: ${admin.email}`);
+
+    // Create database record
     await prisma.admin.upsert({
       where: { email: admin.email },
       update: {
@@ -45,8 +75,8 @@ async function main() {
     console.log(`Upserted admin: ${admin.email} with role ${admin.role}`);
   }
 
-  // Create Sample Students - CSC 415 Class
-  const studentsSetup: any[] = [
+  // Create Sample Students
+  const studentsSetup = [
     {
       matricNumber: 'CSC/2024/001',
       email: 'test.student@tasued.edu.ng',
@@ -56,6 +86,7 @@ async function main() {
       dateOfBirth: new Date('2002-01-15'),
       department: 'Computer Science',
       level: '400',
+      password: 'studentPassword123!',
     },
     {
       matricNumber: 'CSC/2024/002',
@@ -66,18 +97,49 @@ async function main() {
       dateOfBirth: new Date('2001-05-20'),
       department: 'Computer Science',
       level: '300',
+      password: 'studentPassword123!',
     },
   ];
 
   for (const student of studentsSetup) {
+    // Create Supabase Auth user
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: student.email,
+      password: student.password,
+      email_confirm: true,
+      user_metadata: {
+        matricNumber: student.matricNumber,
+        firstName: student.firstName,
+        lastName: student.lastName,
+        phoneNumber: student.phoneNumber,
+        department: student.department,
+        level: student.level,
+        type: 'student',
+        role: 'STUDENT',
+        biometricEnrolled: false,
+      }
+    });
+
+    if (authError) {
+      console.error(`Failed to create Supabase user for ${student.email}:`, authError.message);
+      continue;
+    }
+
+    console.log(`Created Supabase auth user: ${student.email}`);
+
+    // Create user in database
     const user = await prisma.user.upsert({
       where: { matricNumber: student.matricNumber },
       update: {
         email: student.email,
         firstName: student.firstName,
         lastName: student.lastName,
+        phoneNumber: student.phoneNumber,
+        department: student.department,
+        level: student.level,
       },
       create: {
+        id: authUser.user?.id,
         matricNumber: student.matricNumber,
         email: student.email,
         firstName: student.firstName,

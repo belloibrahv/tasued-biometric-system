@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { BiometricVerificationService } from '@/lib/services/biometric-service';
 import { decryptData } from '@/lib/encryption';
+import { User } from '@prisma/client';
 
 // POST /api/biometric/verify - Verify a student's identity
 export async function POST(request: NextRequest) {
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let user = null;
+    let user: User | null = null;
     let verificationMethod = method || 'QR_CODE';
 
     // Handle dashboard fetch method - just get user info without verification
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
             where: { id: qrRecord.id },
             data: {
               usageCount: { increment: 1 },
-              lastUsedAt: new Date(),
+              usedAt: new Date(),
             },
           });
         }
@@ -182,8 +183,6 @@ export async function POST(request: NextRequest) {
       await db.auditLog.create({
         data: {
           userId: user.id,
-          actorType: 'SYSTEM',
-          actorId: 'SYSTEM', // This could be the operator ID if coming from operator verification
           actionType: 'IDENTITY_VERIFICATION',
           resourceType: 'USER',
           resourceId: user.id,

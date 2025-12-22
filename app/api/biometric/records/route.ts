@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       hasFacial: !!biometricData.facialTemplate,
       facialQuality: biometricData.facialQuality,
       enrolledAt: biometricData.enrolledAt,
-      lastUpdated: biometricData.lastUpdated,
+      lastUpdated: biometricData.updatedAt,
     });
   } catch (error) {
     console.error('Error fetching biometric data:', error);
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     const updateData: any = {
-      lastUpdated: new Date(),
+      updatedAt: new Date(),
     };
 
     if (type === 'fingerprint') {

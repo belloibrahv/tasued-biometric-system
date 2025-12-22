@@ -84,9 +84,9 @@ export async function GET(request: NextRequest) {
     const recentVerifications = recentLogs.map(log => ({
       studentName: `${log.user.firstName} ${log.user.lastName}`,
       matricNumber: log.user.matricNumber,
-      service: log.service.name,
+      service: log.service?.name || 'Unknown',
       status: log.status,
-      method: log.verificationMethod,
+      method: log.method,
       time: formatTimeAgo(log.timestamp),
     }));
 

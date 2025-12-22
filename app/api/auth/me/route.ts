@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    // Ensure DB connection is active (important for pooling/cold starts)
+    // Ensure DB connection is active
     await connectDb();
 
     const authHeader = request.headers.get('Authorization');
@@ -40,52 +40,54 @@ export async function GET(request: Request) {
         id: user.id,
         email: user.email,
         role: user.user_metadata?.role || 'STUDENT',
-        biometricEnrolled: user.user_metadata?.biometricEnrolled === true
       };
     }
 
     // Fetch user details from DB
-    const isAdmin = payload.role === 'ADMIN' || payload.role === 'OPERATOR';
-
-    let user: any = null;
-    if (isAdmin) {
-      user = await db.admin.findUnique({
-        where: { id: payload.id }
-      });
-    } else {
-      user = await db.user.findUnique({
-        where: { id: payload.id },
-        include: {
-          biometricData: {
-            select: {
-              id: true,
-              userId: true,
-              enrolledAt: true,
-              lastUpdated: true,
-              // Note: facialPhoto and facialTemplate are excluded here to save memory (130kiB+)
-              // They should be fetched separately when verifying biometrics
-            }
+    let user = await db.user.findUnique({
+      where: { id: payload.id },
+      include: {
+        biometricData: {
+          select: {
+            id: true,
+            facialTemplate: true,
+            fingerprintTemplate: true,
+            facialQuality: true,
+            fingerprintQuality: true,
+            enrolledAt: true,
           }
         }
-      });
+      }
+    });
 
-      // If missing and not admin, try to sync from Supabase
-      if (!user && !isAdmin) {
-        if (!authUser) {
-          const supabase = createClient();
-          const { data: { user: foundUser } } = await supabase.auth.getUser();
-          authUser = foundUser;
-        }
+    // If missing, try to sync from Supabase
+    if (!user) {
+      if (!authUser) {
+        const supabase = createClient();
+        const { data: { user: foundUser } } = await supabase.auth.getUser();
+        authUser = foundUser;
+      }
 
-        if (authUser) {
-          console.log(`Syncing profile for user ${authUser.id} on /api/auth/me`);
-          user = await UserService.syncUserFromAuth(authUser);
-          // Re-fetch with includes if synchronized
-          user = await db.user.findUnique({
-            where: { id: user.id },
-            include: { biometricData: true }
-          });
-        }
+      if (authUser) {
+        console.log(`Syncing profile for user ${authUser.id} on /api/auth/me`);
+        const syncedUser = await UserService.syncUserFromAuth(authUser);
+        
+        // Fetch again with biometric data
+        user = await db.user.findUnique({
+          where: { id: syncedUser.id },
+          include: {
+            biometricData: {
+              select: {
+                id: true,
+                facialTemplate: true,
+                fingerprintTemplate: true,
+                facialQuality: true,
+                fingerprintQuality: true,
+                enrolledAt: true,
+              }
+            }
+          }
+        });
       }
     }
 
@@ -96,38 +98,43 @@ export async function GET(request: Request) {
       }, { status: 404 });
     }
 
-    if (isAdmin) {
-      return NextResponse.json({
-        user: {
-          ...user,
-          type: 'admin',
-          role: payload.role || (user as any).role,
-          biometricEnrolled: true
-        }
-      });
-    }
+    // Determine if user is admin/staff
+    const isAdmin = authUser?.user_metadata?.type === 'admin' || 
+                    authUser?.user_metadata?.role === 'ADMIN' ||
+                    authUser?.user_metadata?.role === 'SUPER_ADMIN' ||
+                    authUser?.user_metadata?.role === 'OPERATOR';
 
-    // Student logic
-    const biometric = (user as any).biometricData;
+    // Check biometric enrollment status
+    const hasBiometric = user.biometricData && (
+      !!user.biometricData.facialTemplate || 
+      !!user.biometricData.fingerprintTemplate
+    );
 
-    // Get stats
-    const servicesCount = await db.serviceConnection.count({
-      where: { userId: user.id, isActive: true },
-    });
-
-    const unreadNotifications = await db.notification.count({
-      where: { userId: user.id, isRead: false },
-    });
-
+    // Return unified response structure with all user fields
     return NextResponse.json({
       user: {
-        ...user,
-        type: 'student',
-        biometricEnrolled: payload.biometricEnrolled || !!biometric,
-        biometricEnrolledAt: biometric?.enrolledAt,
-        connectedServicesCount: servicesCount,
-        unreadNotificationsCount: unreadNotifications,
-      },
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        otherNames: user.otherNames,
+        matricNumber: user.matricNumber,
+        phoneNumber: user.phoneNumber,
+        dateOfBirth: user.dateOfBirth,
+        department: user.department,
+        level: user.level, // Return level exactly as stored
+        profilePhoto: user.profilePhoto,
+        isActive: user.isActive,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        // Computed fields
+        type: isAdmin ? 'admin' : 'student',
+        biometricEnrolled: hasBiometric || user.biometricEnrolled,
+        biometricEnrolledAt: user.biometricData?.enrolledAt || null,
+        // Legacy compat fields
+        connectedServicesCount: 0,
+        unreadNotificationsCount: 0,
+      }
     });
 
   } catch (error: any) {

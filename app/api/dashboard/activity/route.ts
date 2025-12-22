@@ -12,14 +12,12 @@ export async function GET(request: NextRequest) {
     let userId: string | null = null;
 
     if (token) {
-      // Try custom token verification first
       const payload = await verifyToken(token);
       if (payload) {
         userId = payload.id;
       }
     }
 
-    // If custom token didn't work, try Supabase auth
     if (!userId) {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
@@ -60,16 +58,17 @@ export async function GET(request: NextRequest) {
     // Format the response
     const activities = accessLogs.map(log => ({
       id: log.id,
-      service: log.service.name,
-      serviceSlug: log.service.slug,
-      serviceIcon: log.service.icon,
-      action: log.verificationMethod === 'QR_CODE' ? 'QR Scan' :
-              log.verificationMethod === 'FINGERPRINT' ? 'Fingerprint' :
-              log.verificationMethod === 'FACIAL' ? 'Face ID' : 'Manual',
+      service: log.service?.name || 'Unknown Service',
+      serviceSlug: log.service?.slug || 'unknown',
+      serviceIcon: log.service?.icon || null,
+      action: log.method === 'QR_CODE' ? 'QR Scan' :
+              log.method === 'FINGERPRINT' ? 'Fingerprint' :
+              log.method === 'FACIAL' ? 'Face ID' : 
+              log.action || 'Manual',
       status: log.status,
       location: log.location || 'Unknown',
       timestamp: log.timestamp,
-      biometricScore: log.biometricMatchScore,
+      confidenceScore: log.confidenceScore,
     }));
 
     return NextResponse.json({

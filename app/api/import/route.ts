@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     // Update biometric data
     const updateData: any = {
-      lastUpdated: new Date(),
+      updatedAt: new Date(),
     };
 
     if (importData.biometricData.fingerprint) {
@@ -80,8 +80,6 @@ export async function POST(request: NextRequest) {
     await db.auditLog.create({
       data: {
         userId: payload.id,
-        actorType: 'STUDENT',
-        actorId: payload.id,
         actionType: 'BIOMETRIC_IMPORT',
         resourceType: 'BIOMETRIC_DATA',
         resourceId: payload.id,
