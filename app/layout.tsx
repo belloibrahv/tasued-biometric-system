@@ -43,6 +43,12 @@ export const metadata: Metadata = {
   authors: [{ name: 'CSC 415 Net-Centric Computing Team' }],
   creator: 'Dr. Ogunsanwo - CSC 415',
   manifest: '/manifest.json',
+  icons: [
+    { rel: 'icon', url: '/favicon.ico' },
+    { rel: 'icon', url: '/favicon-16x16.png', sizes: '16x16' },
+    { rel: 'icon', url: '/favicon-32x32.png', sizes: '32x32' },
+    { rel: 'apple-touch-icon', url: '/icons/icon-192x192.png', sizes: '192x192' },
+  ],
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
