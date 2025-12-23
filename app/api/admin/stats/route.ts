@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
       : 0;
 
     // Get chart data in parallel
-    const chartPromises = [];
+    const chartPromises: Promise<{ date: string; count: number }>[] = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -112,6 +112,22 @@ export async function GET(request: NextRequest) {
       })
     );
 
+    // Get recent users for admin dashboard
+    const recentUsers = await db.user.findMany({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        matricNumber: true,
+        department: true,
+        biometricEnrolled: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    });
+
     return NextResponse.json({
       stats: {
         totalUsers,
@@ -125,6 +141,7 @@ export async function GET(request: NextRequest) {
       },
       chartData,
       serviceData: serviceData.filter(s => s.value > 0),
+      recentUsers,
     });
 
   } catch (error) {

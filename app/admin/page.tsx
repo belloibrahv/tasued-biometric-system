@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Users, Shield, CheckCircle, Server, ChevronRight, TrendingUp, Clock } from 'lucide-react';
+import { Users, Shield, CheckCircle, Server, ChevronRight } from 'lucide-react';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({

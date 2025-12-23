@@ -1,18 +1,17 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import {
   Fingerprint, Mail, Lock, ArrowRight, Loader2, AlertCircle,
-  Eye, EyeOff, Shield, CheckCircle, User, Users
+  Eye, EyeOff, Shield, CheckCircle, User
 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 import { login } from '@/app/actions/auth';
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams?.get('redirect') || '/dashboard';
 

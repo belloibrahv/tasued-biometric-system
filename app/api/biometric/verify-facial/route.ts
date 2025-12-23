@@ -3,6 +3,7 @@ import db from '@/lib/db';
 import { verifyToken } from '@/lib/auth';
 import { decryptData } from '@/lib/encryption';
 import { BiometricVerificationService } from '@/lib/services/biometric-service';
+import { createClient } from '@/utils/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,13 +12,27 @@ export async function POST(request: NextRequest) {
     const token = request.cookies.get('auth-token')?.value ||
                   request.headers.get('authorization')?.replace('Bearer ', '');
 
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let operatorId: string | null = null;
+
+    // Try custom token verification first
+    if (token) {
+      const payload = await verifyToken(token);
+      if (payload) {
+        operatorId = payload.id;
+      }
     }
 
-    const payload = await verifyToken(token);
-    if (!payload) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    // Fallback to Supabase auth
+    if (!operatorId) {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        operatorId = user.id;
+      }
+    }
+
+    if (!operatorId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -68,7 +83,7 @@ export async function POST(request: NextRequest) {
     // Create audit log
     await db.auditLog.create({
       data: {
-        userId: payload.id,
+        userId: operatorId,
         actionType: 'BIOMETRIC_VERIFICATION',
         resourceType: 'BIOMETRIC',
         resourceId: biometricData.id,

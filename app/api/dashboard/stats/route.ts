@@ -51,6 +51,25 @@ export async function GET(request: NextRequest) {
     });
 
 
+    // Get this month's verifications
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    
+    const thisMonthVerifications = await db.accessLog.count({
+      where: {
+        userId,
+        timestamp: { gte: monthStart },
+      },
+    });
+
+    // Get last access
+    const lastAccess = await db.accessLog.findFirst({
+      where: { userId },
+      orderBy: { timestamp: 'desc' },
+      select: { timestamp: true },
+    });
+
     // Get this week's verifications
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - 7);
@@ -103,6 +122,11 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
+      // Fields expected by dashboard page
+      totalAccess: totalVerifications,
+      thisMonth: thisMonthVerifications,
+      lastAccess: lastAccess?.timestamp || null,
+      // Additional stats
       stats: {
         totalVerifications,
         successfulVerifications,

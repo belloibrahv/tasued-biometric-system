@@ -42,7 +42,7 @@ export async function POST(
     }
 
     let studentId = directUserId;
-    let student = null;
+    let student: any = null;
 
     // If QR code provided, verify it
     if (qrCode) {

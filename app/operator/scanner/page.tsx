@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Webcam from 'react-webcam';
-import { QrCode, Camera, CheckCircle, XCircle, RefreshCw, Loader2, Shield, User, Keyboard, ScanLine } from 'lucide-react';
+import { QrCode, Camera, CheckCircle, XCircle, RefreshCw, Loader2, Shield, Keyboard, ScanLine } from 'lucide-react';
 
 // Dynamically import QR scanner to avoid SSR issues
 const QRScanner = dynamic(() => import('@/components/QRScanner'), { ssr: false });

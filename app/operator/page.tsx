@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Eye, QrCode, Users, CheckCircle, ChevronRight, Clock, ClipboardList, TrendingUp } from 'lucide-react';
+import { Eye, QrCode, Users, CheckCircle, ChevronRight, Clock, ClipboardList } from 'lucide-react';
 
 export default function OperatorDashboard() {
   const [stats, setStats] = useState({

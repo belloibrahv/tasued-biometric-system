@@ -1,6 +1,5 @@
 import db from '@/lib/db';
 import { QRCode } from '@prisma/client';
-import { randomUUID } from 'crypto';
 
 export class QrService {
   static async issue(userId: string, opts?: { expiresAt?: Date; code?: string }): Promise<QRCode> {

@@ -30,8 +30,8 @@ export async function POST(
     }
 
     let studentId = directUserId;
-    let student = null;
-    let accessRecord = null;
+    let student: any = null;
+    let accessRecord: any = null;
 
     // If accessId provided, use it directly
     if (accessId) {
