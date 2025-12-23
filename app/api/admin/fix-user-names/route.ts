@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import db, { connectDb } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -28,8 +29,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden - Admin access required' }, { status: 403 });
     }
 
-    // Get all users from Supabase Auth
-    const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
+    // Use admin client to list all users
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return NextResponse.json({ error: 'Missing Supabase credentials' }, { status: 500 });
+    }
+
+    const adminClient = createAdminClient(supabaseUrl, supabaseServiceKey);
+    const { data: { users: authUsers }, error: authError } = await adminClient.auth.admin.listUsers();
 
     if (authError) {
       return NextResponse.json({ 
@@ -140,7 +149,7 @@ export async function GET(request: NextRequest) {
 
     const userType = user.user_metadata?.type || 'student';
     const role = user.user_metadata?.role || 'STUDENT';
-    const isAdmin = userType === 'admin' || role === 'ADMIN' || role === 'SUPER_ADMIN';
+    const isAdmin = userType === 'admin' || role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OPERATOR';
 
     if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

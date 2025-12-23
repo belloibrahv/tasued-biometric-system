@@ -162,7 +162,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Generate QR code image with correct options
-    const qrCodeUrl = `${request.nextUrl.origin}/api/verify-qr/${encodeURIComponent(qrCode.code)}`;
+    // Use production URL for QR codes so they work when scanned externally
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : request.nextUrl.origin;
+    const productionUrl = 'https://tasued-biometric-system.vercel.app';
+    const qrCodeUrl = `${productionUrl}/verify/${encodeURIComponent(qrCode.code)}`;
     const qrCodeImage = await QRCode.toDataURL(qrCodeUrl, {
       errorCorrectionLevel: 'M',
       margin: 1,
@@ -283,7 +288,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Generate QR code image with correct options
-    const qrCodeUrl = `${request.nextUrl.origin}/api/verify-qr/${encodeURIComponent(code)}`;
+    // Use production URL for QR codes so they work when scanned externally
+    const productionUrl = 'https://tasued-biometric-system.vercel.app';
+    const qrCodeUrl = `${productionUrl}/verify/${encodeURIComponent(code)}`;
     const qrCodeImage = await QRCode.toDataURL(qrCodeUrl, {
       errorCorrectionLevel: 'M',
       margin: 1,

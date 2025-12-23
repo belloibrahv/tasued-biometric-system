@@ -15,6 +15,8 @@ export async function middleware(request: NextRequest) {
     '/reset-password',
     '/api/health',
     '/api/biometric/facial-embed', // Whitelist biometric processing (stateless)
+    '/api/verify-qr', // Public QR verification API
+    '/verify', // Public QR verification page
     '/manifest.json',
     '/sw.js',
     '/favicon.ico',
@@ -30,7 +32,11 @@ export async function middleware(request: NextRequest) {
   ];
 
   const isPublicRoute = publicRoutes.some(route =>
-    pathname === route || pathname.startsWith('/_next') || pathname.startsWith('/static')
+    pathname === route || 
+    pathname.startsWith('/_next') || 
+    pathname.startsWith('/static') ||
+    pathname.startsWith('/verify/') ||
+    pathname.startsWith('/api/verify-qr/')
   );
 
   // If user is already logged in, redirect to appropriate dashboard

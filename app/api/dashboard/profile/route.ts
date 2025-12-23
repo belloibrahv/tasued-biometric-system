@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { prisma } from '@/lib/prisma';
+import { createClient } from '@/utils/supabase/server';
+import db, { connectDb } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 
 // GET - Fetch user profile
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const userId = cookieStore.get('userId')?.value;
+    // Ensure database connection
+    await connectDb();
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Use Supabase auth
+    const supabase = createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return NextResponse.json({ error: 'Unauthorized', details: error?.message }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    const profile = await db.user.findUnique({
+      where: { id: user.id },
       select: {
         id: true,
         matricNumber: true,
@@ -31,25 +37,32 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    if (!user) {
+    if (!profile) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ profile: user });
+    return NextResponse.json({ profile });
   } catch (error) {
     console.error('Profile fetch error:', error);
-    return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to fetch profile',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
 
 // PATCH - Update user profile
 export async function PATCH(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const userId = cookieStore.get('userId')?.value;
+    // Ensure database connection
+    await connectDb();
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Use Supabase auth
+    const supabase = createClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return NextResponse.json({ error: 'Unauthorized', details: error?.message }, { status: 401 });
     }
 
     const body = await request.json();
@@ -61,8 +74,8 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Update user profile
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
+    const updatedUser = await db.user.update({
+      where: { id: user.id },
       data: {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -89,12 +102,12 @@ export async function PATCH(request: NextRequest) {
     });
 
     // Log the profile update
-    await prisma.auditLog.create({
+    await db.auditLog.create({
       data: {
-        userId,
+        userId: user.id,
         actionType: 'PROFILE_UPDATE',
         resourceType: 'User',
-        resourceId: userId,
+        resourceId: user.id,
         newValues: { firstName, lastName, otherNames, phoneNumber, department, level },
         status: 'SUCCESS',
       },
@@ -103,6 +116,9 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ profile: updatedUser, message: 'Profile updated successfully' });
   } catch (error) {
     console.error('Profile update error:', error);
-    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to update profile',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
