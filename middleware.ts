@@ -22,6 +22,13 @@ export async function middleware(request: NextRequest) {
     '/sitemap.xml',
   ];
 
+  // Routes that require auth but not biometric enrollment
+  const authOnlyRoutes = [
+    '/enroll-biometric',
+    '/api/biometric/enroll',
+    '/api/auth/me',
+  ];
+
   const isPublicRoute = publicRoutes.some(route =>
     pathname === route || pathname.startsWith('/_next') || pathname.startsWith('/static')
   );
@@ -60,9 +67,9 @@ export async function middleware(request: NextRequest) {
   // Dashboard / Enrollment check
   const role = user.user_metadata?.role || 'STUDENT';
   const userType = user.user_metadata?.type || 'student';
-  const biometricEnrolled = user.user_metadata?.biometricEnrolled === true;
+  let biometricEnrolled = user.user_metadata?.biometricEnrolled === true;
 
-  // Check if user is admin/staff
+  // Check if user is admin/staff - admins don't need biometric enrollment
   const isAdmin = userType === 'admin' || 
                   role === 'ADMIN' || 
                   role === 'SUPER_ADMIN' || 
@@ -73,8 +80,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin', request.url));
   }
 
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/student')) {
-    if (!biometricEnrolled && pathname !== '/enroll-biometric' && pathname !== '/api/auth/me') {
+  // Skip biometric check for admins/operators - they don't need it
+  if (!isAdmin && (pathname.startsWith('/dashboard') || pathname.startsWith('/student'))) {
+    // Allow access to enroll-biometric page and auth API
+    if (!biometricEnrolled && pathname !== '/enroll-biometric' && !pathname.startsWith('/api/auth/')) {
       return NextResponse.redirect(new URL('/enroll-biometric', request.url));
     }
   }
@@ -97,9 +106,10 @@ export async function middleware(request: NextRequest) {
     }
   });
 
-  // Inject user info
+  // Inject user info - include all fields needed by API routes
   response.headers.set('x-user-id', user?.id || '');
   response.headers.set('x-user-role', role);
+  response.headers.set('x-user-type', userType);
 
   // Copy over the cookies from supabaseResponse (which contains the refreshed session)
   if (supabaseResponse && typeof supabaseResponse.cookies?.getAll === 'function') {

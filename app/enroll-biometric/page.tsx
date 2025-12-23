@@ -121,6 +121,10 @@ export default function EnrollBiometricPage() {
         });
         if (error) {
           console.warn('Enrollment: Local Supabase metadata update failed', error);
+        } else {
+          console.log('Enrollment: Local metadata updated, refreshing session...');
+          // Force session refresh to pick up new metadata
+          await supabase.auth.refreshSession();
         }
       } catch (updateError) {
         console.warn('Enrollment: Local Supabase metadata update failed', updateError);

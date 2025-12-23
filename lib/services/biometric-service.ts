@@ -97,19 +97,26 @@ class BiometricService {
       },
     });
 
-    // Update Supabase Auth Metadata
+    // Update Supabase Auth Metadata using admin API
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (supabaseUrl && supabaseServiceKey) {
       try {
         const supabaseAdmin = createSupabaseClientJS(supabaseUrl, supabaseServiceKey);
-        await supabaseAdmin.auth.admin.updateUserById(userId, {
+        const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
           user_metadata: { biometricEnrolled: true }
         });
+        if (error) {
+          console.error('BiometricService: Auth metadata update failed:', error);
+        } else {
+          console.log('BiometricService: Auth metadata updated successfully for user:', userId);
+        }
       } catch (err) {
         console.warn('BiometricService: Auth metadata update failed', err);
       }
+    } else {
+      console.warn('BiometricService: Missing Supabase credentials for metadata update');
     }
 
     return {

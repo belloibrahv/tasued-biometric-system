@@ -1,35 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/lib/auth';
+import { createClient } from '@/utils/supabase/server';
 import db from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value ||
-      request.headers.get('authorization')?.replace('Bearer ', '');
+    // Check auth using Supabase
+    const supabase = createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!token) {
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const payload = await verifyToken(token);
-    if (!payload || (payload.type !== 'admin' && payload.type !== 'operator')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Check if user is admin/operator
+    const userType = user.user_metadata?.type;
+    const role = user.user_metadata?.role;
+    const isAuthorized = userType === 'admin' || 
+                         role === 'ADMIN' || 
+                         role === 'SUPER_ADMIN' || 
+                         role === 'OPERATOR';
+
+    if (!isAuthorized) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const query = request.nextUrl.searchParams.get('q');
 
-    if (!query) {
-      return NextResponse.json({ error: 'Search query is required' }, { status: 400 });
+    if (!query || query.trim().length < 2) {
+      return NextResponse.json({ error: 'Search query must be at least 2 characters' }, { status: 400 });
     }
 
-    // Search by matric number or email
-    const user = await db.user.findFirst({
+    const searchTerm = query.trim();
+
+    // Search by matric number, email, first name, or last name
+    const users = await db.user.findMany({
       where: {
         OR: [
-          { matricNumber: { contains: query.toUpperCase(), mode: 'insensitive' } },
-          { email: { contains: query.toLowerCase(), mode: 'insensitive' } },
+          { matricNumber: { contains: searchTerm, mode: 'insensitive' } },
+          { email: { contains: searchTerm, mode: 'insensitive' } },
+          { firstName: { contains: searchTerm, mode: 'insensitive' } },
+          { lastName: { contains: searchTerm, mode: 'insensitive' } },
         ],
       },
       select: {
@@ -41,49 +53,24 @@ export async function GET(request: NextRequest) {
         department: true,
         level: true,
         profilePhoto: true,
+        biometricEnrolled: true,
         isActive: true,
         createdAt: true,
       },
+      take: 10,
+      orderBy: { lastName: 'asc' },
     });
 
-    if (!user) {
-      return NextResponse.json({ error: 'Student not found' }, { status: 404 });
+    if (users.length === 0) {
+      return NextResponse.json({ 
+        students: [],
+        message: 'No students found matching your search' 
+      });
     }
 
-    // Fetch biometric and access logs in parallel for better performance
-    const [biometric, recentAccess] = await Promise.all([
-      db.biometricData.findUnique({
-        where: { userId: user.id },
-        select: {
-          fingerprintTemplate: true,
-          facialTemplate: true,
-          enrolledAt: true,
-        },
-      }),
-      db.accessLog.findMany({
-        where: { userId: user.id },
-        include: {
-          service: { select: { name: true } },
-        },
-        orderBy: { timestamp: 'desc' },
-        take: 5,
-      })
-    ]);
-
     return NextResponse.json({
-      student: {
-        ...user,
-        isSuspended: false,
-        isEmailVerified: true,
-        biometricEnrolled: !!(biometric?.fingerprintTemplate || biometric?.facialTemplate),
-        biometricEnrolledAt: biometric?.enrolledAt,
-        recentAccess: recentAccess.map(log => ({
-          service: log.service?.name || 'Unknown',
-          status: log.status,
-          method: log.method,
-          timestamp: log.timestamp,
-        })),
-      },
+      students: users,
+      total: users.length,
     });
 
   } catch (error) {

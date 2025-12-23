@@ -37,15 +37,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { studentId, method, serviceSlug = 'library' } = await request.json();
+    const body = await request.json();
+    const { userId, studentId, method, serviceSlug = 'library' } = body;
+    const targetUserId = userId || studentId;
 
-    if (!studentId || !method) {
+    if (!targetUserId || !method) {
       return NextResponse.json({ error: 'Student ID and method are required' }, { status: 400 });
     }
 
     // Fetch student and service in parallel
     const [student, service] = await Promise.all([
-      db.user.findUnique({ where: { id: studentId } }),
+      db.user.findUnique({ where: { id: targetUserId } }),
       db.service.findUnique({ where: { slug: serviceSlug } })
     ]);
 
@@ -66,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     if (method === 'FINGERPRINT' || method === 'FACIAL') {
       const biometric = await db.biometricData.findUnique({
-        where: { userId: studentId },
+        where: { userId: targetUserId },
       });
 
       if (!biometric || (!biometric.fingerprintTemplate && !biometric.facialTemplate)) {
@@ -87,7 +89,7 @@ export async function POST(request: NextRequest) {
     // Create access log
     const accessLog = await db.accessLog.create({
       data: {
-        userId: studentId,
+        userId: targetUserId,
         serviceId: service.id,
         action: 'OPERATOR_VERIFICATION',
         method: method as any,
@@ -102,7 +104,7 @@ export async function POST(request: NextRequest) {
     // Create audit log (non-blocking)
     db.auditLog.create({
       data: {
-        userId: studentId,
+        userId: targetUserId,
         adminId: operatorId,
         actionType: 'VERIFICATION',
         resourceType: 'ACCESS_LOG',

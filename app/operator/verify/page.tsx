@@ -34,8 +34,20 @@ export default function VerifyPage() {
         body: JSON.stringify({ userId, method: 'MANUAL' }),
       });
       const data = await res.json();
-      if (data.success) {
-        setResult({ ...result, verified: true, verifiedStudent: data });
+      if (res.ok && data.verification) {
+        // Find the student from the current results
+        const student = result.students?.find((s: any) => s.id === userId);
+        setResult({ 
+          ...result, 
+          verified: true, 
+          verifiedStudent: student || {
+            firstName: data.verification.student?.name?.split(' ')[0],
+            lastName: data.verification.student?.name?.split(' ').slice(1).join(' '),
+            matricNumber: data.verification.student?.matricNumber,
+          }
+        });
+      } else {
+        console.error('Verification failed:', data.error);
       }
     } catch (error) {
       console.error('Verification failed:', error);
