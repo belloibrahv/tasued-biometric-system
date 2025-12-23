@@ -1010,7 +1010,7 @@ export default function Home() {
                   <img
                     src="https://tasued.edu.ng/web/wp-content/uploads/2023/03/logo3-1.png"
                     alt="TASUED Logo"
-                    className="h-16 w-auto bg-white rounded-xl p-2"
+                    className="h-16 w-auto"
                   />
                   <div>
                     <p className="text-surface-400 text-sm">Department of Computer Science</p>
@@ -1044,7 +1044,7 @@ export default function Home() {
                     </div>
                     <div>
                       <p className="text-surface-400 text-sm">Academic Session</p>
-                      <p className="text-white font-semibold">2024/2025</p>
+                      <p className="text-white font-semibold">2025/2026</p>
                     </div>
                   </div>
                 </div>
