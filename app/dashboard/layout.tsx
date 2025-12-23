@@ -46,6 +46,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           router.push('/admin');
           return;
         }
+
+        // Check biometric enrollment status from database (more reliable than session)
+        // If not enrolled, redirect to enrollment page
+        if (userData.biometricEnrolled === false) {
+          console.log('Dashboard: User not enrolled, redirecting to enroll-biometric');
+          router.push('/enroll-biometric');
+          return;
+        }
         
         setUser(userData);
       } catch (error) {

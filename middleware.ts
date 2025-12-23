@@ -29,6 +29,7 @@ export async function middleware(request: NextRequest) {
     '/enroll-biometric',
     '/api/biometric/enroll',
     '/api/auth/me',
+    '/api/auth/logout',
   ];
 
   const isPublicRoute = publicRoutes.some(route =>
@@ -38,6 +39,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/verify/') ||
     pathname.startsWith('/api/verify-qr/')
   );
+
+  const isAuthOnlyRoute = authOnlyRoutes.some(route => pathname.startsWith(route));
 
   // If user is already logged in, redirect to appropriate dashboard
   if (user && (pathname === '/login' || pathname === '/register')) {
@@ -51,6 +54,11 @@ export async function middleware(request: NextRequest) {
     if (isAdmin) {
       return NextResponse.redirect(new URL('/admin', request.url));
     } else {
+      // For students, check biometric enrollment before redirecting
+      const biometricEnrolled = user.user_metadata?.biometricEnrolled === true;
+      if (!biometricEnrolled) {
+        return NextResponse.redirect(new URL('/enroll-biometric', request.url));
+      }
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }
@@ -73,7 +81,7 @@ export async function middleware(request: NextRequest) {
   // Dashboard / Enrollment check
   const role = user.user_metadata?.role || 'STUDENT';
   const userType = user.user_metadata?.type || 'student';
-  let biometricEnrolled = user.user_metadata?.biometricEnrolled === true;
+  const biometricEnrolled = user.user_metadata?.biometricEnrolled === true;
 
   // Check if user is admin/staff - admins don't need biometric enrollment
   const isAdmin = userType === 'admin' || 
@@ -86,10 +94,28 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/admin', request.url));
   }
 
+  // Allow auth-only routes without biometric check
+  if (isAuthOnlyRoute) {
+    // Continue to the route
+    const response = NextResponse.next({
+      request: { headers: new Headers(request.headers) }
+    });
+    response.headers.set('x-user-id', user?.id || '');
+    response.headers.set('x-user-role', role);
+    response.headers.set('x-user-type', userType);
+    
+    if (supabaseResponse && typeof supabaseResponse.cookies?.getAll === 'function') {
+      supabaseResponse.cookies.getAll().forEach(cookie => {
+        response.cookies.set(cookie.name, cookie.value, cookie);
+      });
+    }
+    return response;
+  }
+
   // Skip biometric check for admins/operators - they don't need it
   if (!isAdmin && (pathname.startsWith('/dashboard') || pathname.startsWith('/student'))) {
-    // Allow access to enroll-biometric page and auth API
-    if (!biometricEnrolled && pathname !== '/enroll-biometric' && !pathname.startsWith('/api/auth/')) {
+    if (!biometricEnrolled) {
+      console.log(`Middleware: User ${user.id} not enrolled, redirecting to enroll-biometric`);
       return NextResponse.redirect(new URL('/enroll-biometric', request.url));
     }
   }
@@ -104,8 +130,6 @@ export async function middleware(request: NextRequest) {
   }
 
   // Add user info to request headers for downstream use
-  // Note: We create a new response if we need to modify headers,
-  // but we must preserve the cookies from supabaseResponse
   const response = NextResponse.next({
     request: {
       headers: new Headers(request.headers)

@@ -116,15 +116,25 @@ export default function EnrollBiometricPage() {
       // This ensures the current session is immediately updated
       console.log('Enrollment: Updating local Supabase Auth metadata...');
       try {
-        const { error } = await supabase.auth.updateUser({
+        // First update the user metadata
+        const { error: updateError } = await supabase.auth.updateUser({
           data: { biometricEnrolled: true }
         });
-        if (error) {
-          console.warn('Enrollment: Local Supabase metadata update failed', error);
+        
+        if (updateError) {
+          console.warn('Enrollment: Local Supabase metadata update failed', updateError);
         } else {
-          console.log('Enrollment: Local metadata updated, refreshing session...');
-          // Force session refresh to pick up new metadata
-          await supabase.auth.refreshSession();
+          console.log('Enrollment: Local metadata updated successfully');
+        }
+
+        // Force a complete session refresh to get new JWT with updated metadata
+        console.log('Enrollment: Refreshing session to get updated token...');
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError) {
+          console.warn('Enrollment: Session refresh failed', refreshError);
+        } else {
+          console.log('Enrollment: Session refreshed successfully', refreshData?.user?.user_metadata);
         }
       } catch (updateError) {
         console.warn('Enrollment: Local Supabase metadata update failed', updateError);
@@ -133,9 +143,10 @@ export default function EnrollBiometricPage() {
       toast.success('Biometric enrollment successful! Redirecting to dashboard...');
 
       // Use window.location.href to force a full reload and cookie/middleware re-check
+      // Add a small delay to ensure the session is fully updated
       setTimeout(() => {
         window.location.href = '/dashboard';
-      }, 1500);
+      }, 2000);
 
     } catch (error: any) {
       toast.error(error.message || 'Enrollment failed');
