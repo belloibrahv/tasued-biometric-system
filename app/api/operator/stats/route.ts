@@ -49,6 +49,23 @@ export async function GET(request: NextRequest) {
       ? Math.round((successfulToday / todayVerifications) * 100)
       : 100;
 
+    // Today's attendance check-ins
+    const todayAttendance = await db.lectureAttendance.count({
+      where: {
+        checkInTime: { gte: today, lt: tomorrow },
+      },
+    });
+
+    // Active lecture sessions (currently running)
+    const now = new Date();
+    const activeSessions = await db.lectureSession.count({
+      where: {
+        startTime: { lte: now },
+        endTime: { gte: now },
+        isActive: true,
+      },
+    });
+
     // Get recent verifications
     const recentLogs = await db.accessLog.findMany({
       where: {
@@ -85,6 +102,8 @@ export async function GET(request: NextRequest) {
         todayVerifications,
         successRate,
         pendingVerifications: 0,
+        todayAttendance,
+        activeSessions,
       },
       recentVerifications,
     });

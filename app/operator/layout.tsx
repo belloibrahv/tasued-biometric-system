@@ -5,13 +5,16 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Fingerprint, LayoutDashboard, QrCode, Users, Eye,
-  LogOut, Menu, X, Bell
+  LogOut, Menu, X, Bell, ClipboardList, Building2
 } from 'lucide-react';
+import NotificationCenter from '@/components/NotificationCenter';
 
 const navItems = [
   { name: 'Dashboard', href: '/operator', icon: LayoutDashboard },
   { name: 'Verify', href: '/operator/verify', icon: Eye },
   { name: 'Scanner', href: '/operator/scanner', icon: QrCode },
+  { name: 'Services', href: '/operator/services', icon: Building2 },
+  { name: 'Attendance', href: '/operator/attendance', icon: ClipboardList },
   { name: 'Bulk Verify', href: '/operator/bulk', icon: Users },
 ];
 
@@ -147,9 +150,7 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-xs font-medium text-green-700">Online</span>
               </div>
-              <button className="p-2 rounded-lg hover:bg-gray-100">
-                <Bell size={20} className="text-gray-600" />
-              </button>
+              <NotificationCenter enabled={true} />
             </div>
           </div>
         </header>

@@ -4,6 +4,7 @@ import db from '@/lib/db';
 import crypto from 'crypto';
 import { createClient } from '@/utils/supabase/server';
 import QRCode from 'qrcode';
+import UserService from '@/lib/services/user-service';
 
 // GET - Get current QR code
 export const dynamic = 'force-dynamic';
@@ -13,6 +14,7 @@ export async function GET(request: NextRequest) {
     let token = request.cookies.get('auth-token')?.value ||
                 request.headers.get('authorization')?.replace('Bearer ', '');
     let userId: string | null = null;
+    let authUser: any = null;
 
     if (token) {
       // Try custom token verification first
@@ -32,14 +34,22 @@ export async function GET(request: NextRequest) {
       }
 
       userId = user.id;
+      authUser = user;
     }
 
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Always get the Supabase auth user for metadata access (needed to fix Unknown User issue)
+    if (!authUser) {
+      const supabase = createClient();
+      const { data: { user: supaUser } } = await supabase.auth.getUser();
+      authUser = supaUser;
+    }
+
     // Get user info
-    const user = await db.user.findUnique({
+    let user = await db.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -52,8 +62,74 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // If user not found in DB, try to sync from Supabase Auth
+    if (!user && authUser) {
+      console.log(`QR Code: Syncing user ${userId} from Supabase Auth`);
+      try {
+        const syncedUser = await UserService.syncUserFromAuth(authUser);
+        user = {
+          id: syncedUser.id,
+          matricNumber: syncedUser.matricNumber,
+          firstName: syncedUser.firstName,
+          lastName: syncedUser.lastName,
+          department: syncedUser.department,
+          level: syncedUser.level,
+          profilePhoto: syncedUser.profilePhoto,
+        };
+      } catch (syncError) {
+        console.error('QR Code: User sync failed:', syncError);
+      }
+    }
+    
+    // If user exists but has "Unknown User" name, try to update from Supabase metadata
+    if (user && authUser && (user.firstName === 'Unknown' || user.lastName === 'User')) {
+      console.log(`QR Code: User has Unknown name, attempting to update from Supabase metadata`);
+      const metadata = authUser.user_metadata || {};
+      console.log('Supabase metadata:', JSON.stringify(metadata, null, 2));
+      
+      // Handle both firstName/lastName and full_name formats
+      let newFirstName = metadata.firstName || metadata.first_name;
+      let newLastName = metadata.lastName || metadata.last_name;
+      
+      // Parse full_name if firstName/lastName not available
+      const fullNameValue = metadata.full_name || metadata.fullName;
+      if (!newFirstName && !newLastName && fullNameValue) {
+        const nameParts = fullNameValue.trim().split(' ');
+        newFirstName = nameParts[0];
+        newLastName = nameParts.slice(1).join(' ') || null;
+      }
+      
+      if (newFirstName || newLastName) {
+        try {
+          const updatedUser = await db.user.update({
+            where: { id: userId },
+            data: {
+              firstName: newFirstName || user.firstName,
+              lastName: newLastName || user.lastName,
+            },
+            select: {
+              id: true,
+              matricNumber: true,
+              firstName: true,
+              lastName: true,
+              department: true,
+              level: true,
+              profilePhoto: true,
+            },
+          });
+          user = updatedUser;
+          console.log('Updated user name to:', updatedUser.firstName, updatedUser.lastName);
+        } catch (updateError) {
+          console.error('Failed to update user name:', updateError);
+        }
+      }
+    }
+
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ 
+        error: 'User not found', 
+        details: 'Your profile could not be found. Please try logging out and back in.' 
+      }, { status: 404 });
     }
 
     // Get or create active QR code
@@ -65,9 +141,6 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' },
     });
-
-    let qrCodeImage: string | null = null;
-    let qrCodeUrl: string | null = null;
 
     // If no valid QR code, create a new one
     if (!qrCode) {
@@ -88,18 +161,16 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Generate QR code image
-    qrCodeUrl = `${request.nextUrl.origin}/api/verify-qr/${encodeURIComponent(qrCode.code)}`;
-    qrCodeImage = await QRCode.toDataURL(qrCodeUrl, {
+    // Generate QR code image with correct options
+    const qrCodeUrl = `${request.nextUrl.origin}/api/verify-qr/${encodeURIComponent(qrCode.code)}`;
+    const qrCodeImage = await QRCode.toDataURL(qrCodeUrl, {
       errorCorrectionLevel: 'M',
-      type: 'image/png',
-      quality: 0.92,
       margin: 1,
+      width: 256,
       color: {
         dark: '#000000',
         light: '#FFFFFF'
-      },
-      width: 256
+      }
     });
 
     // Calculate time remaining
@@ -138,6 +209,7 @@ export async function POST(request: NextRequest) {
     let token = request.cookies.get('auth-token')?.value ||
                 request.headers.get('authorization')?.replace('Bearer ', '');
     let userId: string | null = null;
+    let authUser: any = null;
 
     if (token) {
       // Try custom token verification first
@@ -157,6 +229,7 @@ export async function POST(request: NextRequest) {
       }
 
       userId = user.id;
+      authUser = user;
     }
 
     if (!userId) {
@@ -164,13 +237,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user
-    const user = await db.user.findUnique({
+    let user = await db.user.findUnique({
       where: { id: userId },
       select: { matricNumber: true },
     });
 
+    // If user not found in DB, try to sync from Supabase Auth
+    if (!user && authUser) {
+      console.log(`QR Code POST: Syncing user ${userId} from Supabase Auth`);
+      try {
+        const syncedUser = await UserService.syncUserFromAuth(authUser);
+        user = { matricNumber: syncedUser.matricNumber };
+      } catch (syncError) {
+        console.error('QR Code POST: User sync failed:', syncError);
+      }
+    }
+
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ 
+        error: 'User not found',
+        details: 'Your profile could not be found. Please try logging out and back in.'
+      }, { status: 404 });
     }
 
     // Deactivate old QR codes
@@ -195,18 +282,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Generate QR code image
+    // Generate QR code image with correct options
     const qrCodeUrl = `${request.nextUrl.origin}/api/verify-qr/${encodeURIComponent(code)}`;
     const qrCodeImage = await QRCode.toDataURL(qrCodeUrl, {
       errorCorrectionLevel: 'M',
-      type: 'image/png',
-      quality: 0.92,
       margin: 1,
+      width: 256,
       color: {
         dark: '#000000',
         light: '#FFFFFF'
-      },
-      width: 256
+      }
     });
 
     return NextResponse.json({

@@ -1013,7 +1013,6 @@ export default function Home() {
                     className="h-16 w-auto bg-white rounded-xl p-2"
                   />
                   <div>
-                    <h3 className="text-white font-bold text-xl">TASUED</h3>
                     <p className="text-surface-400 text-sm">Department of Computer Science</p>
                   </div>
                 </div>

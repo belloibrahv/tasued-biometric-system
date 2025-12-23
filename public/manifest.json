@@ -1,11 +1,11 @@
 {
-  "name": "TASUED BioVault",
+  "name": "BioVault - Biometric Identity System",
   "short_name": "BioVault",
-  "description": "Universal Student Biometric Identity Platform for Tai SOLARIN Federal University of Education",
+  "description": "Biometric-based identity management system for TASUED",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#0066CC",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -58,8 +58,21 @@
     }
   ],
   "categories": ["education", "utilities"],
-  "lang": "en-NG",
-  "dir": "ltr",
-  "scope": "/",
-  "prefer_related_applications": false
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Scan QR Code",
+      "short_name": "Scan",
+      "description": "Open QR scanner",
+      "url": "/operator/scanner",
+      "icons": [{ "src": "/icons/scan-icon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "My QR Code",
+      "short_name": "My QR",
+      "description": "View your QR code",
+      "url": "/dashboard/qr-code",
+      "icons": [{ "src": "/icons/qr-icon.png", "sizes": "96x96" }]
+    }
+  ]
 }

@@ -138,7 +138,15 @@ class UserService {
    * This is the critical function that ensures data consistency between auth and DB
    */
   static async syncUserFromAuth(authUser: any): Promise<User> {
-    const metadata = authUser.user_metadata || {};
+    // DEBUG: Log the full authUser object to see what we're receiving
+    console.log('=== syncUserFromAuth DEBUG ===');
+    console.log('authUser.id:', authUser.id);
+    console.log('authUser.email:', authUser.email);
+    console.log('authUser.user_metadata:', JSON.stringify(authUser.user_metadata, null, 2));
+    console.log('authUser.raw_user_meta_data:', JSON.stringify(authUser.raw_user_meta_data, null, 2));
+    
+    // Try multiple sources for metadata (Supabase can store it in different places)
+    const metadata = authUser.user_metadata || authUser.raw_user_meta_data || {};
     const id = authUser.id;
     const email = (authUser.email || metadata.email || '').toLowerCase();
 
@@ -150,18 +158,29 @@ class UserService {
       ''
     ).toUpperCase();
     
-    // Support both combined fullName and separate firstName/lastName
+    // Support both combined fullName/full_name and separate firstName/lastName
     let firstName = metadata.firstName || metadata.first_name || '';
     let lastName = metadata.lastName || metadata.last_name || '';
     
-    if (!firstName && !lastName && metadata.fullName) {
-      const nameParts = metadata.fullName.split(' ');
+    console.log('Extracted firstName:', firstName);
+    console.log('Extracted lastName:', lastName);
+    
+    // Handle full_name (underscore) or fullName (camelCase) - split into first/last
+    const fullNameValue = metadata.full_name || metadata.fullName || '';
+    if (!firstName && !lastName && fullNameValue) {
+      console.log('Parsing full_name:', fullNameValue);
+      const nameParts = fullNameValue.trim().split(' ');
       firstName = nameParts[0] || 'Unknown';
       lastName = nameParts.slice(1).join(' ') || 'User';
     }
     
+    // Only use defaults if truly empty
     if (!firstName) firstName = 'Unknown';
     if (!lastName) lastName = 'User';
+    
+    console.log('Final firstName:', firstName);
+    console.log('Final lastName:', lastName);
+    console.log('=== END DEBUG ===');
 
     const otherNames = metadata.otherNames || metadata.other_names || null;
     const phoneNumber = metadata.phone || metadata.phoneNumber || metadata.phone_number || null;

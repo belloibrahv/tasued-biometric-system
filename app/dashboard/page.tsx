@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { QrCode, History, Shield, ChevronRight, CheckCircle, Clock, Activity, TrendingUp } from 'lucide-react';
+import { QrCode, History, Shield, ChevronRight, CheckCircle, Clock, Activity, TrendingUp, AlertCircle } from 'lucide-react';
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [stats, setStats] = useState({ totalAccess: 0, thisMonth: 0, lastAccess: null });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,7 +22,17 @@ export default function DashboardPage() {
 
         if (userRes.ok) {
           const userData = await userRes.json();
+          console.log('User data from /api/auth/me:', userData);
           setUser(userData.user);
+          
+          // Check if user data is incomplete
+          if (userData.error) {
+            setError(userData.details || userData.error);
+          }
+        } else {
+          const errorData = await userRes.json();
+          console.error('User fetch error:', errorData);
+          setError(errorData.details || errorData.error || 'Failed to load user data');
         }
 
         if (statsRes.ok) {
@@ -35,6 +46,7 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error('Failed to fetch data:', error);
+        setError('Network error. Please check your connection.');
       } finally {
         setLoading(false);
       }
@@ -54,19 +66,35 @@ export default function DashboardPage() {
     );
   }
 
+  // Get display name - fallback to email if name is missing
+  const displayName = user?.firstName && user.firstName !== 'Unknown' 
+    ? user.firstName 
+    : user?.email?.split('@')[0] || 'User';
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
+      {/* Error banner */}
+      {error && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle size={20} className="text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-yellow-800 font-medium">Profile sync issue</p>
+            <p className="text-sm text-yellow-600 mt-1">{error}</p>
+          </div>
+        </div>
+      )}
+
       {/* Welcome Card */}
       <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl lg:text-3xl font-semibold mb-2">
-              Welcome back, {user?.firstName}!
+              Welcome back, {displayName}!
             </h1>
             <p className="text-blue-100 text-sm lg:text-base">
-              {user?.department} • Level {user?.level}
+              {user?.department || 'Department not set'} • Level {user?.level || '-'}
             </p>
-            <p className="text-blue-200 text-xs mt-1 font-mono">{user?.matricNumber}</p>
+            <p className="text-blue-200 text-xs mt-1 font-mono">{user?.matricNumber || user?.email}</p>
           </div>
           {user?.biometricEnrolled && (
             <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-3 py-2 rounded-lg">

@@ -60,19 +60,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     try {
       const actorTypeHeader = req.headers.get('x-user-type');
       const actorRole = req.headers.get('x-user-role');
-      const actorType = actorTypeHeader === 'student'
-        ? 'STUDENT'
-        : (actorRole === 'OPERATOR' ? 'OPERATOR' : 'ADMIN');
       await db.auditLog.create({
         data: {
           userId: targetUserId,
-          actorType,
-          actorId: byUserId || targetUserId,
+          adminId: actorTypeHeader === 'admin' ? byUserId : null,
           actionType: 'LECTURE_CHECK_IN',
           resourceType: 'LECTURE_SESSION',
           resourceId: sessionId,
           details: { method: methodEnum, matchScore },
           status: 'SUCCESS',
+          ipAddress: req.headers.get('x-forwarded-for') || 'unknown',
+          userAgent: req.headers.get('user-agent') || 'unknown',
         },
       });
     } catch {}

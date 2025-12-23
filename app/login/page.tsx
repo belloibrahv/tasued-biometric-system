@@ -235,8 +235,6 @@ export default function LoginPage() {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-500/5 rounded-full blur-3xl"></div>
         </div>
 
-        {/* Grid Pattern Overlay */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,rgba(0,0,0,0)_70%)]"></div>
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-12 w-full h-full">

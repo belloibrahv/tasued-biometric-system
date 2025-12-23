@@ -2,13 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Eye, QrCode, Users, CheckCircle, ChevronRight, Clock } from 'lucide-react';
+import { Eye, QrCode, Users, CheckCircle, ChevronRight, Clock, ClipboardList, TrendingUp } from 'lucide-react';
 
 export default function OperatorDashboard() {
   const [stats, setStats] = useState({
     todayVerifications: 0,
     successRate: 0,
     pendingVerifications: 0,
+    todayAttendance: 0,
+    activeSessions: 0,
   });
   const [recentVerifications, setRecentVerifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,11 +49,11 @@ export default function OperatorDashboard() {
       {/* Header */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <h1 className="text-2xl font-semibold text-gray-900">Operator Dashboard</h1>
-        <p className="text-gray-500 mt-1">Verify student identities</p>
+        <p className="text-gray-500 mt-1">Verify student identities and manage attendance</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <p className="text-sm text-gray-500">Today's Verifications</p>
           <p className="text-2xl font-semibold text-gray-900 mt-1">{stats.todayVerifications}</p>
@@ -61,13 +63,17 @@ export default function OperatorDashboard() {
           <p className="text-2xl font-semibold text-gray-900 mt-1">{stats.successRate}%</p>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-sm text-gray-500">Pending</p>
-          <p className="text-2xl font-semibold text-gray-900 mt-1">{stats.pendingVerifications}</p>
+          <p className="text-sm text-gray-500">Today's Attendance</p>
+          <p className="text-2xl font-semibold text-gray-900 mt-1">{stats.todayAttendance}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <p className="text-sm text-gray-500">Active Sessions</p>
+          <p className="text-2xl font-semibold text-gray-900 mt-1">{stats.activeSessions}</p>
         </div>
       </div>
 
       {/* Quick actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link href="/operator/verify" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-green-300 hover:shadow-sm transition-all group">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center group-hover:bg-green-100 transition-colors">
@@ -81,7 +87,7 @@ export default function OperatorDashboard() {
           </div>
         </Link>
 
-        <Link href="/operator/scanner" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-green-300 hover:shadow-sm transition-all group">
+        <Link href="/operator/scanner" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all group">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
               <QrCode size={24} className="text-blue-600" />
@@ -94,10 +100,23 @@ export default function OperatorDashboard() {
           </div>
         </Link>
 
-        <Link href="/operator/bulk" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-green-300 hover:shadow-sm transition-all group">
+        <Link href="/operator/attendance" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-purple-300 hover:shadow-sm transition-all group">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-              <Users size={24} className="text-purple-600" />
+              <ClipboardList size={24} className="text-purple-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-gray-900">Attendance</h3>
+              <p className="text-sm text-gray-500">Lecture check-in</p>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </div>
+        </Link>
+
+        <Link href="/operator/bulk" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-orange-300 hover:shadow-sm transition-all group">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center group-hover:bg-orange-100 transition-colors">
+              <Users size={24} className="text-orange-600" />
             </div>
             <div className="flex-1">
               <h3 className="font-medium text-gray-900">Bulk</h3>

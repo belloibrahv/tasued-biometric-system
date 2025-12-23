@@ -5,13 +5,15 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Fingerprint, LayoutDashboard, Users, Server, Shield,
-  LogOut, Menu, X, Bell, Eye
+  LogOut, Menu, X, Bell, Eye, BarChart3, ClipboardList
 } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Services', href: '/admin/services', icon: Server },
+  { name: 'Attendance', href: '/admin/attendance', icon: ClipboardList },
+  { name: 'Reports', href: '/admin/reports', icon: BarChart3 },
   { name: 'Audit Logs', href: '/admin/audit', icon: Shield },
   { name: 'Verification', href: '/operator/verify', icon: Eye },
 ];

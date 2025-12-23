@@ -5,13 +5,15 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Fingerprint, LayoutDashboard, QrCode, History,
-  LogOut, Menu, X, Bell, User, ChevronRight
+  LogOut, Menu, X, Bell, User, ChevronRight, ClipboardList
 } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'My QR Code', href: '/dashboard/qr-code', icon: QrCode },
+  { name: 'Attendance', href: '/dashboard/attendance', icon: ClipboardList },
   { name: 'Access History', href: '/dashboard/history', icon: History },
+  { name: 'Profile', href: '/dashboard/profile', icon: User },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -30,11 +32,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           return;
         }
         const data = await res.json();
-        if (data.user?.type !== 'student') {
+        console.log('Dashboard layout - auth response:', data);
+        
+        // Handle both success and partial success (sync failed but user data available)
+        const userData = data.user;
+        if (!userData) {
+          console.error('No user data in response');
+          return;
+        }
+        
+        // Check if user is admin - redirect to admin dashboard
+        if (userData.type === 'admin') {
           router.push('/admin');
           return;
         }
-        setUser(data.user);
+        
+        setUser(userData);
       } catch (error) {
         console.error('Auth error:', error);
       } finally {
@@ -107,12 +120,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                   <span className="text-blue-600 font-semibold text-sm">
-                    {user.firstName?.[0]}{user.lastName?.[0]}
+                    {(user.firstName?.[0] || user.email?.[0] || 'U').toUpperCase()}
+                    {(user.lastName?.[0] || '').toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 text-sm truncate">{user.firstName} {user.lastName}</p>
-                  <p className="text-xs text-gray-500 truncate">{user.matricNumber}</p>
+                  <p className="font-medium text-gray-900 text-sm truncate">
+                    {user.firstName && user.firstName !== 'Unknown' 
+                      ? `${user.firstName} ${user.lastName || ''}`.trim()
+                      : user.email?.split('@')[0] || 'User'}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">{user.matricNumber || user.email}</p>
                 </div>
               </div>
             </div>
@@ -171,7 +189,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-gray-200 ml-2">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                   <span className="text-blue-600 font-medium text-xs">
-                    {user.firstName?.[0]}{user.lastName?.[0]}
+                    {(user.firstName?.[0] || user.email?.[0] || 'U').toUpperCase()}
+                    {(user.lastName?.[0] || '').toUpperCase()}
                   </span>
                 </div>
               </div>

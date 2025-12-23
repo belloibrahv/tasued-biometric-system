@@ -1,23 +1,30 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { QrCode, Download, RefreshCw, Clock, Copy, Check } from 'lucide-react';
+import { QrCode, Download, RefreshCw, Clock, Copy, Check, AlertCircle } from 'lucide-react';
 
 export default function QRCodePage() {
-  const [qrCode, setQrCode] = useState<any>(null);
+  const [qrData, setQrData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchQRCode = async () => {
+    setError(null);
     try {
       const res = await fetch('/api/dashboard/qr-code');
+      const data = await res.json();
+      
       if (res.ok) {
-        const data = await res.json();
-        setQrCode(data);
+        setQrData(data);
+      } else {
+        setError(data.error || data.details || 'Failed to fetch QR code');
+        console.error('QR fetch error:', data);
       }
     } catch (error) {
       console.error('Failed to fetch QR code:', error);
+      setError('Network error. Please check your connection.');
     } finally {
       setLoading(false);
     }
@@ -25,22 +32,28 @@ export default function QRCodePage() {
 
   const generateNewQR = async () => {
     setGenerating(true);
+    setError(null);
     try {
       const res = await fetch('/api/dashboard/qr-code', { method: 'POST' });
+      const data = await res.json();
+      
       if (res.ok) {
-        const data = await res.json();
-        setQrCode(data);
+        setQrData(data);
+      } else {
+        setError(data.error || data.details || 'Failed to generate QR code');
+        console.error('QR generate error:', data);
       }
     } catch (error) {
       console.error('Failed to generate QR code:', error);
+      setError('Network error. Please check your connection.');
     } finally {
       setGenerating(false);
     }
   };
 
   const copyCode = () => {
-    if (qrCode?.code) {
-      navigator.clipboard.writeText(qrCode.code);
+    if (qrData?.qrCode?.code) {
+      navigator.clipboard.writeText(qrData.qrCode.code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -61,6 +74,10 @@ export default function QRCodePage() {
     );
   }
 
+  // Get the QR code data from the nested response
+  const qrCode = qrData?.qrCode;
+  const user = qrData?.user;
+
   return (
     <div className="max-w-md mx-auto space-y-6">
       {/* Header */}
@@ -69,10 +86,38 @@ export default function QRCodePage() {
         <p className="text-gray-500 mt-1">Use this code for identity verification</p>
       </div>
 
+      {/* Error display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle size={20} className="text-red-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-red-800 font-medium">Error</p>
+            <p className="text-sm text-red-600 mt-1">{error}</p>
+            <button 
+              onClick={fetchQRCode}
+              className="text-sm text-red-700 underline mt-2 hover:text-red-800"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* QR Code card */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
         {qrCode?.qrCodeImage ? (
           <div className="space-y-4">
+            {/* User info */}
+            {user && (
+              <div className="text-center pb-4 border-b border-gray-100">
+                <p className="font-semibold text-gray-900">{user.fullName}</p>
+                <p className="text-sm text-gray-500">{user.matricNumber}</p>
+                {user.department && (
+                  <p className="text-xs text-gray-400 mt-1">{user.department} • Level {user.level}</p>
+                )}
+              </div>
+            )}
+            
             <div className="aspect-square bg-white rounded-xl border border-gray-100 p-4 flex items-center justify-center">
               <img 
                 src={qrCode.qrCodeImage} 

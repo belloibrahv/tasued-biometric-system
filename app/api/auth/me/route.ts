@@ -35,6 +35,13 @@ export async function GET(request: Request) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+      // DEBUG: Log what Supabase returns
+      console.log('=== /api/auth/me DEBUG ===');
+      console.log('Supabase user.id:', user.id);
+      console.log('Supabase user.email:', user.email);
+      console.log('Supabase user.user_metadata:', JSON.stringify(user.user_metadata, null, 2));
+      console.log('=== END DEBUG ===');
+
       authUser = user;
       payload = {
         id: user.id,
@@ -113,6 +120,61 @@ export async function GET(request: Request) {
         error: 'User profile not found',
         details: 'Your account exists but your profile could not be synchronized.'
       }, { status: 404 });
+    }
+
+    // If user exists but has "Unknown User" name, try to update from Supabase metadata
+    if (user && (user.firstName === 'Unknown' || user.lastName === 'User')) {
+      // Get authUser if we don't have it
+      if (!authUser) {
+        const supabase = createClient();
+        const { data: { user: supaUser } } = await supabase.auth.getUser();
+        authUser = supaUser;
+      }
+      
+      if (authUser) {
+        const metadata = authUser.user_metadata || {};
+        console.log('User has Unknown name, checking Supabase metadata:', JSON.stringify(metadata, null, 2));
+        
+        // Handle both firstName/lastName and full_name formats
+        let newFirstName = metadata.firstName || metadata.first_name;
+        let newLastName = metadata.lastName || metadata.last_name;
+        
+        // Parse full_name if firstName/lastName not available
+        const fullNameValue = metadata.full_name || metadata.fullName;
+        if (!newFirstName && !newLastName && fullNameValue) {
+          const nameParts = fullNameValue.trim().split(' ');
+          newFirstName = nameParts[0];
+          newLastName = nameParts.slice(1).join(' ') || null;
+        }
+        
+        if (newFirstName || newLastName) {
+          try {
+            const updatedUser = await db.user.update({
+              where: { id: user.id },
+              data: {
+                firstName: newFirstName || user.firstName,
+                lastName: newLastName || user.lastName,
+              },
+              include: {
+                biometricData: {
+                  select: {
+                    id: true,
+                    facialTemplate: true,
+                    fingerprintTemplate: true,
+                    facialQuality: true,
+                    fingerprintQuality: true,
+                    enrolledAt: true,
+                  }
+                }
+              }
+            });
+            user = updatedUser;
+            console.log('Updated user name to:', updatedUser.firstName, updatedUser.lastName);
+          } catch (updateError) {
+            console.error('Failed to update user name:', updateError);
+          }
+        }
+      }
     }
 
     // Determine if user is admin/staff
