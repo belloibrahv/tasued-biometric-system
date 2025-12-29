@@ -1,37 +1,35 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { User, GraduationCap } from 'lucide-react';
+import { User, Users } from 'lucide-react';
 import { useMemo } from 'react';
 
 interface TeamMember {
   name: string;
   matricNumber: string;
-  role: string;
-  image?: string;
 }
 
 interface TeamSliderProps {
   members: TeamMember[];
 }
 
-// Generate consistent color based on name
-function getAvatarColor(name: string): string {
-  const colors = [
-    'from-blue-500 to-blue-600',
-    'from-green-500 to-green-600',
-    'from-purple-500 to-purple-600',
-    'from-pink-500 to-pink-600',
-    'from-indigo-500 to-indigo-600',
-    'from-teal-500 to-teal-600',
-    'from-orange-500 to-orange-600',
-    'from-cyan-500 to-cyan-600',
+// Generate consistent gradient based on name
+function getAvatarGradient(name: string): string {
+  const gradients = [
+    'from-blue-500 via-blue-600 to-indigo-600',
+    'from-emerald-500 via-green-600 to-teal-600',
+    'from-purple-500 via-violet-600 to-indigo-600',
+    'from-rose-500 via-pink-600 to-fuchsia-600',
+    'from-amber-500 via-orange-600 to-red-600',
+    'from-cyan-500 via-teal-600 to-emerald-600',
+    'from-indigo-500 via-purple-600 to-pink-600',
+    'from-teal-500 via-cyan-600 to-blue-600',
   ];
-  const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
-  return colors[index];
+  const index = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % gradients.length;
+  return gradients[index];
 }
 
-// Get initials from name
+// Get initials from name (first and last name initials)
 function getInitials(name: string): string {
   const parts = name.split(' ').filter(p => p.length > 0);
   if (parts.length >= 2) {
@@ -50,41 +48,38 @@ function formatName(name: string): string {
 }
 
 export default function TeamSlider({ members }: TeamSliderProps) {
-  // Duplicate members for seamless infinite scroll
-  const duplicatedMembers = useMemo(() => [...members, ...members], [members]);
+  // Triple the members for seamless infinite scroll
+  const tripleMembers = useMemo(() => [...members, ...members, ...members], [members]);
   
-  // Calculate duration based on number of members
-  const duration = Math.max(60, members.length * 0.8);
+  // Slow duration for professional feel (120 seconds for full cycle)
+  const duration = 120;
 
   return (
     <div className="relative">
-      {/* Stats Bar */}
-      <div className="flex justify-center gap-8 mb-8">
-        <div className="text-center">
-          <div className="text-3xl font-bold text-brand-600">{members.length}</div>
-          <div className="text-sm text-surface-500">Total Students</div>
-        </div>
-        <div className="text-center">
-          <div className="text-3xl font-bold text-success-600">{members.filter(m => m.role === 'Student Member').length}</div>
-          <div className="text-sm text-surface-500">Regular Students</div>
-        </div>
-        <div className="text-center">
-          <div className="text-3xl font-bold text-purple-600">{members.filter(m => m.role === 'D.E Student').length}</div>
-          <div className="text-sm text-surface-500">D.E Students</div>
+      {/* Header Stats */}
+      <div className="flex justify-center mb-10">
+        <div className="inline-flex items-center gap-3 bg-white px-6 py-3 rounded-full shadow-lg border border-surface-100">
+          <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center">
+            <Users className="text-brand-600" size={20} />
+          </div>
+          <div>
+            <span className="text-2xl font-bold text-surface-900">{members.length}</span>
+            <span className="text-surface-500 ml-2">Student Contributors</span>
+          </div>
         </div>
       </div>
 
-      {/* Desktop Slider - Two Rows */}
+      {/* Desktop Marquee Slider */}
       <div className="hidden md:block overflow-hidden relative">
-        {/* Gradient Overlays */}
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-surface-50 to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-surface-50 to-transparent z-10 pointer-events-none" />
+        {/* Gradient Overlays for smooth fade effect */}
+        <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-surface-50 via-surface-50/80 to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-surface-50 via-surface-50/80 to-transparent z-10 pointer-events-none" />
         
-        {/* Row 1 - Left to Right */}
-        <div className="mb-4 overflow-hidden">
+        {/* Row 1 - Slow Left to Right */}
+        <div className="mb-6">
           <motion.div
-            className="flex gap-4"
-            animate={{ x: [0, -members.length * 220] }}
+            className="flex gap-6"
+            animate={{ x: [0, -members.length * 280] }}
             transition={{
               duration: duration,
               repeat: Infinity,
@@ -92,17 +87,17 @@ export default function TeamSlider({ members }: TeamSliderProps) {
               repeatType: "loop"
             }}
           >
-            {duplicatedMembers.map((member, idx) => (
-              <MemberCard key={`row1-${idx}`} member={member} />
+            {tripleMembers.map((member, idx) => (
+              <ContributorCard key={`row1-${idx}`} member={member} />
             ))}
           </motion.div>
         </div>
 
-        {/* Row 2 - Right to Left */}
-        <div className="overflow-hidden">
+        {/* Row 2 - Slow Right to Left (reversed) */}
+        <div>
           <motion.div
-            className="flex gap-4"
-            animate={{ x: [-members.length * 220, 0] }}
+            className="flex gap-6"
+            animate={{ x: [-members.length * 280, 0] }}
             transition={{
               duration: duration,
               repeat: Infinity,
@@ -110,53 +105,61 @@ export default function TeamSlider({ members }: TeamSliderProps) {
               repeatType: "loop"
             }}
           >
-            {[...duplicatedMembers].reverse().map((member, idx) => (
-              <MemberCard key={`row2-${idx}`} member={member} />
+            {[...tripleMembers].reverse().map((member, idx) => (
+              <ContributorCard key={`row2-${idx}`} member={member} />
             ))}
           </motion.div>
         </div>
       </div>
 
-      {/* Mobile Grid */}
+      {/* Mobile Scrollable Grid */}
       <div className="md:hidden">
-        <div className="grid grid-cols-2 gap-3 max-h-[500px] overflow-y-auto px-1 pb-4">
+        <div className="grid grid-cols-2 gap-4 max-h-[600px] overflow-y-auto px-2 pb-4 scrollbar-thin">
           {members.map((member, idx) => (
-            <MemberCardMobile key={idx} member={member} index={idx} />
+            <MobileContributorCard key={idx} member={member} index={idx} />
           ))}
         </div>
-        <div className="text-center mt-4 text-sm text-surface-500">
-          Scroll to see all {members.length} team members
-        </div>
+        <p className="text-center text-sm text-surface-400 mt-4">
+          Scroll to view all {members.length} contributors
+        </p>
       </div>
     </div>
   );
 }
 
-function MemberCard({ member }: { member: TeamMember }) {
-  const colorClass = getAvatarColor(member.name);
+function ContributorCard({ member }: { member: TeamMember }) {
+  const gradient = getAvatarGradient(member.name);
   const initials = getInitials(member.name);
-  const isDE = member.role === 'D.E Student';
 
   return (
-    <div className="flex-shrink-0 w-52">
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-surface-100 hover:shadow-md hover:border-brand-200 transition-all duration-300 h-full">
-        <div className="flex items-center gap-3">
-          {/* Avatar */}
-          <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center flex-shrink-0 shadow-sm`}>
-            <span className="text-white font-bold text-sm">{initials}</span>
-          </div>
-          
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-surface-900 text-sm leading-tight truncate" title={formatName(member.name)}>
-              {formatName(member.name)}
-            </h3>
-            <p className="text-xs text-surface-500 font-mono mt-0.5">{member.matricNumber}</p>
-            {isDE && (
-              <span className="inline-flex items-center gap-1 text-xs text-purple-600 font-medium mt-1">
-                <GraduationCap size={10} /> D.E
+    <div className="flex-shrink-0 w-64">
+      <div className="bg-white rounded-2xl p-6 shadow-md border border-surface-100 hover:shadow-xl hover:border-brand-200 hover:-translate-y-1 transition-all duration-500 group">
+        {/* Large Avatar */}
+        <div className="relative mb-5">
+          <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${gradient} p-1 shadow-lg group-hover:scale-105 transition-transform duration-500`}>
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+              <span className={`text-2xl font-bold bg-gradient-to-br ${gradient} bg-clip-text text-transparent`}>
+                {initials}
               </span>
-            )}
+            </div>
+          </div>
+          {/* Contributor Badge */}
+          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
+            <span className="inline-flex items-center gap-1 bg-brand-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
+              <User size={10} />
+              Contributor
+            </span>
+          </div>
+        </div>
+
+        {/* Name & Matric */}
+        <div className="text-center pt-2">
+          <h3 className="font-bold text-surface-900 text-base leading-tight group-hover:text-brand-600 transition-colors line-clamp-2 min-h-[2.5rem]">
+            {formatName(member.name)}
+          </h3>
+          <div className="mt-2 inline-flex items-center gap-1.5 bg-surface-100 px-3 py-1.5 rounded-lg">
+            <span className="text-xs text-surface-500">Matric:</span>
+            <span className="text-sm font-mono font-semibold text-surface-700">{member.matricNumber}</span>
           </div>
         </div>
       </div>
@@ -164,31 +167,34 @@ function MemberCard({ member }: { member: TeamMember }) {
   );
 }
 
-function MemberCardMobile({ member, index }: { member: TeamMember; index: number }) {
-  const colorClass = getAvatarColor(member.name);
+function MobileContributorCard({ member, index }: { member: TeamMember; index: number }) {
+  const gradient = getAvatarGradient(member.name);
   const initials = getInitials(member.name);
-  const isDE = member.role === 'D.E Student';
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.02, 0.5) }}
-      className="bg-white rounded-xl p-3 shadow-sm border border-surface-100"
+      transition={{ delay: Math.min(index * 0.03, 0.6) }}
+      className="bg-white rounded-xl p-4 shadow-sm border border-surface-100"
     >
-      <div className="flex flex-col items-center text-center">
-        <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center mb-2 shadow-sm`}>
-          <span className="text-white font-bold">{initials}</span>
+      {/* Avatar */}
+      <div className={`w-16 h-16 mx-auto rounded-full bg-gradient-to-br ${gradient} p-0.5 shadow-md mb-3`}>
+        <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
+          <span className={`text-lg font-bold bg-gradient-to-br ${gradient} bg-clip-text text-transparent`}>
+            {initials}
+          </span>
         </div>
-        <h3 className="font-semibold text-surface-900 text-xs leading-tight line-clamp-2">
+      </div>
+
+      {/* Info */}
+      <div className="text-center">
+        <h3 className="font-semibold text-surface-900 text-sm leading-tight line-clamp-2 min-h-[2.25rem]">
           {formatName(member.name)}
         </h3>
-        <p className="text-xs text-surface-400 font-mono mt-1">{member.matricNumber}</p>
-        {isDE && (
-          <span className="inline-flex items-center gap-1 text-xs text-purple-600 font-medium mt-1 bg-purple-50 px-2 py-0.5 rounded-full">
-            <GraduationCap size={10} /> D.E Student
-          </span>
-        )}
+        <p className="text-xs font-mono text-surface-500 mt-1.5 bg-surface-50 px-2 py-1 rounded inline-block">
+          {member.matricNumber}
+        </p>
       </div>
     </motion.div>
   );
