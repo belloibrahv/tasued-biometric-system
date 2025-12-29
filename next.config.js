@@ -4,8 +4,10 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  swcMinify: true,
   experimental: {
     typedRoutes: false,
+    serverComponentsExternalPackages: ['@tensorflow/tfjs'],
   },
   // Vercel-specific configurations
   eslint: {
@@ -29,6 +31,24 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
   },
+  // Performance optimizations
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Exclude TensorFlow from client bundle if not needed
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    
+    return config;
+  },
+  // Enable gzip compression and other performance optimizations
+  compress: true,
+  poweredByHeader: false,
+  generateEtags: true,
   // Security headers
   async headers() {
     return [

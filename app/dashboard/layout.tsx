@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Fingerprint, LayoutDashboard, QrCode, History,
-  LogOut, Menu, X, Bell, User, ChevronRight, ClipboardList
+  LogOut, Menu, X, Bell, User, ClipboardList
 } from 'lucide-react';
 
 const navItems = [
@@ -107,7 +107,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto lg:h-screen lg:w-64`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="h-16 flex items-center px-4 border-b border-gray-100">
@@ -207,9 +207,43 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page content */}
-        <main className="p-4 lg:p-6">
+        <main className="p-4 lg:p-6 pb-24 lg:pb-6">
           {children}
         </main>
+
+        {/* Mobile Bottom Navigation */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 safe-area-pb">
+          <div className="flex items-center justify-around py-2">
+            {navItems.slice(0, 4).map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+                    isActive 
+                      ? 'text-blue-600' 
+                      : 'text-gray-500'
+                  }`}
+                >
+                  <item.icon size={20} />
+                  <span className="text-xs font-medium">{item.name.split(' ')[0]}</span>
+                </Link>
+              );
+            })}
+            <Link
+              href="/dashboard/profile"
+              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+                pathname === '/dashboard/profile' 
+                  ? 'text-blue-600' 
+                  : 'text-gray-500'
+              }`}
+            >
+              <User size={20} />
+              <span className="text-xs font-medium">Profile</span>
+            </Link>
+          </div>
+        </nav>
       </div>
     </div>
   );

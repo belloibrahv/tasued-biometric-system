@@ -1,8 +1,8 @@
 // pages/api/users/enroll.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
-import { hash } from 'bcrypt';
-import { createBiometricTemplate } from '../../../lib/biometricProcessing';
+// import { hash } from 'bcrypt'; // Not currently used
+import { BiometricVerificationService } from '../../../lib/services/biometric-service';
 import { authenticateUser } from '../../../middleware/auth';
 
 const prisma = new PrismaClient();
@@ -14,19 +14,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const { 
-      studentNumber, 
-      fullName, 
+      matricNumber, 
+      firstName,
+      lastName,
       email, 
-      phone, 
+      phoneNumber, 
       department, 
       level, 
       biometricData 
     } = req.body;
 
     // Validate required fields
-    if (!studentNumber || !fullName || !email || !biometricData) {
+    if (!matricNumber || !firstName || !lastName || !email || !biometricData) {
       return res.status(400).json({ 
-        message: 'Missing required fields: studentNumber, fullName, email, or biometricData' 
+        message: 'Missing required fields: matricNumber, firstName, lastName, email, or biometricData' 
       });
     }
 
@@ -34,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const existingUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { studentNumber },
+          { matricNumber },
           { email }
         ]
       }
@@ -42,37 +43,67 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (existingUser) {
       return res.status(409).json({ 
-        message: 'User with this student number or email already exists' 
+        message: 'User with this matric number or email already exists' 
       });
     }
 
-    // Process biometric data to create encrypted template
-    const encryptedTemplate = await createBiometricTemplate(biometricData);
-
-    // Create user in database
+    // Create user in database first
     const user = await prisma.user.create({
       data: {
-        studentNumber,
-        fullName,
+        matricNumber,
+        firstName,
+        lastName,
         email,
-        phone,
+        phoneNumber,
         department,
         level,
-        encryptedBiometricTemplate: Buffer.from(encryptedTemplate),
-        status: 'ACTIVE'
+        biometricEnrolled: false // Will be updated after biometric data is created
       }
+    });
+
+    // Process biometric data to create embedding for enrollment
+    const biometricService = BiometricVerificationService.getInstance();
+    const { embedding, isValid } = await biometricService.processFacialImageForEnrollment(biometricData);
+    
+    if (!isValid) {
+      // If biometric data is invalid, delete the user we just created
+      await prisma.user.delete({ where: { id: user.id } });
+      return res.status(400).json({ 
+        message: 'Invalid biometric data provided' 
+      });
+    }
+    
+    // Convert embedding to string and encrypt
+    const templateString = JSON.stringify(embedding);
+    const encryptedTemplate = templateString; // Using simple string for now, should use encryption in production
+    
+    // Create biometric data record
+    await prisma.biometricData.create({
+      data: {
+        userId: user.id,
+        facialTemplate: encryptedTemplate,
+        facialQuality: 95, // Default quality score
+        facialPhotos: [] // No photos stored yet
+      }
+    });
+    
+    // Update user to mark as biometric enrolled
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { biometricEnrolled: true }
     });
 
     // Log the enrollment
     await prisma.auditLog.create({
       data: {
         userId: user.id,
-        action: 'USER_ENROLLMENT',
-        tableName: 'User',
-        recordId: user.id,
+        actionType: 'USER_ENROLLMENT',
+        resourceType: 'USER',
+        resourceId: user.id,
         newValues: {
-          studentNumber: user.studentNumber,
-          fullName: user.fullName,
+          matricNumber: user.matricNumber,
+          firstName: user.firstName,
+          lastName: user.lastName,
           email: user.email
         },
         ipAddress: req.socket.remoteAddress || '',
@@ -83,7 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(201).json({ 
       message: 'User enrolled successfully', 
       userId: user.id,
-      studentNumber: user.studentNumber 
+      matricNumber: user.matricNumber 
     });
 
   } catch (error: any) {

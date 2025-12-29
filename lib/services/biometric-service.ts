@@ -2,6 +2,9 @@ import db from '@/lib/db';
 import { encryptData } from '@/lib/encryption';
 import { createClient as createSupabaseClientJS } from '@supabase/supabase-js';
 
+// Server-side biometric processing is handled within this service
+// The client-side biometric processing is only for browser environments
+
 export interface EnrollmentInput {
   userId: string;
   facialTemplate?: number[] | string;
@@ -71,6 +74,7 @@ class BiometricService {
       },
     });
 
+    // Update user's biometric enrollment status
     // Update user's biometric enrollment status
     await db.user.update({
       where: { id: userId },

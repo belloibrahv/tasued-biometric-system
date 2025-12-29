@@ -90,7 +90,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto lg:h-screen lg:w-64`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="h-16 flex items-center px-4 border-b border-gray-100">

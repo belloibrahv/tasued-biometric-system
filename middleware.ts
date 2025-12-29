@@ -14,9 +14,10 @@ export async function middleware(request: NextRequest) {
     '/forgot-password',
     '/reset-password',
     '/api/health',
-    '/api/biometric/facial-embed', // Whitelist biometric processing (stateless)
-    '/api/verify-qr', // Public QR verification API
-    '/verify', // Public QR verification page
+    '/api/biometric/facial-embed',
+    '/api/biometric/check-enrollment',
+    '/api/verify-qr',
+    '/verify',
     '/manifest.json',
     '/sw.js',
     '/favicon.ico',
@@ -54,8 +55,9 @@ export async function middleware(request: NextRequest) {
     if (isAdmin) {
       return NextResponse.redirect(new URL('/admin', request.url));
     } else {
-      // For students, check biometric enrollment before redirecting
+      // For students, check biometric enrollment from session metadata
       const biometricEnrolled = user.user_metadata?.biometricEnrolled === true;
+      
       if (!biometricEnrolled) {
         return NextResponse.redirect(new URL('/enroll-biometric', request.url));
       }
@@ -68,7 +70,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!user) {
-    // If this is an API request, return 401 instead of redirecting to HTML (which breaks JSON parsing)
+    // If this is an API request, return 401 instead of redirecting to HTML
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -96,7 +98,6 @@ export async function middleware(request: NextRequest) {
 
   // Allow auth-only routes without biometric check
   if (isAuthOnlyRoute) {
-    // Continue to the route
     const response = NextResponse.next({
       request: { headers: new Headers(request.headers) }
     });
@@ -115,12 +116,11 @@ export async function middleware(request: NextRequest) {
   // Skip biometric check for admins/operators - they don't need it
   if (!isAdmin && (pathname.startsWith('/dashboard') || pathname.startsWith('/student'))) {
     if (!biometricEnrolled) {
-      console.log(`Middleware: User ${user.id} not enrolled, redirecting to enroll-biometric`);
       return NextResponse.redirect(new URL('/enroll-biometric', request.url));
     }
   }
 
-  // Role-based access control - allow multiple admin roles
+  // Role-based access control
   if (pathname.startsWith('/admin') && !isAdmin) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
@@ -136,12 +136,11 @@ export async function middleware(request: NextRequest) {
     }
   });
 
-  // Inject user info - include all fields needed by API routes
   response.headers.set('x-user-id', user?.id || '');
   response.headers.set('x-user-role', role);
   response.headers.set('x-user-type', userType);
 
-  // Copy over the cookies from supabaseResponse (which contains the refreshed session)
+  // Copy over the cookies from supabaseResponse
   if (supabaseResponse && typeof supabaseResponse.cookies?.getAll === 'function') {
     supabaseResponse.cookies.getAll().forEach(cookie => {
       response.cookies.set(cookie.name, cookie.value, cookie);

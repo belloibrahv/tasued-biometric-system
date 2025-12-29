@@ -70,11 +70,11 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
   return (
     <div className="min-h-screen bg-gray-50">
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/20 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/20 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:z-auto lg:h-screen lg:w-64`}>
         <div className="flex flex-col h-full">
           <div className="h-16 flex items-center px-4 border-b border-gray-100">
             <Link href="/" className="flex items-center gap-3">
@@ -138,7 +138,7 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
         </div>
       </aside>
 
-      <div className="lg:pl-64">
+      <div className="lg:pl-64" style={{zIndex: 10}}>
         <header className="h-16 bg-white border-b border-gray-200 sticky top-0 z-30">
           <div className="flex items-center justify-between h-full px-4 lg:px-6">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-gray-100">

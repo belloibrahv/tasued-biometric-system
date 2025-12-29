@@ -24,14 +24,21 @@ export async function login(formData: FormData) {
   // Handle role-based redirection logic
   const type = data.user.user_metadata?.type || 'student'
   const role = data.user.user_metadata?.role || (type === 'admin' ? 'ADMIN' : 'STUDENT')
+  const biometricEnrolled = data.user.user_metadata?.biometricEnrolled === true
 
   let target = redirectPath
   if (target === '/login' || target === '/') {
     target = '/dashboard'
   }
 
-  if (type === 'admin') {
+  // Admin/operator users go to their respective dashboards
+  if (type === 'admin' || role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OPERATOR') {
     target = role === 'OPERATOR' ? '/operator' : '/admin'
+  } else {
+    // For students, check if biometric enrollment is needed
+    if (!biometricEnrolled) {
+      target = '/enroll-biometric'
+    }
   }
 
   return { success: true, target }

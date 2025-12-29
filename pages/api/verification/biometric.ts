@@ -1,7 +1,7 @@
 // pages/api/verification/biometric.ts
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
-import { verifyBiometric, performLivenessDetection } from '@/lib/biometricProcessing';
+import { BiometricVerificationService } from '@/lib/services/biometric-service';
 
 const prisma = new PrismaClient();
 
@@ -20,106 +20,137 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Verify user exists and is active
     const user = await prisma.user.findUnique({
-      where: { id: userId, status: 'ACTIVE' }
+      where: { id: userId }
     });
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found or inactive' });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    // Verify biometric template exists
-    if (!user.encryptedBiometricTemplate) {
+    // Get biometric data for the user
+    const biometricData = await prisma.biometricData.findUnique({
+      where: { userId: user.id }
+    });
+    
+    if (!biometricData || !biometricData.facialTemplate) {
       return res.status(400).json({ message: 'No biometric template found for user' });
     }
 
-    // Perform liveness detection to ensure it's a real person
-    const livenessResult = await performLivenessDetection(imageData);
-    if (!livenessResult.isLive) {
-      // Log failed verification due to liveness check
-      await prisma.verificationLog.create({
+    // Use the biometric verification service
+    const biometricService = BiometricVerificationService.getInstance();
+    
+    // Parse the stored template
+    let storedEmbedding: number[] = [];
+    try {
+      storedEmbedding = JSON.parse(biometricData.facialTemplate);
+    } catch (error) {
+      return res.status(400).json({ message: 'Invalid biometric template format' });
+    }
+    
+    // Perform enhanced verification
+    const verificationResult = await biometricService.enhancedVerifyFacialImage(
+      imageData,
+      storedEmbedding
+    );
+    
+    if (!verificationResult.verified) {
+      // Log failed verification
+      await prisma.accessLog.create({
         data: {
           userId: user.id,
-          verificationType: verificationType || 'OTHER',
+          action: 'BIOMETRIC_VERIFICATION_FAILED',
+          status: 'FAILED',
+          method: 'FACIAL',
+          confidenceScore: verificationResult.confidence,
           location: location || 'Unknown',
-          result: 'FAILED',
-          confidenceScore: livenessResult.confidence,
-          operatorId: operatorId || null,
           deviceInfo: req.headers['user-agent'] || '',
-          ipAddress: req.socket.remoteAddress || ''
+          ipAddress: req.socket.remoteAddress || '',
+          metadata: {
+            verificationType: verificationType || 'OTHER',
+            qualityScore: verificationResult.qualityScore,
+            livenessCheck: verificationResult.livenessCheck,
+            details: verificationResult.details
+          }
         }
       });
-
+      
       return res.status(400).json({
-        message: 'Liveness check failed',
-        details: livenessResult.message
+        message: 'Biometric verification failed',
+        details: verificationResult.details
       });
     }
 
-    // Perform biometric verification
-    const verificationResult = await verifyBiometric(
-      imageData,
-      user.encryptedBiometricTemplate
-    );
 
-    // Log the verification attempt
-    const verificationLog = await prisma.verificationLog.create({
+
+    // Log the successful verification
+    const accessLog = await prisma.accessLog.create({
       data: {
         userId: user.id,
-        verificationType: verificationType || 'OTHER',
-        location: location || 'Unknown',
-        result: verificationResult.isVerified ? 'SUCCESS' : 'FAILED',
+        action: 'BIOMETRIC_VERIFICATION_SUCCESS',
+        status: 'SUCCESS',
+        method: 'FACIAL',
         confidenceScore: verificationResult.confidence,
-        operatorId: operatorId || null,
+        location: location || 'Unknown',
         deviceInfo: req.headers['user-agent'] || '',
-        ipAddress: req.socket.remoteAddress || ''
+        ipAddress: req.socket.remoteAddress || '',
+        metadata: {
+          verificationType: verificationType || 'OTHER',
+          qualityScore: verificationResult.qualityScore,
+          livenessCheck: verificationResult.livenessCheck,
+          details: verificationResult.details
+        }
       }
     });
 
-    // Update user verification count
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        lastVerification: new Date(),
-        verificationCount: { increment: 1 }
-      }
-    });
+
 
     // If verification is successful, create/update session
-    if (verificationResult.isVerified && serviceId) {
-      await prisma.session.upsert({
+    if (serviceId) {
+      // Check if there's an existing active session for this user and service
+      const existingSession = await prisma.session.findFirst({
         where: {
-          userId_status: { // Note: Removed serviceId from unique constraint in schema, check index
-            userId: user.id,
-            status: 'ACTIVE'
-          }
-        },
-        update: {
-          endTime: null, // Reset end time if reactivating
-          status: 'ACTIVE'
-        },
-        create: {
           userId: user.id,
           serviceId: serviceId,
-          startTime: new Date(),
-          status: 'ACTIVE',
-          ipAddress: req.socket.remoteAddress || '',
-          userAgent: req.headers['user-agent'] || ''
+          status: 'ACTIVE'
         }
       });
+      
+      if (existingSession) {
+        // Update the existing session instead of creating a new one
+        await prisma.session.update({
+          where: { id: existingSession.id },
+          data: {
+            endTime: null, // Reset end time if reactivating
+            status: 'ACTIVE'
+          }
+        });
+      } else {
+        // Create a new session
+        await prisma.session.create({
+          data: {
+            userId: user.id,
+            serviceId: serviceId,
+            startTime: new Date(),
+            status: 'ACTIVE',
+            ipAddress: req.socket.remoteAddress || '',
+            userAgent: req.headers['user-agent'] || ''
+          }
+        });
+      }
     }
 
     // Log the verification result
     await prisma.auditLog.create({
       data: {
         userId: user.id,
-        action: `BIOMETRIC_${verificationResult.isVerified ? 'VERIFICATION_SUCCESS' : 'VERIFICATION_FAILED'}`,
-        tableName: 'VerificationLog',
-        recordId: verificationLog.id,
+        actionType: 'BIOMETRIC_VERIFICATION_SUCCESS',
+        resourceType: 'ACCESS',
+        resourceId: accessLog.id,
         newValues: {
           verificationType: verificationType,
           location: location,
-          result: verificationResult.isVerified ? 'SUCCESS' : 'FAILED',
-          confidenceScore: verificationResult.confidence
+          confidenceScore: verificationResult.confidence,
+          qualityScore: verificationResult.qualityScore
         },
         ipAddress: req.socket.remoteAddress || '',
         userAgent: req.headers['user-agent'] || ''
@@ -127,13 +158,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     res.status(200).json({
-      verified: verificationResult.isVerified,
+      verified: true,
       confidence: verificationResult.confidence,
-      message: verificationResult.message,
-      verificationId: verificationLog.id,
+      message: verificationResult.details,
+      accessLogId: accessLog.id,
       userId: user.id,
-      studentNumber: user.studentNumber,
-      fullName: user.fullName
+      matricNumber: user.matricNumber,
+      fullName: `${user.firstName} ${user.lastName}`
     });
 
   } catch (error: any) {

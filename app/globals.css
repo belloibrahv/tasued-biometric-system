@@ -445,6 +445,10 @@
   .safe-area-top {
     padding-top: max(1rem, env(safe-area-inset-top));
   }
+
+  .safe-area-pb {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
 }
 
 /* Prevent text selection on interactive elements */

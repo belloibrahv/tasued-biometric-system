@@ -19,7 +19,7 @@ async function main() {
       fullName: 'System Administrator',
       role: AdminRole.SUPER_ADMIN,
       permissions: ['all'],
-      password: 'adminPassword123!',
+      password: 'adminPassword123!', // Default password for seeding
     },
     {
       email: 'ogunsanwo@tasued.edu.ng',
@@ -42,7 +42,7 @@ async function main() {
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: admin.email,
       password: admin.password,
-      email_confirm: true,
+      email_confirm: true, // Skip email confirmation for seeded users
       user_metadata: {
         fullName: admin.fullName,
         type: 'admin',
@@ -75,8 +75,8 @@ async function main() {
     console.log(`Upserted admin: ${admin.email} with role ${admin.role}`);
   }
 
-  // Create Sample Students
-  const studentsSetup = [
+  // Create Sample Students - CSC 415 Class
+  const studentsSetup: any[] = [
     {
       matricNumber: 'CSC/2024/001',
       email: 'test.student@tasued.edu.ng',
@@ -86,7 +86,6 @@ async function main() {
       dateOfBirth: new Date('2002-01-15'),
       department: 'Computer Science',
       level: '400',
-      password: 'studentPassword123!',
     },
     {
       matricNumber: 'CSC/2024/002',
@@ -97,49 +96,18 @@ async function main() {
       dateOfBirth: new Date('2001-05-20'),
       department: 'Computer Science',
       level: '300',
-      password: 'studentPassword123!',
     },
   ];
 
   for (const student of studentsSetup) {
-    // Create Supabase Auth user
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: student.email,
-      password: student.password,
-      email_confirm: true,
-      user_metadata: {
-        matricNumber: student.matricNumber,
-        firstName: student.firstName,
-        lastName: student.lastName,
-        phoneNumber: student.phoneNumber,
-        department: student.department,
-        level: student.level,
-        type: 'student',
-        role: 'STUDENT',
-        biometricEnrolled: false,
-      }
-    });
-
-    if (authError) {
-      console.error(`Failed to create Supabase user for ${student.email}:`, authError.message);
-      continue;
-    }
-
-    console.log(`Created Supabase auth user: ${student.email}`);
-
-    // Create user in database
     const user = await prisma.user.upsert({
       where: { matricNumber: student.matricNumber },
       update: {
         email: student.email,
         firstName: student.firstName,
         lastName: student.lastName,
-        phoneNumber: student.phoneNumber,
-        department: student.department,
-        level: student.level,
       },
       create: {
-        id: authUser.user?.id,
         matricNumber: student.matricNumber,
         email: student.email,
         firstName: student.firstName,
@@ -221,6 +189,12 @@ async function main() {
 
 main()
   .catch((e) => {
+    console.error('Error during seeding:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });  .catch((e) => {
     console.error('Error during seeding:', e);
     process.exit(1);
   })

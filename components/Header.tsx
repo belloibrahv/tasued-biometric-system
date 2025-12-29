@@ -46,6 +46,12 @@ const Header = () => {
     { name: 'Export', href: '/export', icon: DownloadCloud },
   ];
 
+  // Navigation for users who haven't enrolled biometric data yet
+  const preEnrollmentNavigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Biometric Enrollment', href: '/enroll-biometric', icon: Fingerprint },
+  ];
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     localStorage.removeItem('token');
@@ -79,20 +85,39 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1">
-            {isLoggedIn && navigation.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={isActive ? 'nav-link-active' : 'nav-link-inactive'}
-                >
-                  <Icon size={16} />
-                  {item.name}
-                </Link>
-              );
-            })}
+            {isLoggedIn && user && (
+              // Show different navigation based on enrollment status
+              user.biometricEnrolled !== false ? 
+                navigation.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={isActive ? 'nav-link-active' : 'nav-link-inactive'}
+                    >
+                      <Icon size={16} />
+                      {item.name}
+                    </Link>
+                  );
+                })
+              : 
+                preEnrollmentNavigation.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={isActive ? 'nav-link-active' : 'nav-link-inactive'}
+                    >
+                      <Icon size={16} />
+                      {item.name}
+                    </Link>
+                  );
+                })
+            )}
           </nav>
 
           {/* Right Actions */}
@@ -159,22 +184,43 @@ const Header = () => {
                       <div className="text-xs text-brand-500 font-semibold uppercase tracking-wider">{user?.role}</div>
                     </div>
                   </div>
-                  {navigation.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href;
-                    return (
-                      <Link
-                        key={item.name}
-                        href={item.href}
-                        onClick={() => setIsMenuOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition-all ${isActive ? 'text-brand-600 bg-brand-50' : 'text-surface-600 hover:bg-surface-100'
-                          }`}
-                      >
-                        <Icon size={20} />
-                        {item.name}
-                      </Link>
-                    );
-                  })}
+                  {
+                    // Show different navigation based on enrollment status
+                    user.biometricEnrolled !== false ? 
+                      navigation.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = pathname === item.href;
+                        return (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            onClick={() => setIsMenuOpen(false)}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition-all ${isActive ? 'text-brand-600 bg-brand-50' : 'text-surface-600 hover:bg-surface-100'
+                              }`}
+                          >
+                            <Icon size={20} />
+                            {item.name}
+                          </Link>
+                        );
+                      })
+                    : 
+                      preEnrollmentNavigation.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = pathname === item.href;
+                        return (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            onClick={() => setIsMenuOpen(false)}
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-semibold transition-all ${isActive ? 'text-brand-600 bg-brand-50' : 'text-surface-600 hover:bg-surface-100'
+                              }`}
+                          >
+                            <Icon size={20} />
+                            {item.name}
+                          </Link>
+                        );
+                      })
+                  }
                   <button
                     onClick={handleLogout}
                     className="w-full mt-4 px-4 py-3 rounded-xl text-base font-semibold text-error-600 hover:bg-error-50 flex items-center gap-3 transition-colors"

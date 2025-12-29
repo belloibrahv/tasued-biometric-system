@@ -56,26 +56,42 @@ export async function POST(request: NextRequest) {
     console.log(`Enrollment: Processing for user ${userId}`);
 
     // CRITICAL: Ensure user exists in our database before creating biometric data
-    try {
-      let dbUser = await UserService.getUserById(userId);
-      
-      if (!dbUser && supabaseUser) {
-        console.log('Enrollment: User not found in DB, syncing from Supabase Auth...');
-        dbUser = await UserService.syncUserFromAuth(supabaseUser);
-        console.log(`Enrollment: User synced successfully: ${dbUser.email}`);
-      } else if (!dbUser) {
-        console.error('Enrollment: User not found and no Supabase user data available');
-        return NextResponse.json({ 
-          error: 'User not found in database. Please register first.' 
-        }, { status: 404 });
-      }
+    // Add caching to avoid repeated DB lookups
+    const userCacheKey = `user_${userId}`;
+    let dbUser: any = global[userCacheKey];
+    
+    if (!dbUser) {
+      try {
+        dbUser = await UserService.getUserById(userId);
+        
+        if (!dbUser && supabaseUser) {
+          console.log('Enrollment: User not found in DB, syncing from Supabase Auth...');
+          dbUser = await UserService.syncUserFromAuth(supabaseUser);
+          console.log(`Enrollment: User synced successfully: ${dbUser.email}`);
+        } else if (!dbUser) {
+          console.error('Enrollment: User not found and no Supabase user data available');
+          return NextResponse.json({ 
+            error: 'User not found in database. Please register first.' 
+          }, { status: 404 });
+        }
+        
+        // Cache the user for a short period to avoid repeated DB calls
+        global[userCacheKey] = dbUser;
+        setTimeout(() => {
+          if (global[userCacheKey] === dbUser) {
+            delete global[userCacheKey];
+          }
+        }, 30000); // 30 seconds cache
 
-      console.log(`Enrollment: User verified in database: ${dbUser.email}`);
-    } catch (syncError: any) {
-      console.error('Enrollment: User sync failed:', syncError);
-      return NextResponse.json({ 
-        error: `User synchronization failed: ${syncError.message}` 
-      }, { status: 500 });
+        console.log(`Enrollment: User verified in database: ${dbUser.email}`);
+      } catch (syncError: any) {
+        console.error('Enrollment: User sync failed:', syncError);
+        return NextResponse.json({ 
+          error: `User synchronization failed: ${syncError.message}` 
+        }, { status: 500 });
+      }
+    } else {
+      console.log(`Enrollment: Using cached user: ${dbUser.email}`);
     }
 
     const body = await request.json();
