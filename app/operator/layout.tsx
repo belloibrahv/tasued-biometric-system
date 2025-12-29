@@ -78,7 +78,7 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
         <div className="flex flex-col h-full">
           <div className="h-16 flex items-center px-4 border-b border-gray-100">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-green-600 rounded-lg flex items-center justify-center">
+              <div className="w-9 h-9 bg-brand-600 rounded-lg flex items-center justify-center">
                 <Fingerprint size={20} className="text-white" />
               </div>
               <div>
@@ -92,16 +92,20 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
           </div>
 
           <div className="p-4">
-            <div className="bg-green-50 rounded-xl p-3">
+            <div className="bg-brand-50 rounded-xl p-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-brand-600 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold text-sm">
                     {user.firstName?.[0]}{user.lastName?.[0]}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 text-sm truncate">{user.firstName} {user.lastName}</p>
-                  <p className="text-xs text-green-600 font-medium">Operator</p>
+                  <p className="font-medium text-gray-900 text-sm truncate">
+                    {user.firstName && user.firstName !== 'Unknown' 
+                      ? `${user.firstName} ${user.lastName || ''}`.trim()
+                      : user.email?.split('@')[0] || 'User'}
+                  </p>
+                  <p className="text-xs text-brand-600 font-medium">Operator</p>
                 </div>
               </div>
             </div>
@@ -116,7 +120,7 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors ${
-                    isActive ? 'bg-green-50 text-green-600' : 'text-gray-600 hover:bg-gray-50'
+                    isActive ? 'bg-brand-50 text-brand-600' : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   <item.icon size={20} />
@@ -146,9 +150,9 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
             </button>
             <div className="flex-1" />
             <div className="flex items-center gap-2">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs font-medium text-green-700">Online</span>
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-brand-50 rounded-full">
+                <div className="w-2 h-2 bg-brand-500 rounded-full animate-pulse"></div>
+                <span className="text-xs font-medium text-brand-700">Online</span>
               </div>
               <NotificationCenter enabled={true} />
             </div>

@@ -126,8 +126,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="p-4">
             <div className="bg-gray-50 rounded-xl p-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-semibold text-sm">
+                <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center">
+                  <span className="text-brand-600 font-semibold text-sm">
                     {(user.firstName?.[0] || user.email?.[0] || 'U').toUpperCase()}
                     {(user.lastName?.[0] || '').toUpperCase()}
                   </span>
@@ -155,7 +155,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors ${
                     isActive 
-                      ? 'bg-blue-50 text-blue-600' 
+                      ? 'bg-brand-50 text-brand-600' 
                       : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
@@ -195,8 +195,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Bell size={20} className="text-gray-600" />
               </button>
               <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-gray-200 ml-2">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-medium text-xs">
+                <div className="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center">
+                  <span className="text-brand-600 font-medium text-xs">
                     {(user.firstName?.[0] || user.email?.[0] || 'U').toUpperCase()}
                     {(user.lastName?.[0] || '').toUpperCase()}
                   </span>

@@ -85,7 +85,7 @@ export default function DashboardPage() {
       )}
 
       {/* Welcome Card */}
-      <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg">
+      <div className="bg-gradient-to-br from-brand-600 to-brand-700 rounded-xl p-6 text-white shadow-lg">
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl lg:text-3xl font-semibold mb-2">
@@ -109,10 +109,10 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-              <Activity size={20} className="text-blue-600" />
+            <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center">
+              <Activity size={20} className="text-brand-600" />
             </div>
-            <TrendingUp size={16} className="text-green-500" />
+            <TrendingUp size={16} className="text-success-500" />
           </div>
           <p className="text-2xl font-semibold text-gray-900">{stats.totalAccess}</p>
           <p className="text-sm text-gray-500 mt-1">Total Access</p>
@@ -120,8 +120,8 @@ export default function DashboardPage() {
         
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-              <CheckCircle size={20} className="text-green-600" />
+            <div className="w-10 h-10 bg-success-50 rounded-lg flex items-center justify-center">
+              <CheckCircle size={20} className="text-success-600" />
             </div>
           </div>
           <p className="text-2xl font-semibold text-gray-900">{stats.thisMonth}</p>
@@ -130,8 +130,8 @@ export default function DashboardPage() {
         
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
-              <Clock size={20} className="text-purple-600" />
+            <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center">
+              <Clock size={20} className="text-brand-600" />
             </div>
           </div>
           <p className="text-lg font-semibold text-gray-900">
@@ -147,11 +147,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Link 
             href="/dashboard/qr-code" 
-            className="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all"
+            className="group bg-white rounded-xl border border-gray-200 p-5 hover:border-brand-300 hover:shadow-md transition-all"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                <QrCode size={24} className="text-blue-600" />
+              <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center group-hover:bg-brand-100 transition-colors">
+                <QrCode size={24} className="text-brand-600" />
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900 mb-0.5">My QR Code</h3>
@@ -163,17 +163,17 @@ export default function DashboardPage() {
 
           <Link 
             href="/dashboard/history" 
-            className="group bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all"
+            className="group bg-white rounded-xl border border-gray-200 p-5 hover:border-brand-300 hover:shadow-md transition-all"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                <History size={24} className="text-purple-600" />
+              <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center group-hover:bg-brand-100 transition-colors">
+                <History size={24} className="text-brand-600" />
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900 mb-0.5">Access History</h3>
                 <p className="text-sm text-gray-500">View your activity log</p>
               </div>
-              <ChevronRight size={20} className="text-gray-400 group-hover:text-purple-600 transition-colors" />
+              <ChevronRight size={20} className="text-gray-400 group-hover:text-brand-600 transition-colors" />
             </div>
           </Link>
         </div>
@@ -184,7 +184,7 @@ export default function DashboardPage() {
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-semibold text-gray-900">Recent Activity</h2>
           {recentActivity.length > 0 && (
-            <Link href="/dashboard/history" className="text-sm text-blue-600 font-medium hover:text-blue-700">
+            <Link href="/dashboard/history" className="text-sm text-brand-600 font-medium hover:text-brand-700">
               View all
             </Link>
           )}

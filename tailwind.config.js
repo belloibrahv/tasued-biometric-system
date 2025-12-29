@@ -9,44 +9,44 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // TASUED BioVault Primary Colors
+        // Educational Brand Colors - Professional and Consistent
         brand: {
           50: '#eff6ff',
           100: '#dbeafe',
           200: '#bfdbfe',
           300: '#93c5fd',
           400: '#60a5fa',
-          500: '#0066CC', // Primary Blue
-          600: '#0052a3',
-          700: '#003d7a',
-          800: '#002952',
-          900: '#001429',
-          950: '#000a14',
+          500: '#1e40af', // Professional Education Blue
+          600: '#1e3a8a', // Darker Education Blue
+          700: '#1d3663', // Deep Education Blue
+          800: '#1e3a8a', // Consistent with 600
+          900: '#1e3a8a', // Consistent with 600
+          950: '#0f172a', // Navy Blue
         },
-        // Secondary Green
+        // Professional Secondary Color - Education Green
         success: {
-          50: '#ecfdf5',
-          100: '#d1fae5',
-          200: '#a7f3d0',
-          300: '#6ee7b7',
-          400: '#34d399',
-          500: '#059669', // Secondary Green
-          600: '#047857',
-          700: '#065f46',
-          800: '#064e3b',
-          900: '#022c22',
+          50: '#f0fdfa',
+          100: '#ccfbf1',
+          200: '#99f6e4',
+          300: '#5eead4',
+          400: '#2dd4bf',
+          500: '#0d9488', // Professional Education Green
+          600: '#0f766e', // Darker Education Green
+          700: '#115e59', // Deep Education Green
+          800: '#134e4a',
+          900: '#134e4a',
         },
-        // Accent Gold
+        // Professional Accent Color - Education Gold
         accent: {
           50: '#fffbeb',
           100: '#fef3c7',
           200: '#fde68a',
           300: '#fcd34d',
           400: '#fbbf24',
-          500: '#F59E0B', // Accent Gold
-          600: '#d97706',
-          700: '#b45309',
-          800: '#92400e',
+          500: '#d97706', // Professional Education Gold
+          600: '#b45309', // Darker Education Gold
+          700: '#92400e', // Deep Education Gold
+          800: '#78350f',
           900: '#78350f',
         },
         // Surface/Neutral
@@ -88,11 +88,11 @@ module.exports = {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
         'glass': 'linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))',
-        'brand-gradient': 'linear-gradient(135deg, #0066CC 0%, #003d7a 100%)',
-        'success-gradient': 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-        'accent-gradient': 'linear-gradient(135deg, #F59E0B 0%, #d97706 100%)',
+        'brand-gradient': 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)',
+        'success-gradient': 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
+        'accent-gradient': 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
         'dark-gradient': 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-        'hero-pattern': 'radial-gradient(circle at 25% 25%, rgba(0, 102, 204, 0.1) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(5, 150, 105, 0.1) 0%, transparent 50%)',
+        'hero-pattern': 'radial-gradient(circle at 25% 25%, rgba(30, 64, 175, 0.1) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(13, 148, 136, 0.1) 0%, transparent 50%)',
       },
       boxShadow: {
         'premium': '0 10px 30px -5px rgba(0, 0, 0, 0.1), 0 4px 12px -4px rgba(0, 0, 0, 0.05)',
@@ -100,7 +100,7 @@ module.exports = {
         'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
         'card-hover': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
-        'brand': '0 4px 14px 0 rgba(0, 102, 204, 0.39)',
+        'brand': '0 4px 14px 0 rgba(30, 64, 175, 0.39)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out forwards',

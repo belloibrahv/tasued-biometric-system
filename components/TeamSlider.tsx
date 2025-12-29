@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { User, Users } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 interface TeamMember {
   name: string;
@@ -51,41 +51,46 @@ export default function TeamSlider({ members }: TeamSliderProps) {
   // Triple the members for seamless infinite scroll
   const tripleMembers = useMemo(() => [...members, ...members, ...members], [members]);
   
-  // Slow duration for professional feel (120 seconds for full cycle)
-  const duration = 120;
+  // Very slow duration for professional feel (240 seconds for full cycle)
+  const duration = 240;
+  
+  // State to control animation on hover
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div className="relative">
       {/* Header Stats */}
-      <div className="flex justify-center mb-10">
-        <div className="inline-flex items-center gap-3 bg-white px-6 py-3 rounded-full shadow-lg border border-surface-100">
-          <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center">
-            <Users className="text-brand-600" size={20} />
+      <div className="flex justify-center mb-12">
+        <div className="inline-flex items-center gap-4 bg-gradient-to-r from-brand-500 to-brand-600 px-8 py-4 rounded-full shadow-xl border border-brand-200">
+          <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+            <Users className="text-white" size={24} />
           </div>
-          <div>
-            <span className="text-2xl font-bold text-surface-900">{members.length}</span>
-            <span className="text-surface-500 ml-2">Student Contributors</span>
+          <div className="text-center">
+            <span className="text-3xl font-bold text-white">{members.length}</span>
+            <div className="text-brand-100 text-sm font-medium">Student Contributors</div>
           </div>
         </div>
       </div>
 
       {/* Desktop Marquee Slider */}
-      <div className="hidden md:block overflow-hidden relative">
+      <div className="hidden md:block overflow-hidden relative rounded-3xl p-8 bg-gradient-to-b from-surface-50/50 to-white border border-surface-200 shadow-lg">
         {/* Gradient Overlays for smooth fade effect */}
-        <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-surface-50 via-surface-50/80 to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-surface-50 via-surface-50/80 to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
         
         {/* Row 1 - Slow Left to Right */}
-        <div className="mb-6">
+        <div className="mb-8">
           <motion.div
-            className="flex gap-6"
+            className="flex gap-8"
             animate={{ x: [0, -members.length * 280] }}
             transition={{
-              duration: duration,
+              duration: isHovered ? Infinity : duration, // Pause when hovered
               repeat: Infinity,
               ease: "linear",
               repeatType: "loop"
             }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
           >
             {tripleMembers.map((member, idx) => (
               <ContributorCard key={`row1-${idx}`} member={member} />
@@ -96,14 +101,16 @@ export default function TeamSlider({ members }: TeamSliderProps) {
         {/* Row 2 - Slow Right to Left (reversed) */}
         <div>
           <motion.div
-            className="flex gap-6"
+            className="flex gap-8"
             animate={{ x: [-members.length * 280, 0] }}
             transition={{
-              duration: duration,
+              duration: isHovered ? Infinity : duration, // Pause when hovered
               repeat: Infinity,
               ease: "linear",
               repeatType: "loop"
             }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
           >
             {[...tripleMembers].reverse().map((member, idx) => (
               <ContributorCard key={`row2-${idx}`} member={member} />
@@ -132,11 +139,11 @@ function ContributorCard({ member }: { member: TeamMember }) {
   const initials = getInitials(member.name);
 
   return (
-    <div className="flex-shrink-0 w-64">
-      <div className="bg-white rounded-2xl p-6 shadow-md border border-surface-100 hover:shadow-xl hover:border-brand-200 hover:-translate-y-1 transition-all duration-500 group">
+    <div className="flex-shrink-0 w-72">
+      <div className="bg-white rounded-2xl p-7 shadow-lg border border-surface-200 hover:shadow-2xl hover:border-brand-300 hover:-translate-y-1.5 transition-all duration-500 group shadow-brand/10 hover:shadow-brand/20">
         {/* Large Avatar */}
-        <div className="relative mb-5">
-          <div className={`w-20 h-20 mx-auto rounded-full bg-gradient-to-br ${gradient} p-1 shadow-lg group-hover:scale-105 transition-transform duration-500`}>
+        <div className="relative mb-6">
+          <div className={`w-24 h-24 mx-auto rounded-full bg-gradient-to-br ${gradient} p-1 shadow-lg group-hover:scale-105 transition-transform duration-500`}>
             <div className="w-full h-full rounded-full bg-white flex items-center justify-center">
               <span className={`text-2xl font-bold bg-gradient-to-br ${gradient} bg-clip-text text-transparent`}>
                 {initials}
@@ -145,21 +152,21 @@ function ContributorCard({ member }: { member: TeamMember }) {
           </div>
           {/* Contributor Badge */}
           <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-            <span className="inline-flex items-center gap-1 bg-brand-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-sm">
-              <User size={10} />
+            <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white text-xs font-semibold px-4 py-1.5 rounded-full shadow-md">
+              <User size={12} />
               Contributor
             </span>
           </div>
         </div>
 
         {/* Name & Matric */}
-        <div className="text-center pt-2">
-          <h3 className="font-bold text-surface-900 text-base leading-tight group-hover:text-brand-600 transition-colors line-clamp-2 min-h-[2.5rem]">
+        <div className="text-center pt-3">
+          <h3 className="font-bold text-surface-900 text-lg leading-tight group-hover:text-brand-600 transition-colors line-clamp-2 min-h-[2.5rem]">
             {formatName(member.name)}
           </h3>
-          <div className="mt-2 inline-flex items-center gap-1.5 bg-surface-100 px-3 py-1.5 rounded-lg">
-            <span className="text-xs text-surface-500">Matric:</span>
-            <span className="text-sm font-mono font-semibold text-surface-700">{member.matricNumber}</span>
+          <div className="mt-3 inline-flex items-center gap-2 bg-surface-100 px-4 py-2 rounded-xl">
+            <span className="text-xs text-surface-500 font-medium">Matric:</span>
+            <span className="text-sm font-mono font-semibold text-surface-700 tracking-wide">{member.matricNumber}</span>
           </div>
         </div>
       </div>

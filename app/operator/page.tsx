@@ -74,10 +74,10 @@ export default function OperatorDashboard() {
 
       {/* Quick actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link href="/operator/verify" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-green-300 hover:shadow-sm transition-all group">
+        <Link href="/operator/verify" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-brand-300 hover:shadow-sm transition-all group">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center group-hover:bg-green-100 transition-colors">
-              <Eye size={24} className="text-green-600" />
+            <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center group-hover:bg-brand-100 transition-colors">
+              <Eye size={24} className="text-brand-600" />
             </div>
             <div className="flex-1">
               <h3 className="font-medium text-gray-900">Verify</h3>
@@ -87,10 +87,10 @@ export default function OperatorDashboard() {
           </div>
         </Link>
 
-        <Link href="/operator/scanner" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all group">
+        <Link href="/operator/scanner" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-brand-300 hover:shadow-sm transition-all group">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-              <QrCode size={24} className="text-blue-600" />
+            <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center group-hover:bg-brand-100 transition-colors">
+              <QrCode size={24} className="text-brand-600" />
             </div>
             <div className="flex-1">
               <h3 className="font-medium text-gray-900">Scanner</h3>
@@ -100,10 +100,10 @@ export default function OperatorDashboard() {
           </div>
         </Link>
 
-        <Link href="/operator/attendance" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-purple-300 hover:shadow-sm transition-all group">
+        <Link href="/operator/attendance" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-brand-300 hover:shadow-sm transition-all group">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-              <ClipboardList size={24} className="text-purple-600" />
+            <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center group-hover:bg-brand-100 transition-colors">
+              <ClipboardList size={24} className="text-brand-600" />
             </div>
             <div className="flex-1">
               <h3 className="font-medium text-gray-900">Attendance</h3>
@@ -113,10 +113,10 @@ export default function OperatorDashboard() {
           </div>
         </Link>
 
-        <Link href="/operator/bulk" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-orange-300 hover:shadow-sm transition-all group">
+        <Link href="/operator/bulk" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-brand-300 hover:shadow-sm transition-all group">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center group-hover:bg-orange-100 transition-colors">
-              <Users size={24} className="text-orange-600" />
+            <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center group-hover:bg-brand-100 transition-colors">
+              <Users size={24} className="text-brand-600" />
             </div>
             <div className="flex-1">
               <h3 className="font-medium text-gray-900">Bulk</h3>

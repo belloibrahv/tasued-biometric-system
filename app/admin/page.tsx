@@ -43,10 +43,10 @@ export default function AdminDashboard() {
   ];
 
   const colorMap: Record<string, { bg: string; text: string; icon: string }> = {
-    blue: { bg: 'bg-blue-50', text: 'text-blue-600', icon: 'bg-blue-100' },
-    green: { bg: 'bg-green-50', text: 'text-green-600', icon: 'bg-green-100' },
-    purple: { bg: 'bg-purple-50', text: 'text-purple-600', icon: 'bg-purple-100' },
-    orange: { bg: 'bg-orange-50', text: 'text-orange-600', icon: 'bg-orange-100' },
+    blue: { bg: 'bg-brand-50', text: 'text-brand-600', icon: 'bg-brand-100' },
+    green: { bg: 'bg-success-50', text: 'text-success-600', icon: 'bg-success-100' },
+    purple: { bg: 'bg-brand-50', text: 'text-brand-600', icon: 'bg-brand-100' },
+    orange: { bg: 'bg-accent-50', text: 'text-accent-600', icon: 'bg-accent-100' },
   };
 
   if (loading) {
@@ -89,10 +89,10 @@ export default function AdminDashboard() {
 
       {/* Quick actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Link href="/admin/users" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all group">
+        <Link href="/admin/users" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-brand-300 hover:shadow-sm transition-all group">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-              <Users size={24} className="text-blue-600" />
+            <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center group-hover:bg-brand-100 transition-colors">
+              <Users size={24} className="text-brand-600" />
             </div>
             <div className="flex-1">
               <h3 className="font-medium text-gray-900">Manage Users</h3>
@@ -102,10 +102,10 @@ export default function AdminDashboard() {
           </div>
         </Link>
 
-        <Link href="/admin/services" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all group">
+        <Link href="/admin/services" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-success-300 hover:shadow-sm transition-all group">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center group-hover:bg-green-100 transition-colors">
-              <Server size={24} className="text-green-600" />
+            <div className="w-12 h-12 bg-success-50 rounded-xl flex items-center justify-center group-hover:bg-success-100 transition-colors">
+              <Server size={24} className="text-success-600" />
             </div>
             <div className="flex-1">
               <h3 className="font-medium text-gray-900">Services</h3>
@@ -115,10 +115,10 @@ export default function AdminDashboard() {
           </div>
         </Link>
 
-        <Link href="/admin/audit" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all group">
+        <Link href="/admin/audit" className="bg-white rounded-xl border border-gray-200 p-4 hover:border-brand-300 hover:shadow-sm transition-all group">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-              <Shield size={24} className="text-purple-600" />
+            <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center group-hover:bg-brand-100 transition-colors">
+              <Shield size={24} className="text-brand-600" />
             </div>
             <div className="flex-1">
               <h3 className="font-medium text-gray-900">Audit Logs</h3>
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
       <div className="bg-white rounded-xl border border-gray-200">
         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
           <h2 className="font-medium text-gray-900">Recent Users</h2>
-          <Link href="/admin/users" className="text-sm text-blue-600 font-medium hover:underline">
+          <Link href="/admin/users" className="text-sm text-brand-600 font-medium hover:underline">
             View all
           </Link>
         </div>

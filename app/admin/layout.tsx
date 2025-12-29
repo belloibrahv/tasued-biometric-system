@@ -110,16 +110,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* User card */}
           <div className="p-4">
-            <div className="bg-blue-50 rounded-xl p-3">
+            <div className="bg-brand-50 rounded-xl p-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-brand-600 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold text-sm">
-                    {user.firstName?.[0]}{user.lastName?.[0]}
+                    {(user.firstName?.[0] || user.email?.[0] || 'U').toUpperCase()}
+                    {(user.lastName?.[0] || '').toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 text-sm truncate">{user.firstName} {user.lastName}</p>
-                  <p className="text-xs text-blue-600 font-medium">Administrator</p>
+                  <p className="font-medium text-gray-900 text-sm truncate">
+                    {user.firstName && user.firstName !== 'Unknown' 
+                      ? `${user.firstName} ${user.lastName || ''}`.trim()
+                      : user.email?.split('@')[0] || 'User'}
+                  </p>
+                  <p className="text-xs text-brand-600 font-medium">Administrator</p>
                 </div>
               </div>
             </div>
@@ -136,7 +141,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors ${
                     isActive 
-                      ? 'bg-blue-50 text-blue-600' 
+                      ? 'bg-brand-50 text-brand-600' 
                       : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
