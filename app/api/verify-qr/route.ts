@@ -73,13 +73,8 @@ export async function POST(request: NextRequest) {
     await db.accessLog.create({
       data: {
         userId: qrRecord.user.id,
-        serviceId: null, // No specific service for public QR scans
-        verificationMethod: 'QR_CODE_PUBLIC_SCAN',
+        action: 'QR_VERIFICATION',
         status: 'SUCCESS',
-        operatorId: 'PUBLIC_SCANNER', // Indicate it was a public scan
-        location: 'Public Verification',
-        ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        userAgent: request.headers.get('user-agent') || 'unknown',
         timestamp: new Date(),
       },
     });
@@ -88,18 +83,8 @@ export async function POST(request: NextRequest) {
     await db.auditLog.create({
       data: {
         userId: qrRecord.user.id,
-        actorType: 'SYSTEM',
-        actorId: 'PUBLIC_QR_SCANNER',
         actionType: 'PUBLIC_QR_VERIFICATION',
-        resourceType: 'USER',
-        resourceId: qrRecord.user.id,
-        status: 'SUCCESS',
-        details: {
-          qrCodeId: qrRecord.id,
-          verificationMethod: 'PUBLIC_SCAN',
-          scannerInfo: request.headers.get('user-agent') || 'unknown',
-          ipAddress: request.headers.get('x-forwarded-for') || 'unknown',
-        },
+        details: 'Public QR code verification',
         timestamp: new Date(),
       },
     });

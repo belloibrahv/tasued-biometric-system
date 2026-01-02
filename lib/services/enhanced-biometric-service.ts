@@ -100,7 +100,7 @@ export class EnhancedBiometricService {
   async generateFacialEmbedding(imageElement: HTMLImageElement | HTMLVideoElement): Promise<FacialEmbedding> {
     await this.initialize();
 
-    return tf.tidy(() => {
+    const embeddingArray = tf.tidy(() => {
       // Convert image to tensor
       let tensor = tf.browser.fromPixels(imageElement);
       
@@ -118,7 +118,7 @@ export class EnhancedBiometricService {
       let features = tensor;
       
       // Apply convolution-like transformations
-      features = this.applyFeatureExtraction(features);
+      features = this.applyFeatureExtraction(features as tf.Tensor3D) as any;
       
       // Global average pooling to get fixed-size embedding
       const embedding = this.globalAveragePooling(features);
@@ -127,22 +127,22 @@ export class EnhancedBiometricService {
       const normalized = this.l2Normalize(embedding);
       
       // Convert to array
-      const embeddingArray = Array.from(normalized.dataSync());
-
-      // Get quality metrics
-      const canvas = document.createElement('canvas');
-      canvas.width = imageElement instanceof HTMLImageElement ? imageElement.width : imageElement.videoWidth;
-      canvas.height = imageElement instanceof HTMLImageElement ? imageElement.height : imageElement.videoHeight;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(imageElement, 0, 0);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      
-      return {
-        embedding: embeddingArray,
-        quality: this.analyzeImageQualitySync(imageData),
-        timestamp: Date.now()
-      };
+      return Array.from(normalized.dataSync());
     });
+
+    // Get quality metrics
+    const canvas = document.createElement('canvas');
+    canvas.width = imageElement instanceof HTMLImageElement ? imageElement.width : imageElement.videoWidth;
+    canvas.height = imageElement instanceof HTMLImageElement ? imageElement.height : imageElement.videoHeight;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(imageElement, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    return {
+      embedding: embeddingArray,
+      quality: await this.analyzeImageQuality(imageData),
+      timestamp: Date.now()
+    };
   }
 
   /**
@@ -205,15 +205,15 @@ export class EnhancedBiometricService {
   // PRIVATE HELPER METHODS
   // ============================================
 
-  private applyFeatureExtraction(tensor: tf.Tensor): tf.Tensor {
+  private applyFeatureExtraction(tensor: tf.Tensor3D): tf.Tensor | tf.Tensor3D | tf.Tensor4D {
     // Simulate feature extraction with multiple transformations
     // In production, use pre-trained CNN layers
     
     // Average pooling to reduce dimensions
-    let features = tf.avgPool(tensor, 2, 2, 'same');
+    let features: tf.Tensor | tf.Tensor3D | tf.Tensor4D = tf.avgPool(tensor as tf.Tensor3D | tf.Tensor4D, 2, 2, 'same');
     
     // Apply another pooling layer
-    features = tf.avgPool(features, 2, 2, 'same');
+    features = tf.avgPool(features as tf.Tensor3D | tf.Tensor4D, 2, 2, 'same');
     
     return features;
   }

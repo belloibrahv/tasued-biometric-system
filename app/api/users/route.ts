@@ -39,7 +39,6 @@ export async function GET(request: NextRequest) {
           profilePhoto: true,
           isActive: true,
           createdAt: true,
-          lastLoginAt: true,
         },
       });
 
@@ -66,7 +65,6 @@ export async function GET(request: NextRequest) {
         profilePhoto: true,
         isActive: true,
         createdAt: true,
-        lastLoginAt: true,
       },
     });
 

@@ -28,6 +28,9 @@ export async function middleware(request: NextRequest) {
   // Routes that require auth but not biometric enrollment
   const authOnlyRoutes = [
     '/enroll-biometric',
+    '/onboarding',
+    '/onboarding-complete',
+    '/registration-success',
     '/api/biometric/enroll',
     '/api/auth/me',
     '/api/auth/logout',

@@ -10,7 +10,7 @@ import { toast, Toaster } from 'sonner';
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const token = searchParams?.get('token') || '';
   
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

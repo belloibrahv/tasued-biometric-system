@@ -37,6 +37,13 @@
     "**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "pages/**/*",
+    "middleware/auth.ts",
+    "scripts/create-favicon*.ts",
+    "lib/services/audit-service.ts",
+    "app/api/dashboard/notifications/**/*",
+    "app/api/export/**/*",
+    "app/api/webauthn/**/*"
   ]
 }

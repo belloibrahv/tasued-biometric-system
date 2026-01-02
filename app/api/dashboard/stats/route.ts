@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
       : thisWeekVerifications > 0 ? 100 : 0;
 
     // Get daily access data for chart (last 7 days)
-    const dailyData = [];
+    const dailyData: Array<{ day: string; count: number; date: string }> = [];
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     for (let i = 6; i >= 0; i--) {

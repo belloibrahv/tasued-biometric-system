@@ -17,6 +17,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset --force",
+    "db:setup": "node scripts/setup-db.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

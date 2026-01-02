@@ -126,11 +126,11 @@ export default function RegisterPage() {
       if (data.user) {
         // Check if email confirmation is required
         if (data.session) {
-          // Session exists, user is logged in - redirect to enrollment
-          toast.success('Registration successful! Redirecting to biometric enrollment...');
+          // Session exists, user is logged in - redirect to success page
+          toast.success('Registration successful! Redirecting...');
           setTimeout(() => {
-            window.location.href = '/enroll-biometric';
-          }, 1500);
+            window.location.href = '/registration-success';
+          }, 1000);
         } else {
           // No session - might need email confirmation or auto-sign in
           // Try to sign in automatically
@@ -150,10 +150,10 @@ export default function RegisterPage() {
               throw signInError;
             }
           } else if (signInData.session) {
-            toast.success('Registration successful! Redirecting to biometric enrollment...');
+            toast.success('Registration successful! Redirecting...');
             setTimeout(() => {
-              window.location.href = '/enroll-biometric';
-            }, 1500);
+              window.location.href = '/registration-success';
+            }, 1000);
           }
         }
       }
