@@ -34,6 +34,9 @@ export async function login(formData: FormData) {
   // Admin/operator users go to their respective dashboards
   if (type === 'admin' || role === 'ADMIN' || role === 'SUPER_ADMIN' || role === 'OPERATOR') {
     target = role === 'OPERATOR' ? '/operator' : '/admin'
+  } else if (type === 'lecturer') {
+    // Lecturers go to lecturer dashboard
+    target = '/lecturer'
   } else {
     // For students, check if biometric enrollment is needed
     if (!biometricEnrolled) {

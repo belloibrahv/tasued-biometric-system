@@ -54,9 +54,12 @@ export async function middleware(request: NextRequest) {
                     role === 'ADMIN' || 
                     role === 'SUPER_ADMIN' || 
                     role === 'OPERATOR';
+    const isLecturer = userType === 'lecturer';
     
     if (isAdmin) {
       return NextResponse.redirect(new URL('/admin', request.url));
+    } else if (isLecturer) {
+      return NextResponse.redirect(new URL('/lecturer', request.url));
     } else {
       // For students, check biometric enrollment from session metadata
       const biometricEnrolled = user.user_metadata?.biometricEnrolled === true;
@@ -93,10 +96,22 @@ export async function middleware(request: NextRequest) {
                   role === 'ADMIN' || 
                   role === 'SUPER_ADMIN' || 
                   role === 'OPERATOR';
+  
+  const isLecturer = userType === 'lecturer';
 
   // If admin tries to access dashboard, redirect to admin panel
   if (isAdmin && (pathname.startsWith('/dashboard') || pathname.startsWith('/student'))) {
     return NextResponse.redirect(new URL('/admin', request.url));
+  }
+
+  // If lecturer tries to access student dashboard, redirect to lecturer panel
+  if (isLecturer && (pathname.startsWith('/dashboard') || pathname.startsWith('/student'))) {
+    return NextResponse.redirect(new URL('/lecturer', request.url));
+  }
+
+  // If non-lecturer tries to access lecturer routes, redirect to dashboard
+  if (!isLecturer && pathname.startsWith('/lecturer')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   // Allow auth-only routes without biometric check
