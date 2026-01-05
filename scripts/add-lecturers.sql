@@ -75,7 +75,7 @@ SELECT
   NULL,
   NULL,
   NULL,
-  '[]'::jsonb,
+  ARRAY[]::text[],
   now(),
   now()
 FROM "User" u
