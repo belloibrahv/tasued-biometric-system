@@ -19,7 +19,7 @@ async function main() {
       fullName: 'System Administrator',
       role: AdminRole.SUPER_ADMIN,
       permissions: ['all'],
-      password: 'adminPassword123!', // Default password for seeding
+      password: 'adminPassword123!',
     },
     {
       email: 'ogunsanwo@tasued.edu.ng',
@@ -38,24 +38,30 @@ async function main() {
   ];
 
   for (const admin of adminsSetup) {
-    // Create Supabase Auth user first
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: admin.email,
-      password: admin.password,
-      email_confirm: true, // Skip email confirmation for seeded users
-      user_metadata: {
-        fullName: admin.fullName,
-        type: 'admin',
-        role: admin.role,
-      }
+    // Check if admin already exists
+    const existingAdmin = await prisma.admin.findUnique({
+      where: { email: admin.email }
     });
 
-    if (authError) {
-      console.error(`Failed to create Supabase user for ${admin.email}:`, authError.message);
-      continue;
-    }
+    if (!existingAdmin) {
+      // Create Supabase Auth user first
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: admin.email,
+        password: admin.password,
+        email_confirm: true,
+        user_metadata: {
+          fullName: admin.fullName,
+          type: 'admin',
+          role: admin.role,
+        }
+      });
 
-    console.log(`Created Supabase auth user: ${admin.email}`);
+      if (authError) {
+        console.error(`Failed to create Supabase user for ${admin.email}:`, authError.message);
+      } else {
+        console.log(`Created Supabase auth user: ${admin.email}`);
+      }
+    }
 
     // Create database record
     await prisma.admin.upsert({
@@ -72,7 +78,92 @@ async function main() {
         permissions: admin.permissions,
       },
     });
-    console.log(`Upserted admin: ${admin.email} with role ${admin.role}`);
+    console.log(`✓ Admin: ${admin.email} with role ${admin.role}`);
+  }
+
+  // Create Lecturer Accounts
+  const lecturersSetup = [
+    {
+      matricNumber: 'LEC/2024/001',
+      email: 'adeyemi.lecturer@tasued.edu.ng',
+      firstName: 'Adeyemi',
+      lastName: 'Okafor',
+      phoneNumber: '+234 803 456 7890',
+      department: 'Computer Science',
+      password: 'Lecturer@2024!',
+    },
+    {
+      matricNumber: 'LEC/2024/002',
+      email: 'johnson.lecturer@tasued.edu.ng',
+      firstName: 'Johnson',
+      lastName: 'Akinwale',
+      phoneNumber: '+234 805 678 9012',
+      department: 'Computer Science',
+      password: 'Lecturer@2024!',
+    },
+  ];
+
+  for (const lecturer of lecturersSetup) {
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: lecturer.email }
+    });
+
+    if (!existingUser) {
+      // Create Supabase Auth user for lecturer
+      const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: lecturer.email,
+        password: lecturer.password,
+        email_confirm: true,
+        user_metadata: {
+          firstName: lecturer.firstName,
+          lastName: lecturer.lastName,
+          type: 'lecturer',
+        }
+      });
+
+      if (authError) {
+        console.error(`Failed to create Supabase user for ${lecturer.email}:`, authError.message);
+      } else {
+        console.log(`Created Supabase auth user: ${lecturer.email}`);
+      }
+    }
+
+    // Create lecturer user in database
+    const user = await prisma.user.upsert({
+      where: { email: lecturer.email },
+      update: {
+        firstName: lecturer.firstName,
+        lastName: lecturer.lastName,
+        phoneNumber: lecturer.phoneNumber,
+      },
+      create: {
+        matricNumber: lecturer.matricNumber,
+        email: lecturer.email,
+        firstName: lecturer.firstName,
+        lastName: lecturer.lastName,
+        phoneNumber: lecturer.phoneNumber,
+        department: lecturer.department,
+        isActive: true,
+        biometricEnrolled: false,
+      },
+    });
+
+    // Create empty biometric data placeholder
+    await prisma.biometricData.upsert({
+      where: { userId: user.id },
+      update: {},
+      create: {
+        userId: user.id,
+        fingerprintTemplate: null,
+        fingerprintQuality: null,
+        facialTemplate: null,
+        facialQuality: null,
+        facialPhotos: [],
+      },
+    });
+
+    console.log(`✓ Lecturer: ${lecturer.email} | Password: ${lecturer.password}`);
   }
 
   // Create Sample Students - CSC 415 Class
@@ -101,9 +192,8 @@ async function main() {
 
   for (const student of studentsSetup) {
     const user = await prisma.user.upsert({
-      where: { matricNumber: student.matricNumber },
+      where: { email: student.email },
       update: {
-        email: student.email,
         firstName: student.firstName,
         lastName: student.lastName,
       },
@@ -150,7 +240,7 @@ async function main() {
       },
     });
 
-    console.log(`Upserted student: ${student.email}`);
+    console.log(`✓ Student: ${student.email}`);
   }
 
   // Create Services
@@ -181,10 +271,17 @@ async function main() {
         optionalPermissions: ['history'],
       },
     });
-    console.log(`Upserted service: ${service.name}`);
+    console.log(`✓ Service: ${service.name}`);
   }
 
-  console.log('Seeding completed successfully!');
+  console.log('\n✅ Seeding completed successfully!');
+  console.log('\n📋 LECTURER CREDENTIALS:');
+  console.log('─────────────────────────────────────────');
+  lecturersSetup.forEach(lecturer => {
+    console.log(`Email: ${lecturer.email}`);
+    console.log(`Password: ${lecturer.password}`);
+    console.log('─────────────────────────────────────────');
+  });
 }
 
 main()
@@ -195,4 +292,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

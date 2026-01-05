@@ -1,275 +1,367 @@
-"use client";
-import React, { useMemo, useState, useEffect } from 'react';
+'use client';
+
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
+import {
+  Download, Loader2, RefreshCw, Search, Filter, Calendar,
+  Users, TrendingUp, CheckCircle
+} from 'lucide-react';
 
-export default function AttendanceAdminPage() {
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+interface LectureSession {
+  id: string;
+  courseCode: string;
+  courseName: string;
+  lecturer: string | null;
+  venue: string;
+  startTime: string;
+  endTime: string;
+  department: string;
+  level: string;
+}
 
-  const [filters, setFilters] = useState({
-    course: '',
-    department: '',
-    level: '',
-    from: '',
-    to: '',
-  });
+interface AttendanceStats {
+  session: LectureSession;
+  stats: {
+    totalStudents: number;
+    successfulCheckins: number;
+    failedCheckins: number;
+    successRate: string;
+    verificationMethods: {
+      qrCode: number;
+      facial: number;
+      manual: number;
+    };
+  };
+  attendance: Array<{
+    id: string;
+    matricNumber: string;
+    name: string;
+    email: string;
+    department: string;
+    level: string;
+    checkInTime: string;
+    method: string;
+    status: string;
+  }>;
+}
 
-  async function load() {
-    setLoading(true);
-    setError(null);
+export default function AdminAttendancePage() {
+  const [sessions, setSessions] = useState<LectureSession[]>([]);
+  const [selectedSession, setSelectedSession] = useState<LectureSession | null>(null);
+  const [report, setReport] = useState<AttendanceStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingReport, setLoadingReport] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    loadSessions();
+  }, []);
+
+  const loadSessions = async () => {
     try {
-      const qs = new URLSearchParams();
-      if (filters.course) qs.set('course', filters.course);
-      if (filters.department) qs.set('department', filters.department);
-      if (filters.level) qs.set('level', filters.level);
-      if (filters.from) qs.set('from', filters.from);
-      if (filters.to) qs.set('to', filters.to);
-      const res = await fetch(`/api/lectures?${qs.toString()}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to load sessions');
-      setSessions(data.items || []);
-      setTotal(data.total || 0);
-    } catch (e: any) {
-      setError(e.message);
+      const now = new Date();
+      const from = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const to = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const res = await fetch(`/api/lectures?from=${from}&to=${to}&take=100`);
+      if (res.ok) {
+        const data = await res.json();
+        setSessions(data.items || []);
+      }
+    } catch (error) {
+      console.error('Failed to load sessions:', error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  useEffect(() => { load(); }, []);
-
-  return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Lecture Attendance Sessions</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
-        <input className="border rounded p-2" placeholder="Course Code" value={filters.course} onChange={e => setFilters({ ...filters, course: e.target.value })} />
-        <input className="border rounded p-2" placeholder="Department" value={filters.department} onChange={e => setFilters({ ...filters, department: e.target.value })} />
-        <input className="border rounded p-2" placeholder="Level" value={filters.level} onChange={e => setFilters({ ...filters, level: e.target.value })} />
-        <input className="border rounded p-2" type="datetime-local" value={filters.from} onChange={e => setFilters({ ...filters, from: e.target.value })} />
-        <input className="border rounded p-2" type="datetime-local" value={filters.to} onChange={e => setFilters({ ...filters, to: e.target.value })} />
-      </div>
-
-      <div className="flex gap-2">
-        <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={load}>Apply Filters</button>
-        <CreateSession onCreated={load} />
-      </div>
-
-      {loading && <p>Loading...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-
-      <div className="overflow-auto">
-        <table className="min-w-full border text-sm">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="p-2 border">Course</th>
-              <th className="p-2 border">Lecturer</th>
-              <th className="p-2 border">Venue</th>
-              <th className="p-2 border">Start</th>
-              <th className="p-2 border">End</th>
-              <th className="p-2 border">Department</th>
-              <th className="p-2 border">Level</th>
-              <th className="p-2 border">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sessions.map((s) => (
-              <tr key={s.id}>
-                <td className="p-2 border">{s.courseCode} - {s.courseName}</td>
-                <td className="p-2 border">{s.lecturer || '-'}</td>
-                <td className="p-2 border">{s.venue}</td>
-                <td className="p-2 border">{format(new Date(s.startTime), 'PPpp')}</td>
-                <td className="p-2 border">{format(new Date(s.endTime), 'PPpp')}</td>
-                <td className="p-2 border">{s.department}</td>
-                <td className="p-2 border">{s.level}</td>
-                <td className="p-2 border">
-                  <AttendanceDrawer sessionId={s.id} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <p className="text-sm text-gray-600">Total: {total}</p>
-    </div>
-  );
-}
-
-function CreateSession({ onCreated }: { onCreated: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [form, setForm] = useState({
-    courseCode: '',
-    courseName: '',
-    lecturer: '',
-    venue: '',
-    startTime: '',
-    endTime: '',
-    department: '',
-    level: '',
-  });
-
-  async function submit() {
-    setSaving(true); setError(null);
+  const loadReport = async (sessionId: string) => {
+    setLoadingReport(true);
     try {
-      const res = await fetch('/api/lectures', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create session');
-      setOpen(false);
-      setForm({ courseCode: '', courseName: '', lecturer: '', venue: '', startTime: '', endTime: '', department: '', level: '' });
-      onCreated();
-    } catch (e: any) {
-      setError(e.message);
-    } finally { setSaving(false); }
+      const res = await fetch(`/api/lectures/${sessionId}/attendance-report`);
+      if (res.ok) {
+        const data = await res.json();
+        setReport(data);
+      }
+    } catch (error) {
+      console.error('Failed to load report:', error);
+    } finally {
+      setLoadingReport(false);
+    }
+  };
+
+  const handleSessionSelect = (session: LectureSession) => {
+    setSelectedSession(session);
+    loadReport(session.id);
+  };
+
+  const downloadReport = async (format: 'json' | 'csv') => {
+    if (!selectedSession) return;
+
+    try {
+      const res = await fetch(`/api/lectures/${selectedSession.id}/attendance-report?format=${format}`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `attendance-${selectedSession.courseCode}-${format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (error) {
+      console.error('Failed to download report:', error);
+    }
+  };
+
+  const filteredAttendance = report?.attendance.filter(a => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      a.name.toLowerCase().includes(query) ||
+      a.email.toLowerCase().includes(query) ||
+      a.matricNumber.toLowerCase().includes(query)
+    );
+  }) || [];
+
+  const chartData = report ? [
+    { name: 'Successful', value: report.stats.successfulCheckins },
+    { name: 'Failed', value: report.stats.failedCheckins },
+  ] : [];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 size={32} className="animate-spin text-blue-600" />
+      </div>
+    );
   }
 
   return (
-    <div>
-      <button className="bg-green-600 text-white px-4 py-2 rounded" onClick={() => setOpen(true)}>New Session</button>
-      {open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded shadow p-4 w-full max-w-2xl space-y-2">
-            <h2 className="text-lg font-semibold">Create Lecture Session</h2>
-            {error && <p className="text-red-600 text-sm">{error}</p>}
-            <div className="grid grid-cols-2 gap-2">
-              <input className="border rounded p-2" placeholder="Course Code" value={form.courseCode} onChange={e => setForm({ ...form, courseCode: e.target.value })} />
-              <input className="border rounded p-2" placeholder="Course Name" value={form.courseName} onChange={e => setForm({ ...form, courseName: e.target.value })} />
-              <input className="border rounded p-2" placeholder="Lecturer" value={form.lecturer} onChange={e => setForm({ ...form, lecturer: e.target.value })} />
-              <input className="border rounded p-2" placeholder="Venue" value={form.venue} onChange={e => setForm({ ...form, venue: e.target.value })} />
-              <input className="border rounded p-2" type="datetime-local" value={form.startTime} onChange={e => setForm({ ...form, startTime: e.target.value })} />
-              <input className="border rounded p-2" type="datetime-local" value={form.endTime} onChange={e => setForm({ ...form, endTime: e.target.value })} />
-              <input className="border rounded p-2" placeholder="Department" value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} />
-              <input className="border rounded p-2" placeholder="Level" value={form.level} onChange={e => setForm({ ...form, level: e.target.value })} />
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Attendance Management</h1>
+          <p className="text-gray-500 mt-1">View and manage lecture attendance records</p>
+        </div>
+        <button
+          onClick={loadSessions}
+          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+        >
+          <RefreshCw size={20} />
+        </button>
+      </div>
+
+      {/* Session Selector */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Select Lecture Session</label>
+        <select
+          value={selectedSession?.id || ''}
+          onChange={(e) => {
+            const session = sessions.find(s => s.id === e.target.value);
+            if (session) handleSessionSelect(session);
+          }}
+          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Select a session...</option>
+          {sessions.map((session) => (
+            <option key={session.id} value={session.id}>
+              {session.courseCode} - {session.courseName} ({format(new Date(session.startTime), 'MMM d, HH:mm')})
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {selectedSession && report && (
+        <>
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Total Students</p>
+                  <p className="text-3xl font-bold text-gray-900">{report.stats.totalStudents}</p>
+                </div>
+                <Users size={24} className="text-blue-600" />
+              </div>
             </div>
-            <div className="flex gap-2 justify-end">
-              <button className="px-4 py-2" onClick={() => setOpen(false)}>Cancel</button>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={submit} disabled={saving}>{saving ? 'Creating...' : 'Create'}</button>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Checked In</p>
+                  <p className="text-3xl font-bold text-green-600">{report.stats.successfulCheckins}</p>
+                </div>
+                <CheckCircle size={24} className="text-green-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Success Rate</p>
+                  <p className="text-3xl font-bold text-blue-600">{report.stats.successRate}%</p>
+                </div>
+                <TrendingUp size={24} className="text-blue-600" />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">QR Code Scans</p>
+                  <p className="text-3xl font-bold text-purple-600">{report.stats.verificationMethods.qrCode}</p>
+                </div>
+                <Calendar size={24} className="text-purple-600" />
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
-function AttendanceDrawer({ sessionId }: { sessionId: string }) {
-  const [operatorUserId, setOperatorUserId] = useState('');
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [items, setItems] = useState<any[]>([]);
+          {/* Session Details & Chart */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Session Info */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="font-semibold text-gray-900 mb-4">Session Details</h2>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="text-gray-600">Course</p>
+                  <p className="font-medium text-gray-900">{report.session.courseCode} - {report.session.courseName}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Lecturer</p>
+                  <p className="font-medium text-gray-900">{report.session.lecturer || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Venue</p>
+                  <p className="font-medium text-gray-900">{report.session.venue}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Time</p>
+                  <p className="font-medium text-gray-900">
+                    {format(new Date(report.session.startTime), 'HH:mm')} - {format(new Date(report.session.endTime), 'HH:mm')}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Department</p>
+                  <p className="font-medium text-gray-900">{report.session.department} - Level {report.session.level}</p>
+                </div>
+              </div>
 
-  async function load() {
-    setLoading(true); setError(null);
-    try {
-      const res = await fetch(`/api/lectures/${sessionId}/attendance`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch attendance');
-      setItems(data.items || []);
-    } catch (e: any) { setError(e.message); }
-    finally { setLoading(false); }
-  }
-
-  // Auto-refresh every 10s when open
-  useEffect(() => {
-    let t: any;
-    if (open) {
-      load();
-      t = setInterval(load, 10000);
-    }
-    return () => { if (t) clearInterval(t); };
-  }, [open, sessionId]);
-
-  async function checkInSelf(method: 'QR_CODE'|'FINGERPRINT'|'FACIAL'|'IRIS'|'MANUAL') {
-    setLoading(true); setError(null);
-    try {
-      const res = await fetch(`/api/lectures/${sessionId}/check-in`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ method }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Check-in failed');
-      await load();
-    } catch (e: any) { setError(e.message); } finally { setLoading(false); }
-  }
-
-  async function checkInUser() {
-    if (!operatorUserId.trim()) return setError('Enter a userId');
-    setLoading(true); setError(null);
-    try {
-      const res = await fetch(`/api/lectures/${sessionId}/check-in`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: operatorUserId, method: 'QR_CODE' }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Operator check-in failed');
-      setOperatorUserId('');
-      await load();
-    } catch (e: any) { setError(e.message); } finally { setLoading(false); }
-  }
-
-  async function checkOutUser() {
-    if (!operatorUserId.trim()) return setError('Enter a userId');
-    setLoading(true); setError(null);
-    try {
-      const res = await fetch(`/api/lectures/${sessionId}/check-out`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: operatorUserId }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Operator check-out failed');
-      setOperatorUserId('');
-      await load();
-    } catch (e: any) { setError(e.message); } finally { setLoading(false); }
-  }
-
-  return (
-    <div>
-      <button className="text-blue-600 underline" onClick={() => setOpen(true)}>View Attendance</button>
-      {open && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded shadow p-4 w-full max-w-3xl space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Attendance</h3>
-              <button onClick={() => setOpen(false)}>Close</button>
+              {/* Download Buttons */}
+              <div className="mt-6 space-y-2">
+                <button
+                  onClick={() => downloadReport('csv')}
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center justify-center gap-2"
+                >
+                  <Download size={18} />
+                  Download CSV
+                </button>
+                <button
+                  onClick={() => downloadReport('json')}
+                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 flex items-center justify-center gap-2"
+                >
+                  <Download size={18} />
+                  Download JSON
+                </button>
+              </div>
             </div>
-            {error && <p className="text-red-600 text-sm">{error}</p>}
-            {loading && <p>Loading...</p>}
-            <div className="flex flex-wrap gap-2 items-center">
-              {/* Self check-in shortcuts for testing */}
-              <button className="bg-green-600 text-white px-3 py-1 rounded" onClick={() => checkInSelf('QR_CODE')}>Self Check-in (QR)</button>
-              <button className="bg-indigo-600 text-white px-3 py-1 rounded" onClick={() => checkInSelf('FACIAL')}>Self Check-in (Face)</button>
+
+            {/* Chart */}
+            <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="font-semibold text-gray-900 mb-4">Check-in Status</h2>
+              {chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="value" fill="#3b82f6" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-gray-500">
+                  No data available
+                </div>
+              )}
             </div>
-            {/* Operator quick actions */}
-            <div className="flex flex-wrap gap-2 items-center">
-              <input className="border rounded p-2 flex-1 min-w-[220px]" placeholder="Enter student userId" value={operatorUserId} onChange={e => setOperatorUserId(e.target.value)} />
-              <button className="bg-blue-600 text-white px-3 py-1 rounded" onClick={checkInUser} disabled={loading}>Operator Check-in</button>
-              <button className="bg-gray-700 text-white px-3 py-1 rounded" onClick={checkOutUser} disabled={loading}>Operator Check-out</button>
+          </div>
+
+          {/* Attendance List */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="font-semibold text-gray-900">Attendance Records</h2>
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search..."
+                  className="pl-9 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm w-48 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
-            <div className="overflow-auto max-h-[60vh]">
-              <table className="min-w-full border text-sm">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="p-2 border">Student</th>
-                    <th className="p-2 border">Email</th>
-                    <th className="p-2 border">Method</th>
-                    <th className="p-2 border">Check-in</th>
-                    <th className="p-2 border">Check-out</th>
-                    <th className="p-2 border">Score</th>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Matric Number</th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Name</th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Email</th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Check-in Time</th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Method</th>
+                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">Status</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {items.map((a) => (
-                    <tr key={a.id}>
-                      <td className="p-2 border">{a.user?.lastName} {a.user?.firstName}</td>
-                      <td className="p-2 border">{a.user?.email}</td>
-                      <td className="p-2 border">{a.method}</td>
-                      <td className="p-2 border">{a.checkInTime ? format(new Date(a.checkInTime), 'PPpp') : '-'}</td>
-                      <td className="p-2 border">{a.checkOutTime ? format(new Date(a.checkOutTime), 'PPpp') : '-'}</td>
-                      <td className="p-2 border">{typeof a.matchScore === 'number' ? a.matchScore.toFixed(2) : '-'}</td>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredAttendance.length > 0 ? (
+                    filteredAttendance.map((record) => (
+                      <tr key={record.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 text-sm text-gray-900">{record.matricNumber}</td>
+                        <td className="px-6 py-4 text-sm text-gray-900">{record.name}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{record.email}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {format(new Date(record.checkInTime), 'MMM d, HH:mm')}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            record.method === 'QR_CODE' ? 'bg-blue-100 text-blue-700' :
+                            record.method === 'FACIAL' ? 'bg-purple-100 text-purple-700' :
+                            record.method === 'MANUAL' ? 'bg-pink-100 text-pink-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {record.method}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            record.status === 'SUCCESS' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          }`}>
+                            {record.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                        No records found
+                      </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
