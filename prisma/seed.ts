@@ -274,6 +274,60 @@ async function main() {
     console.log(`✓ Service: ${service.name}`);
   }
 
+  // Create Sample Lecture Sessions
+  const now = new Date();
+  const lectureSessionsSetup = [
+    {
+      courseCode: 'CSC 415',
+      courseName: 'Advanced Database Systems',
+      lecturer: 'Adeyemi Okafor',
+      venue: 'Computer Lab 1',
+      startTime: new Date(now.getTime() + 60 * 60 * 1000), // 1 hour from now
+      endTime: new Date(now.getTime() + 120 * 60 * 1000), // 2 hours from now
+      department: 'Computer Science',
+      level: '400',
+    },
+    {
+      courseCode: 'CSC 410',
+      courseName: 'Software Engineering',
+      lecturer: 'Johnson Akinwale',
+      venue: 'Lecture Hall A',
+      startTime: new Date(now.getTime() + 180 * 60 * 1000), // 3 hours from now
+      endTime: new Date(now.getTime() + 240 * 60 * 1000), // 4 hours from now
+      department: 'Computer Science',
+      level: '400',
+    },
+    {
+      courseCode: 'CSC 301',
+      courseName: 'Data Structures',
+      lecturer: 'Adeyemi Okafor',
+      venue: 'Computer Lab 2',
+      startTime: new Date(now.getTime() - 30 * 60 * 1000), // 30 minutes ago (ongoing)
+      endTime: new Date(now.getTime() + 30 * 60 * 1000), // 30 minutes from now
+      department: 'Computer Science',
+      level: '300',
+    },
+  ];
+
+  for (const lecture of lectureSessionsSetup) {
+    await prisma.lectureSession.upsert({
+      where: { id: `${lecture.courseCode}-${lecture.startTime.getTime()}` },
+      update: {},
+      create: {
+        courseCode: lecture.courseCode,
+        courseName: lecture.courseName,
+        lecturer: lecture.lecturer,
+        venue: lecture.venue,
+        startTime: lecture.startTime,
+        endTime: lecture.endTime,
+        department: lecture.department,
+        level: lecture.level,
+        createdBy: 'system',
+      },
+    });
+    console.log(`✓ Lecture: ${lecture.courseCode} - ${lecture.courseName}`);
+  }
+
   console.log('\n✅ Seeding completed successfully!');
   console.log('\n📋 LECTURER CREDENTIALS:');
   console.log('─────────────────────────────────────────');
