@@ -108,7 +108,7 @@ model Service {
   requiresBiometric   Boolean     @default(false)
   allowMultipleEntry  Boolean     @default(true)
   maxCapacity         Int?
-  currentOccupancy    Int         @default(0)
+  currentOccupancy    Int         @default(0) // @db.Int @check("currentOccupancy >= 0")
   operatingHours      Json?       // { start: "08:00", end: "18:00", days: [1,2,3,4,5] }
   location            String?
   requiredPermissions String[]

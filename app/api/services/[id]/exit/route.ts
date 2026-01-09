@@ -130,12 +130,10 @@ export async function POST(
     });
 
     // Decrement service occupancy (ensure it doesn't go below 0)
-    await db.service.update({
+    const updatedService = await db.service.update({
       where: { id: serviceId },
       data: { 
-        currentOccupancy: { 
-          decrement: service.currentOccupancy > 0 ? 1 : 0 
-        } 
+        currentOccupancy: Math.max(0, service.currentOccupancy - 1)
       },
     });
 
@@ -170,7 +168,7 @@ export async function POST(
       },
       service: {
         name: service.name,
-        currentOccupancy: Math.max(0, service.currentOccupancy - 1),
+        currentOccupancy: updatedService.currentOccupancy,
       },
     });
   } catch (error: any) {
