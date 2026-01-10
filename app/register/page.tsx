@@ -9,7 +9,6 @@ import {
   Eye, EyeOff, User, GraduationCap, Phone, CheckCircle
 } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
-import { supabase } from '@/lib/supabase';
 
 export default function RegisterPage() {
   const router = useRouter();
