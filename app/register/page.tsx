@@ -99,62 +99,49 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      // Register with Supabase
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            matricNumber: formData.matricNumber,
-            phone: formData.phone,
-            department: formData.department,
-            level: formData.level,
-            type: 'student',
-            role: 'STUDENT',
-            biometricEnrolled: false,
-          },
-          emailRedirectTo: `${window.location.origin}/enroll-biometric`,
-        }
-      });
+      // Import the register action
+      const { register } = await import('@/app/actions/auth');
 
-      if (signUpError) {
-        throw signUpError;
+      // Call the server action with form data
+      // For now, pass empty facial data since we're not capturing it on registration
+      const result = await register(
+        {
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          matricNumber: formData.matricNumber,
+          phoneNumber: formData.phone,
+          department: formData.department,
+          level: formData.level,
+          otherNames: '',
+          dateOfBirth: null,
+        },
+        [], // empty facial embedding
+        '' // empty facial photo
+      );
+
+      if (result.error) {
+        setError(result.error);
+        toast.error(result.error);
+        setLoading(false);
+        return;
       }
 
-      if (data.user) {
-        // Check if email confirmation is required
-        if (data.session) {
-          // Session exists, user is logged in - redirect to success page
-          toast.success('Registration successful! Redirecting...');
+      if (result.success) {
+        toast.success('Registration successful! Redirecting...');
+        
+        if (result.autoLogin) {
+          // User is auto-logged in, redirect to dashboard
           setTimeout(() => {
-            window.location.href = '/registration-success';
+            window.location.href = result.target || '/dashboard';
           }, 1000);
         } else {
-          // No session - might need email confirmation or auto-sign in
-          // Try to sign in automatically
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password,
-          });
-
-          if (signInError) {
-            // If sign-in fails, it might be because email confirmation is required
-            if (signInError.message.includes('Email not confirmed')) {
-              toast.success('Registration successful! Please check your email to confirm your account.');
-              setTimeout(() => {
-                router.push('/login');
-              }, 2000);
-            } else {
-              throw signInError;
-            }
-          } else if (signInData.session) {
-            toast.success('Registration successful! Redirecting...');
-            setTimeout(() => {
-              window.location.href = '/registration-success';
-            }, 1000);
-          }
+          // User needs to verify email
+          toast.info(result.message || 'Please check your email to verify your account.');
+          setTimeout(() => {
+            router.push(result.target || '/login');
+          }, 2000);
         }
       }
     } catch (err: any) {
@@ -162,7 +149,6 @@ export default function RegisterPage() {
       const errorMessage = err.message || 'Registration failed. Please try again.';
       setError(errorMessage);
       toast.error(errorMessage);
-    } finally {
       setLoading(false);
     }
   };
