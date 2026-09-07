@@ -79,14 +79,14 @@ export async function GET(request: NextRequest) {
     // If no users found in database, try to sync from Supabase Auth
     if (total === 0) {
       console.log('No users found in database, attempting to sync from Supabase Auth...');
-      
+
       try {
         // Get all users from Supabase Auth
         const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
-        
+
         if (!authError && authUsers && authUsers.length > 0) {
           console.log(`Found ${authUsers.length} users in Supabase Auth, syncing to database...`);
-          
+
           // Sync each user to the database
           for (const authUser of authUsers) {
             try {
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
               console.error(`Failed to sync user ${authUser.id}:`, syncErr);
             }
           }
-          
+
           // Re-fetch users from database after sync
           [users, total] = await Promise.all([
             db.user.findMany({
@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Admin users error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });

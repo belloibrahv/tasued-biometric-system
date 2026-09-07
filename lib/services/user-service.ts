@@ -144,7 +144,7 @@ class UserService {
     console.log('authUser.email:', authUser.email);
     console.log('authUser.user_metadata:', JSON.stringify(authUser.user_metadata, null, 2));
     console.log('authUser.raw_user_meta_data:', JSON.stringify(authUser.raw_user_meta_data, null, 2));
-    
+
     // Try multiple sources for metadata (Supabase can store it in different places)
     const metadata = authUser.user_metadata || authUser.raw_user_meta_data || {};
     const id = authUser.id;
@@ -152,19 +152,19 @@ class UserService {
 
     // Extract user data from metadata - support multiple field name formats
     const matricNumber = (
-      metadata.studentNumber || 
-      metadata.matricNumber || 
-      metadata.matric_number || 
+      metadata.studentNumber ||
+      metadata.matricNumber ||
+      metadata.matric_number ||
       ''
     ).toUpperCase();
-    
+
     // Support both combined fullName/full_name and separate firstName/lastName
     let firstName = metadata.firstName || metadata.first_name || '';
     let lastName = metadata.lastName || metadata.last_name || '';
-    
+
     console.log('Extracted firstName:', firstName);
     console.log('Extracted lastName:', lastName);
-    
+
     // Handle full_name (underscore) or fullName (camelCase) - split into first/last
     const fullNameValue = metadata.full_name || metadata.fullName || '';
     if (!firstName && !lastName && fullNameValue) {
@@ -173,11 +173,11 @@ class UserService {
       firstName = nameParts[0] || 'Unknown';
       lastName = nameParts.slice(1).join(' ') || 'User';
     }
-    
+
     // Only use defaults if truly empty
     if (!firstName) firstName = 'Unknown';
     if (!lastName) lastName = 'User';
-    
+
     console.log('Final firstName:', firstName);
     console.log('Final lastName:', lastName);
     console.log('=== END DEBUG ===');
@@ -185,20 +185,20 @@ class UserService {
     const otherNames = metadata.otherNames || metadata.other_names || null;
     const phoneNumber = metadata.phone || metadata.phoneNumber || metadata.phone_number || null;
     const department = metadata.department || null;
-    
+
     // CRITICAL: Preserve the level exactly as provided - this fixes the consistency issue
     const level = metadata.level ? String(metadata.level) : '100';
 
     // Determine user type from metadata
     const metadataType = (metadata.type || '').toLowerCase();
     const metadataRole = (metadata.role || '').toUpperCase();
-    const isAdmin = metadataType === 'admin' || 
-                    metadataRole === 'ADMIN' || 
-                    metadataRole === 'SUPER_ADMIN' || 
+    const isAdmin = metadataType === 'admin' ||
+                    metadataRole === 'ADMIN' ||
+                    metadataRole === 'SUPER_ADMIN' ||
                     metadataRole === 'OPERATOR';
 
     if (!email) throw new Error('Email is required for synchronization');
-    
+
     // For students, matric number is required. For admins, generate a temporary one if missing
     let finalMatricNumber = matricNumber;
     if (!isAdmin && !matricNumber) {
@@ -238,7 +238,7 @@ class UserService {
       // Update ID to match new Auth ID and sync all fields
       return await db.user.update({
         where: { email },
-        data: { 
+        data: {
           id,
           firstName,
           lastName,
@@ -258,7 +258,7 @@ class UserService {
       });
 
       if (existingByMatric) {
-        // If email matches, we already handled it. 
+        // If email matches, we already handled it.
         // If email differs, it's a conflict.
         throw new Error(`Matric Number ${finalMatricNumber} is already in use.`);
       }

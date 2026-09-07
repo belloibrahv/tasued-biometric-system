@@ -8,15 +8,15 @@ interface SkeletonProps {
   animate?: boolean;
 }
 
-export function Skeleton({ 
-  className = '', 
+export function Skeleton({
+  className = '',
   variant = 'rectangular',
   width,
   height,
   animate = true
 }: SkeletonProps) {
   const baseClass = 'bg-gradient-to-r from-surface-200 via-surface-100 to-surface-200 bg-[length:200%_100%]';
-  
+
   const variantClasses = {
     text: 'rounded h-4',
     circular: 'rounded-full',

@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     const monthStart = new Date();
     monthStart.setDate(1);
     monthStart.setHours(0, 0, 0, 0);
-    
+
     const thisMonthVerifications = await db.accessLog.count({
       where: {
         userId,

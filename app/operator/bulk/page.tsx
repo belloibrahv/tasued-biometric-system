@@ -23,7 +23,7 @@ export default function BulkVerifyPage() {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setFile(e.dataTransfer.files[0]);
     }
@@ -37,7 +37,7 @@ export default function BulkVerifyPage() {
 
   const uploadAndVerify = async () => {
     if (!file) return;
-    
+
     setLoading(true);
     const formData = new FormData();
     formData.append('file', file);
@@ -96,7 +96,7 @@ export default function BulkVerifyPage() {
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Upload size={32} className="text-gray-400" />
               </div>
-              
+
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {file ? file.name : 'Upload CSV File'}
               </h3>

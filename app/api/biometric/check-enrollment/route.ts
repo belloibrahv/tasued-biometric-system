@@ -40,13 +40,13 @@ export async function GET(request: NextRequest) {
 
     // Check both the flag and actual biometric data
     const hasActualBiometricData = user.biometricData && (
-      !!user.biometricData.facialTemplate || 
+      !!user.biometricData.facialTemplate ||
       !!user.biometricData.fingerprintTemplate
     );
 
     const enrolled = user.biometricEnrolled || hasActualBiometricData;
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       enrolled,
       biometricEnrolled: user.biometricEnrolled,
       hasData: hasActualBiometricData

@@ -120,7 +120,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 text-sm truncate">
-                    {user.firstName && user.firstName !== 'Unknown' 
+                    {user.firstName && user.firstName !== 'Unknown'
                       ? `${user.firstName} ${user.lastName || ''}`.trim()
                       : user.email?.split('@')[0] || 'User'}
                   </p>
@@ -140,8 +140,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors ${
-                    isActive 
-                      ? 'bg-brand-50 text-brand-600' 
+                    isActive
+                      ? 'bg-brand-50 text-brand-600'
                       : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
@@ -154,8 +154,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Logout */}
           <div className="p-3 border-t border-gray-100">
-            <button 
-              onClick={handleLogout} 
+            <button
+              onClick={handleLogout}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
             >
               <LogOut size={20} />
@@ -173,9 +173,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-gray-100">
               <Menu size={20} className="text-gray-600" />
             </button>
-            
+
             <div className="flex-1 lg:flex-none" />
-            
+
             <div className="flex items-center gap-2">
               <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>

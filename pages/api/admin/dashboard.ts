@@ -48,8 +48,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const totalVerificationsCount = await prisma.verificationLog.count();
-    const successRate = totalVerificationsCount > 0 
-      ? (verificationSuccessRate._count / totalVerificationsCount) * 100 
+    const successRate = totalVerificationsCount > 0
+      ? (verificationSuccessRate._count / totalVerificationsCount) * 100
       : 0;
 
     const usersByDepartment = await prisma.user.groupBy({
@@ -108,9 +108,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   } catch (error: any) {
     console.error('Admin dashboard error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Internal server error during admin dashboard operation',
-      error: error.message 
+      error: error.message
     });
   } finally {
     await prisma.$disconnect();
