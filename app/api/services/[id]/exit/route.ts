@@ -106,9 +106,9 @@ export async function POST(
       });
 
       if (!accessRecord) {
-        return NextResponse.json({ 
-          success: false, 
-          message: 'No active entry found for this student' 
+        return NextResponse.json({
+          success: false,
+          message: 'No active entry found for this student'
         }, { status: 400 });
       }
 
@@ -132,7 +132,7 @@ export async function POST(
     // Decrement service occupancy (ensure it doesn't go below 0)
     const updatedService = await db.service.update({
       where: { id: serviceId },
-      data: { 
+      data: {
         currentOccupancy: Math.max(0, service.currentOccupancy - 1)
       },
     });
@@ -162,7 +162,7 @@ export async function POST(
       student,
       duration: {
         minutes: durationMinutes,
-        formatted: durationMinutes >= 60 
+        formatted: durationMinutes >= 60
           ? `${Math.floor(durationMinutes / 60)}h ${durationMinutes % 60}m`
           : `${durationMinutes}m`,
       },
@@ -173,9 +173,9 @@ export async function POST(
     });
   } catch (error: any) {
     console.error('Service exit error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      message: error.message || 'Internal server error' 
+    return NextResponse.json({
+      success: false,
+      message: error.message || 'Internal server error'
     }, { status: 500 });
   }
 }

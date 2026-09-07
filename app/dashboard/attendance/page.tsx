@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { 
-  Calendar, Clock, MapPin, CheckCircle, XCircle, 
+import {
+  Calendar, Clock, MapPin, CheckCircle, XCircle,
   Loader2, RefreshCw, QrCode, X, TrendingUp, Activity, AlertCircle, ChevronRight
 } from 'lucide-react';
 
@@ -60,7 +60,7 @@ export default function StudentAttendancePage() {
       const now = new Date();
       const from = new Date(now.getTime() - 30 * 60 * 1000).toISOString(); // 30 min ago
       const to = new Date(now.getTime() + 2 * 60 * 60 * 1000).toISOString(); // 2 hours from now
-      
+
       const [sessionsRes, attendanceRes] = await Promise.all([
         fetch(`/api/lectures?from=${from}&to=${to}`),
         fetch('/api/dashboard/attendance'),
@@ -74,18 +74,18 @@ export default function StudentAttendancePage() {
       if (attendanceRes.ok) {
         const data = await attendanceRes.json();
         setMyAttendance(data.attendance || []);
-        
+
         // Calculate stats
         const totalAttendance = data.attendance?.length || 0;
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
-        
+
         const thisMonthCount = data.attendance?.filter((a: AttendanceRecord) => {
           const date = new Date(a.checkInTime);
           return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
         }).length || 0;
-        
+
         setStats({
           totalAttendance,
           thisMonth: thisMonthCount,
@@ -141,7 +141,7 @@ export default function StudentAttendancePage() {
 
     try {
       let sessionId = code;
-      
+
       if (code.includes('/')) {
         try {
           const url = new URL(code);
@@ -153,7 +153,7 @@ export default function StudentAttendancePage() {
       }
 
       const matchingSession = activeSessions.find(s => s.id === sessionId);
-      
+
       if (!matchingSession) {
         setScanMessage({ type: 'error', text: 'Session not found. Please try again.' });
         return;
@@ -203,8 +203,8 @@ export default function StudentAttendancePage() {
     );
   }
 
-  const displayName = user?.firstName && user.firstName !== 'Unknown' 
-    ? user.firstName 
+  const displayName = user?.firstName && user.firstName !== 'Unknown'
+    ? user.firstName
     : user?.email?.split('@')[0] || 'User';
 
   return (
@@ -241,7 +241,7 @@ export default function StudentAttendancePage() {
           <p className="text-2xl font-semibold text-gray-900">{stats.totalAttendance}</p>
           <p className="text-sm text-gray-500 mt-1">Total Attendance</p>
         </div>
-        
+
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 bg-success-50 rounded-lg flex items-center justify-center">
@@ -251,7 +251,7 @@ export default function StudentAttendancePage() {
           <p className="text-2xl font-semibold text-gray-900">{stats.thisMonth}</p>
           <p className="text-sm text-gray-500 mt-1">This Month</p>
         </div>
-        
+
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center">
@@ -341,8 +341,8 @@ export default function StudentAttendancePage() {
             </div>
           </button>
 
-          <Link 
-            href="/dashboard/attendance-analytics" 
+          <Link
+            href="/dashboard/attendance-analytics"
             className="group bg-white rounded-xl border border-gray-200 p-5 hover:border-brand-300 hover:shadow-md transition-all"
           >
             <div className="flex items-center gap-4">

@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const imageHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
+
     // Check cache first
     const cached = embeddingCache.get(imageHash);
     if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
@@ -53,17 +53,17 @@ export async function POST(req: NextRequest) {
         }
       });
     }
-    
+
     // Process the image and extract facial features
     // Add timeout to prevent long processing
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Facial embedding processing timeout')), 10000); // 10 second timeout
     });
-    
+
     const processingPromise = biometricService.processFacialImageForEnrollment(image);
-    
+
     const result = await Promise.race([processingPromise, timeoutPromise]) as any;
-    
+
     // Cache the result if it's valid
     if (result.isValid && result.embedding && result.embedding.length > 0) {
       embeddingCache.set(imageHash, {

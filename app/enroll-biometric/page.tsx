@@ -69,7 +69,7 @@ export default function EnrollBiometricPage() {
     setCameraError(null);
     setShowCamera(true);
     setCameraPermission('checking');
-    
+
     // Give the webcam component time to initialize
     setTimeout(() => {
       if (!cameraReady) {
@@ -94,7 +94,7 @@ export default function EnrollBiometricPage() {
   const handleCameraError = useCallback((err: any) => {
     console.error('Camera error:', err);
     setCameraReady(false);
-    
+
     let errorMessage = 'Unable to access camera';
     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
       errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.';
@@ -108,7 +108,7 @@ export default function EnrollBiometricPage() {
     } else {
       errorMessage = `Camera error: ${err.message || err.name || 'Unknown error'}`;
     }
-    
+
     setCameraError(errorMessage);
   }, []);
 
@@ -117,7 +117,7 @@ export default function EnrollBiometricPage() {
     setCameraError(null);
     setCameraReady(false);
     setShowCamera(false);
-    
+
     setTimeout(() => {
       setShowCamera(true);
     }, 500);
@@ -131,7 +131,7 @@ export default function EnrollBiometricPage() {
 
     setCapturingBiometric(true);
     toast.info('Capturing image, please hold still...');
-    
+
     const imageSrc = webcamRef.current.getScreenshot();
 
     if (!imageSrc) {
@@ -233,7 +233,7 @@ export default function EnrollBiometricPage() {
         const { error: updateError } = await supabase.auth.updateUser({
           data: { biometricEnrolled: true }
         });
-        
+
         if (updateError) {
           console.warn('Enrollment: Local Supabase metadata update failed', updateError);
         } else {
@@ -243,7 +243,7 @@ export default function EnrollBiometricPage() {
         // Force a complete session refresh to get new JWT with updated metadata
         console.log('Enrollment: Refreshing session to get updated token...');
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-        
+
         if (refreshError) {
           console.warn('Enrollment: Session refresh failed', refreshError);
         } else {
@@ -259,7 +259,7 @@ export default function EnrollBiometricPage() {
       // This prevents the redirect loop by ensuring the system recognizes the enrollment
       const verifyEnrollment = async (attempts = 0): Promise<boolean> => {
         if (attempts >= 5) return false;
-        
+
         try {
           const res = await fetch('/api/auth/me');
           if (res.ok) {
@@ -271,7 +271,7 @@ export default function EnrollBiometricPage() {
         } catch (e) {
           console.warn('Enrollment verification attempt failed:', e);
         }
-        
+
         // Wait and retry
         await new Promise(resolve => setTimeout(resolve, 1000));
         return verifyEnrollment(attempts + 1);
@@ -279,7 +279,7 @@ export default function EnrollBiometricPage() {
 
       // Verify enrollment is recognized before redirecting
       const verified = await verifyEnrollment();
-      
+
       if (verified) {
         // Use window.location.href to force a full reload and cookie/middleware re-check
         window.location.href = '/dashboard';
@@ -313,9 +313,9 @@ export default function EnrollBiometricPage() {
                 <Home size={18} />
                 <span className="text-sm">Home</span>
               </Link>
-              <a 
-                href="https://support.google.com/chrome/answer/2693767" 
-                target="_blank" 
+              <a
+                href="https://support.google.com/chrome/answer/2693767"
+                target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-brand-500 hover:text-brand-600 transition-colors"
               >
@@ -386,7 +386,7 @@ export default function EnrollBiometricPage() {
                             forceScreenshotSourceSize={false}
                           />
                         ) : null}
-                        
+
                         {/* Loading state */}
                         {showCamera && !cameraReady && cameraPermission !== 'denied' && !cameraError && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-900">
@@ -394,14 +394,14 @@ export default function EnrollBiometricPage() {
                             <p className="text-white text-sm">Starting camera...</p>
                           </div>
                         )}
-                        
+
                         {/* Permission prompt */}
                         {!showCamera && cameraPermission !== 'denied' && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-900 p-4 text-center">
                             <Camera className="text-blue-400 mb-4" size={48} />
                             <p className="text-white text-lg font-semibold mb-2">Camera Access Required</p>
                             <p className="text-gray-300 text-sm mb-4">We need camera access to capture your facial data for enrollment.</p>
-                            <button 
+                            <button
                               className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
                               onClick={startCamera}
                             >
@@ -409,7 +409,7 @@ export default function EnrollBiometricPage() {
                             </button>
                           </div>
                         )}
-                        
+
                         {/* Permission denied */}
                         {cameraPermission === 'denied' && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-900 p-4 text-center">
@@ -419,14 +419,14 @@ export default function EnrollBiometricPage() {
                               Please allow camera access in your browser settings to continue.
                             </p>
                             <div className="space-y-2">
-                              <button 
+                              <button
                                 className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
                                 onClick={() => window.location.reload()}
                               >
                                 <RefreshCw size={16} className="inline mr-2" />
                                 Refresh Page
                               </button>
-                              <a 
+                              <a
                                 href="https://support.google.com/chrome/answer/2693767"
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -437,14 +437,14 @@ export default function EnrollBiometricPage() {
                             </div>
                           </div>
                         )}
-                        
+
                         {/* Camera error */}
                         {cameraError && cameraPermission !== 'denied' && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-surface-900 p-4 text-center">
                             <AlertCircle className="text-yellow-400 mb-4" size={48} />
                             <p className="text-white text-lg font-semibold mb-2">Camera Issue</p>
                             <p className="text-gray-300 text-sm mb-4">{cameraError}</p>
-                            <button 
+                            <button
                               className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
                               onClick={retryCamera}
                             >
@@ -453,7 +453,7 @@ export default function EnrollBiometricPage() {
                             </button>
                           </div>
                         )}
-                        
+
                         {/* Face guide overlay when camera is ready */}
                         {cameraReady && !capturedImage && (
                           <div className="absolute inset-0 pointer-events-none">
@@ -563,7 +563,7 @@ export default function EnrollBiometricPage() {
                   Having trouble with the camera?
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Link 
+                  <Link
                     href="/"
                     className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm text-surface-600 hover:text-surface-800 hover:bg-surface-100 rounded-lg transition-colors"
                   >

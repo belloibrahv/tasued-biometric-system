@@ -17,14 +17,14 @@ async function main() {
     try {
       // Try to get user by email
       const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
-      
+
       if (error) {
         console.error(`Error listing users: ${error.message}`);
         continue;
       }
 
       const user = users.find(u => u.email === email);
-      
+
       if (user) {
         console.log(`✓ Found in Supabase: ${email}`);
         console.log(`  ID: ${user.id}`);

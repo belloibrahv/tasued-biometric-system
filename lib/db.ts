@@ -29,7 +29,7 @@ if (process.env.NODE_ENV === 'production') {
  */
 export async function connectDb(retries = 3, delay = 1000) {
   let lastError: any;
-  
+
   for (let i = 0; i < retries; i++) {
     try {
       await db.$connect();
@@ -38,14 +38,14 @@ export async function connectDb(retries = 3, delay = 1000) {
     } catch (error: any) {
       lastError = error;
       console.error(`Database connection attempt ${i + 1}/${retries} failed:`, error.message);
-      
+
       if (i < retries - 1) {
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
       }
     }
   }
-  
+
   console.error('Failed to connect to database after retries:', lastError);
   throw lastError;
 }

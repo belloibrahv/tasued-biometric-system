@@ -135,7 +135,7 @@ model ServiceAccess {
   status      AccessStatus @default(SUCCESS)
   operatorId  String?
   notes       String?
-  
+
   @@index([userId, serviceId])
   @@index([serviceId, entryTime])
   @@index([userId, exitTime])

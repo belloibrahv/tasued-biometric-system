@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface-50 p-4">
       <Toaster position="top-center" richColors />
-      
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -94,13 +94,13 @@ export default function ForgotPasswordPage() {
               <p className="text-surface-500 mb-6">
                 We&apos;ve sent a password reset link to <strong>{email}</strong>
               </p>
-              
+
               {/* Demo token display */}
               {resetToken && (
                 <div className="bg-warning-50 border border-warning-200 rounded-xl p-4 mb-6 text-left">
                   <p className="text-xs font-bold text-warning-600 uppercase mb-2">Demo Mode</p>
                   <p className="text-sm text-warning-700 mb-2">Use this link to reset your password:</p>
-                  <Link 
+                  <Link
                     href={`/reset-password?token=${resetToken}`}
                     className="text-brand-500 text-sm font-mono break-all hover:underline"
                   >

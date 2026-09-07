@@ -112,11 +112,11 @@ export default function QRScanner({ onScan, onError, width = 300, height = 300 }
 
   const switchCamera = async () => {
     if (cameras.length <= 1) return;
-    
+
     const currentIndex = cameras.findIndex((c) => c.id === selectedCamera);
     const nextIndex = (currentIndex + 1) % cameras.length;
     const nextCamera = cameras[nextIndex].id;
-    
+
     if (isScanning) {
       await stopScanning();
       setSelectedCamera(nextCamera);
@@ -138,7 +138,7 @@ export default function QRScanner({ onScan, onError, width = 300, height = 300 }
         style={{ width, height }}
       >
         <div id={scannerId} className="w-full h-full" />
-        
+
         {!isScanning && !isInitializing && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white">
             <Camera size={48} className="text-gray-400 mb-3" />
