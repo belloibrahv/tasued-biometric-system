@@ -101,7 +101,7 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 text-sm truncate">
-                    {user.firstName && user.firstName !== 'Unknown' 
+                    {user.firstName && user.firstName !== 'Unknown'
                       ? `${user.firstName} ${user.lastName || ''}`.trim()
                       : user.email?.split('@')[0] || 'User'}
                   </p>
@@ -131,8 +131,8 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
           </nav>
 
           <div className="p-3 border-t border-gray-100">
-            <button 
-              onClick={handleLogout} 
+            <button
+              onClick={handleLogout}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
             >
               <LogOut size={20} />

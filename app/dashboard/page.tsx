@@ -24,7 +24,7 @@ export default function DashboardPage() {
           const userData = await userRes.json();
           console.log('User data from /api/auth/me:', userData);
           setUser(userData.user);
-          
+
           // Check if user data is incomplete
           if (userData.error) {
             setError(userData.details || userData.error);
@@ -67,8 +67,8 @@ export default function DashboardPage() {
   }
 
   // Get display name - fallback to email if name is missing
-  const displayName = user?.firstName && user.firstName !== 'Unknown' 
-    ? user.firstName 
+  const displayName = user?.firstName && user.firstName !== 'Unknown'
+    ? user.firstName
     : user?.email?.split('@')[0] || 'User';
 
   return (
@@ -117,7 +117,7 @@ export default function DashboardPage() {
           <p className="text-2xl font-semibold text-gray-900">{stats.totalAccess}</p>
           <p className="text-sm text-gray-500 mt-1">Total Access</p>
         </div>
-        
+
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 bg-success-50 rounded-lg flex items-center justify-center">
@@ -127,7 +127,7 @@ export default function DashboardPage() {
           <p className="text-2xl font-semibold text-gray-900">{stats.thisMonth}</p>
           <p className="text-sm text-gray-500 mt-1">This Month</p>
         </div>
-        
+
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="w-10 h-10 bg-brand-50 rounded-lg flex items-center justify-center">
@@ -145,8 +145,8 @@ export default function DashboardPage() {
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Link 
-            href="/dashboard/qr-code" 
+          <Link
+            href="/dashboard/qr-code"
             className="group bg-white rounded-xl border border-gray-200 p-5 hover:border-brand-300 hover:shadow-md transition-all"
           >
             <div className="flex items-center gap-4">
@@ -161,8 +161,8 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-          <Link 
-            href="/dashboard/history" 
+          <Link
+            href="/dashboard/history"
             className="group bg-white rounded-xl border border-gray-200 p-5 hover:border-brand-300 hover:shadow-md transition-all"
           >
             <div className="flex items-center gap-4">

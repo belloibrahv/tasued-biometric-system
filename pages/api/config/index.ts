@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'GET') {
       // Retrieve all system configuration values
       const configs = await prisma.systemConfig.findMany();
-      
+
       // Convert to an object for easier use
       const configObject: Record<string, any> = {};
       configs.forEach(config => {
@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         config: configObject,
         message: 'System configuration retrieved successfully'
       });
-    } 
+    }
     else if (req.method === 'PUT') {
       // Verify admin authentication
       const authResult = await authenticateUser(req, true); // require admin privileges
@@ -90,9 +90,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } catch (error: any) {
     console.error('System configuration error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Internal server error during configuration operation',
-      error: error.message 
+      error: error.message
     });
   } finally {
     await prisma.$disconnect();

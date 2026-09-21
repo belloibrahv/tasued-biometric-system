@@ -80,17 +80,17 @@ export async function GET(request: NextRequest) {
         console.error('QR Code: User sync failed:', syncError);
       }
     }
-    
+
     // If user exists but has "Unknown User" name, try to update from Supabase metadata
     if (user && authUser && (user.firstName === 'Unknown' || user.lastName === 'User')) {
       console.log(`QR Code: User has Unknown name, attempting to update from Supabase metadata`);
       const metadata = authUser.user_metadata || {};
       console.log('Supabase metadata:', JSON.stringify(metadata, null, 2));
-      
+
       // Handle both firstName/lastName and full_name formats
       let newFirstName = metadata.firstName || metadata.first_name;
       let newLastName = metadata.lastName || metadata.last_name;
-      
+
       // Parse full_name if firstName/lastName not available
       const fullNameValue = metadata.full_name || metadata.fullName;
       if (!newFirstName && !newLastName && fullNameValue) {
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
         newFirstName = nameParts[0];
         newLastName = nameParts.slice(1).join(' ') || null;
       }
-      
+
       if (newFirstName || newLastName) {
         try {
           const updatedUser = await db.user.update({
@@ -126,9 +126,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (!user) {
-      return NextResponse.json({ 
-        error: 'User not found', 
-        details: 'Your profile could not be found. Please try logging out and back in.' 
+      return NextResponse.json({
+        error: 'User not found',
+        details: 'Your profile could not be found. Please try logging out and back in.'
       }, { status: 404 });
     }
 
@@ -163,8 +163,8 @@ export async function GET(request: NextRequest) {
 
     // Generate QR code image with correct options
     // Use production URL for QR codes so they work when scanned externally
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
       : request.nextUrl.origin;
     const productionUrl = 'https://tasued-biometric-system.vercel.app';
     const qrCodeUrl = `${productionUrl}/verify/${encodeURIComponent(qrCode.code)}`;
@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!user) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'User not found',
         details: 'Your profile could not be found. Please try logging out and back in.'
       }, { status: 404 });

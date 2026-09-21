@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { 
+import {
   BookOpen, GraduationCap, Building2, Utensils, Heart, Bus,
   CheckCircle, XCircle, LogIn, LogOut, Users, Clock, RefreshCw,
   Loader2, AlertCircle, Search
@@ -93,12 +93,12 @@ export default function ServiceAccessPage() {
 
   const handleQRScan = useCallback(async (code: string) => {
     if (!selectedService || processing) return;
-    
+
     setProcessing(true);
     setResult(null);
 
     try {
-      const endpoint = mode === 'entry' 
+      const endpoint = mode === 'entry'
         ? `/api/services/${selectedService.id}/entry`
         : `/api/services/${selectedService.id}/exit`;
 
@@ -110,7 +110,7 @@ export default function ServiceAccessPage() {
 
       const data = await res.json();
       setResult(data);
-      
+
       if (data.success) {
         playSound(true);
         loadActiveAccess();
@@ -128,7 +128,7 @@ export default function ServiceAccessPage() {
 
   const handleManualExit = async (accessId: string) => {
     if (!selectedService) return;
-    
+
     try {
       const res = await fetch(`/api/services/${selectedService.id}/exit`, {
         method: 'POST',
@@ -197,7 +197,7 @@ export default function ServiceAccessPage() {
         {services.map((service) => {
           const Icon = getIcon(service.icon);
           const isSelected = selectedService?.id === service.id;
-          const occupancyPercent = service.maxCapacity 
+          const occupancyPercent = service.maxCapacity
             ? Math.round((service.currentOccupancy / service.maxCapacity) * 100)
             : null;
 
@@ -265,7 +265,7 @@ export default function ServiceAccessPage() {
               <h2 className="font-semibold text-gray-900 mb-4">
                 {mode === 'entry' ? 'Scan for Entry' : 'Scan for Exit'}
               </h2>
-              
+
               <div className="flex justify-center">
                 <QRScanner
                   onScan={handleQRScan}
@@ -285,7 +285,7 @@ export default function ServiceAccessPage() {
                 </div>
                 {selectedService.maxCapacity && (
                   <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className={`h-full transition-all ${
                         (selectedService.currentOccupancy / selectedService.maxCapacity) >= 0.9
                           ? 'bg-red-500'
@@ -313,7 +313,7 @@ export default function ServiceAccessPage() {
                   )}
                   <div>
                     <p className={`font-semibold ${result.success ? 'text-green-800' : 'text-red-800'}`}>
-                      {result.success 
+                      {result.success
                         ? (mode === 'entry' ? 'Entry Recorded' : 'Exit Recorded')
                         : 'Access Denied'}
                     </p>
@@ -348,7 +348,7 @@ export default function ServiceAccessPage() {
                 />
               </div>
             </div>
-            
+
             <div className="max-h-[500px] overflow-y-auto divide-y divide-gray-100">
               {filteredAccess.length > 0 ? (
                 filteredAccess.map((access) => (
