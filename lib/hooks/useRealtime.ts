@@ -27,7 +27,7 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
       if (lastEventIdRef.current) {
         params.set('after', lastEventIdRef.current);
       }
-      
+
       const res = await fetch(`/api/realtime/events?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();

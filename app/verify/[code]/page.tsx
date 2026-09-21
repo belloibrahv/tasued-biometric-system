@@ -44,7 +44,7 @@ export default function VerifyPage({ params }: { params: { code: string } }) {
       try {
         const res = await fetch(`/api/verify-qr/${encodeURIComponent(params.code)}`);
         const data = await res.json();
-        
+
         if (res.ok) {
           setResult({ success: true, ...data });
         } else {

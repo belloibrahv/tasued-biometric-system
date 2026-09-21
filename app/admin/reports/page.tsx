@@ -55,7 +55,7 @@ export default function ReportsPage() {
       const res = await fetch(
         `/api/admin/reports/export?from=${dateRange.from}&to=${dateRange.to}&type=${reportType}&format=${format}`
       );
-      
+
       if (res.ok) {
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
@@ -77,7 +77,7 @@ export default function ReportsPage() {
   const setQuickRange = (range: 'today' | 'week' | 'month' | 'quarter') => {
     const today = new Date();
     let from: Date;
-    
+
     switch (range) {
       case 'today':
         from = today;
@@ -92,7 +92,7 @@ export default function ReportsPage() {
         from = subDays(today, 90);
         break;
     }
-    
+
     setDateRange({
       from: format(from, 'yyyy-MM-dd'),
       to: format(today, 'yyyy-MM-dd'),
@@ -250,7 +250,7 @@ export default function ReportsPage() {
                   const height = (day.count / maxCount) * 100;
                   return (
                     <div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                      <div 
+                      <div
                         className="w-full bg-blue-500 rounded-t transition-all hover:bg-blue-600"
                         style={{ height: `${Math.max(height, 2)}%` }}
                         title={`${day.date}: ${day.count} verifications`}
@@ -278,7 +278,7 @@ export default function ReportsPage() {
                         <span className="font-medium text-gray-900">{item.count}</span>
                       </div>
                       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className="h-full bg-green-500 rounded-full transition-all"
                           style={{ width: `${width}%` }}
                         />

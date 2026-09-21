@@ -1,11 +1,11 @@
 %=======================================================================================================
 % A BIOMETRIC-BASED IDENTITY MANAGEMENT SYSTEM FOR EDUCATIONAL INSTITUTIONS
 % A Case Study of Tai Solarin Federal University of Education (TASUED)
-% 
+%
 % A Research Paper Presented to the Department of Computer Science
 % Tai Solarin University of Education, Ijagun, Ijebu-Ode, Ogun State, Nigeria
-% 
-% In Partial Fulfillment of the Requirements for the Award of 
+%
+% In Partial Fulfillment of the Requirements for the Award of
 % Bachelor of Science (B.Sc.) Degree in Computer Science
 %
 % By:
@@ -938,7 +938,7 @@ The API follows RESTful principles with clear endpoint structure and consistent 
 \subsection{Authentication API}
 begin{itemize}
 item POST /api/auth/register: User registration with biometric enrollment
-item POST /api/auth/login: User authentication and session creation  
+item POST /api/auth/login: User authentication and session creation
 item GET /api/auth/me: Get current user information
 item POST /api/auth/logout: Terminate user session
 end{itemize}
@@ -1258,7 +1258,7 @@ export async function GET(request) {
     // Get user authentication
     const token = request.cookies.get('auth-token')?.value ||
                   request.headers.get('authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -1353,7 +1353,7 @@ export async function GET(request) {
     // Get the QR code from the URL path parameter
     const { pathname } = new URL(request.url);
     const code = decodeURIComponent(pathname.split('/').pop() || '');
-    
+
     if (!code) {
       return NextResponse.json(
         { error: 'QR code parameter is required' },
@@ -1718,7 +1718,7 @@ This research makes several significant contributions to the field of biometric 
 \subsection{Technical Contributions}
 \begin{itemize}
 \item Designed and implemented a secure QR code generation system with time-based expiration
-\item Created efficient facial embedding algorithms optimized for real-time processing  
+\item Created efficient facial embedding algorithms optimized for real-time processing
 \item Developed a scalable three-tier architecture for biometric identity management
 \item Established security protocols for biometric data protection in educational environments
 \item Implemented public API endpoints for external QR code verification

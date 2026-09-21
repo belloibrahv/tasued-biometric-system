@@ -19,7 +19,7 @@ model User {
 }
 ```
 
-**Impact**: 
+**Impact**:
 - If a lecturer with matric number `LEC/2024/001` already exists, creating another with the same matric number will fail
 - The error is silently caught by `ON CONFLICT (email) DO NOTHING` in SQL, but the biometric data insert may still fail
 
@@ -67,7 +67,7 @@ model BiometricData {
 Run this query in Supabase SQL Editor to check if lecturers exist:
 
 ```sql
-SELECT 
+SELECT
   id,
   email,
   "firstName",
@@ -179,7 +179,7 @@ FROM "User" u
 WHERE u.email IN ('adeyemi.lecturer@tasued.edu.ng', 'johnson.lecturer@tasued.edu.ng');
 
 -- Verify
-SELECT 
+SELECT
   u.id,
   u.email,
   u."firstName",
@@ -206,7 +206,7 @@ INSERT INTO "User" (
   "biometricEnrolled",
   "createdAt",
   "updatedAt"
-) VALUES 
+) VALUES
   (gen_random_uuid(), 'LEC/2024/001', 'adeyemi.lecturer@tasued.edu.ng', 'Adeyemi', 'Okafor', '+234 803 456 7890', 'Computer Science', true, false, now(), now()),
   (gen_random_uuid(), 'LEC/2024/002', 'johnson.lecturer@tasued.edu.ng', 'Johnson', 'Akinwale', '+234 805 678 9012', 'Computer Science', true, false, now(), now())
 ON CONFLICT (email) DO UPDATE SET
@@ -341,9 +341,9 @@ WHERE email IN ('adeyemi.lecturer@tasued.edu.ng', 'johnson.lecturer@tasued.edu.n
 
 -- Create lecturers fresh
 INSERT INTO "User" (
-  id, "matricNumber", email, "firstName", "lastName", "phoneNumber", 
+  id, "matricNumber", email, "firstName", "lastName", "phoneNumber",
   department, "isActive", "biometricEnrolled", "createdAt", "updatedAt"
-) VALUES 
+) VALUES
   (gen_random_uuid(), 'LEC/2024/001', 'adeyemi.lecturer@tasued.edu.ng', 'Adeyemi', 'Okafor', '+234 803 456 7890', 'Computer Science', true, false, now(), now()),
   (gen_random_uuid(), 'LEC/2024/002', 'johnson.lecturer@tasued.edu.ng', 'Johnson', 'Akinwale', '+234 805 678 9012', 'Computer Science', true, false, now(), now());
 

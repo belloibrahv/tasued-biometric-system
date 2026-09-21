@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Server, Plus, ToggleLeft, ToggleRight, Edit2, Trash2, 
+import {
+  Server, Plus, ToggleLeft, ToggleRight, Edit2, Trash2,
   Users, MapPin, Clock, Shield, X, Loader2, Save
 } from 'lucide-react';
 
@@ -139,13 +139,13 @@ export default function ServicesPage() {
                 }`}>
                   <Server size={28} className={service.isActive ? 'text-blue-600' : 'text-gray-400'} />
                 </div>
-                
+
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-semibold text-gray-900">{service.name}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      service.isActive 
-                        ? 'bg-green-50 text-green-700' 
+                      service.isActive
+                        ? 'bg-green-50 text-green-700'
                         : 'bg-gray-100 text-gray-500'
                     }`}>
                       {service.isActive ? 'Active' : 'Inactive'}
@@ -156,9 +156,9 @@ export default function ServicesPage() {
                       </span>
                     )}
                   </div>
-                  
+
                   <p className="text-sm text-gray-500 mb-3">{service.description || 'No description'}</p>
-                  
+
                   <div className="flex flex-wrap gap-4 text-sm">
                     <div className="flex items-center gap-1.5 text-gray-600">
                       <Users size={14} />
@@ -198,8 +198,8 @@ export default function ServicesPage() {
                   <button
                     onClick={() => toggleService(service.id, service.isActive)}
                     className={`p-2 rounded-lg transition-colors ${
-                      service.isActive 
-                        ? 'text-green-600 hover:bg-green-50' 
+                      service.isActive
+                        ? 'text-green-600 hover:bg-green-50'
                         : 'text-gray-400 hover:bg-gray-100'
                     }`}
                   >
@@ -239,14 +239,14 @@ export default function ServicesPage() {
   );
 }
 
-function ServiceModal({ 
-  service, 
-  onClose, 
-  onSave, 
-  saving 
-}: { 
-  service: Service | null; 
-  onClose: () => void; 
+function ServiceModal({
+  service,
+  onClose,
+  onSave,
+  saving
+}: {
+  service: Service | null;
+  onClose: () => void;
   onSave: (service: Partial<Service>) => void;
   saving: boolean;
 }) {
