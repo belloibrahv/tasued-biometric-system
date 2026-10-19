@@ -32,10 +32,10 @@ export default function QRScannerPage() {
 
   const verifyQRCode = async (code: string) => {
     if (!code.trim() || loading) return;
-    
+
     // Prevent duplicate scans of the same code
     if (code === lastScannedCode && result?.success) return;
-    
+
     setLoading(true);
     setResult(null);
     setLastScannedCode(code);
@@ -48,7 +48,7 @@ export default function QRScannerPage() {
       });
       const data = await res.json();
       setResult(data);
-      
+
       // Play sound feedback
       if (data.success) {
         playSuccessSound();
@@ -183,7 +183,7 @@ export default function QRScannerPage() {
             <label className="text-sm font-medium text-gray-700">Facial Verification</label>
             <span className="text-xs text-gray-400">Optional</span>
           </div>
-          
+
           {facialImage ? (
             <div className="relative">
               <img src={facialImage} alt="Captured" className="w-full h-40 object-cover rounded-lg" />

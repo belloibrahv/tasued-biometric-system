@@ -31,14 +31,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const biometricData = await prisma.biometricData.findUnique({
       where: { userId: user.id }
     });
-    
+
     if (!biometricData || !biometricData.facialTemplate) {
       return res.status(400).json({ message: 'No biometric template found for user' });
     }
 
     // Use the biometric verification service
     const biometricService = BiometricVerificationService.getInstance();
-    
+
     // Parse the stored template
     let storedEmbedding: number[] = [];
     try {
@@ -46,13 +46,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } catch (error) {
       return res.status(400).json({ message: 'Invalid biometric template format' });
     }
-    
+
     // Perform enhanced verification
     const verificationResult = await biometricService.enhancedVerifyFacialImage(
       imageData,
       storedEmbedding
     );
-    
+
     if (!verificationResult.verified) {
       // Log failed verification
       await prisma.accessLog.create({
@@ -73,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         }
       });
-      
+
       return res.status(400).json({
         message: 'Biometric verification failed',
         details: verificationResult.details
@@ -114,7 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           status: 'ACTIVE'
         }
       });
-      
+
       if (existingSession) {
         // Update the existing session instead of creating a new one
         await prisma.session.update({

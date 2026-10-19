@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   let dbConnected = false;
-  
+
   try {
     // Ensure DB connection is active with retry logic
     try {
@@ -95,7 +95,7 @@ export async function GET(request: Request) {
         console.log(`Syncing profile for user ${authUser.id} on /api/auth/me`);
         try {
           const syncedUser = await UserService.syncUserFromAuth(authUser);
-          
+
           // Fetch again with biometric data
           user = await db.user.findUnique({
             where: { id: syncedUser.id },
@@ -182,15 +182,15 @@ export async function GET(request: Request) {
         const { data: { user: supaUser } } = await supabase.auth.getUser();
         authUser = supaUser;
       }
-      
+
       if (authUser) {
         const metadata = authUser.user_metadata || {};
         console.log('User has Unknown name, checking Supabase metadata:', JSON.stringify(metadata, null, 2));
-        
+
         // Handle both firstName/lastName and full_name formats
         let newFirstName = metadata.firstName || metadata.first_name;
         let newLastName = metadata.lastName || metadata.last_name;
-        
+
         // Parse full_name if firstName/lastName not available
         const fullNameValue = metadata.full_name || metadata.fullName;
         if (!newFirstName && !newLastName && fullNameValue) {
@@ -198,7 +198,7 @@ export async function GET(request: Request) {
           newFirstName = nameParts[0];
           newLastName = nameParts.slice(1).join(' ') || null;
         }
-        
+
         if (newFirstName || newLastName) {
           try {
             const updatedUser = await db.user.update({
@@ -230,14 +230,14 @@ export async function GET(request: Request) {
     }
 
     // Determine if user is admin/staff
-    const isAdmin = authUser?.user_metadata?.type === 'admin' || 
+    const isAdmin = authUser?.user_metadata?.type === 'admin' ||
                     authUser?.user_metadata?.role === 'ADMIN' ||
                     authUser?.user_metadata?.role === 'SUPER_ADMIN' ||
                     authUser?.user_metadata?.role === 'OPERATOR';
 
     // Check biometric enrollment status
     const hasBiometric = user?.biometricData && (
-      !!user.biometricData.facialTemplate || 
+      !!user.biometricData.facialTemplate ||
       !!user.biometricData.fingerprintTemplate
     );
 

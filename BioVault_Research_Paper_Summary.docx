@@ -197,10 +197,10 @@ The facial recognition system implements a custom algorithm featuring:
 function generateFacialEmbedding(image) {
   // Extract key facial landmarks
   const landmarks = extractLandmarks(image);
-  
+
   // Generate 128-dimensional feature vector
   const embedding = calculateGeometricFeatures(landmarks);
-  
+
   // Normalize for consistent comparison
   return normalizeVector(embedding);
 }
@@ -210,7 +210,7 @@ function calculateSimilarity(template1, template2) {
   const dotProduct = template1.reduce((sum, val, i) => sum + val * template2[i], 0);
   const magnitude1 = Math.sqrt(template1.reduce((sum, val) => sum + val * val, 0));
   const magnitude2 = Math.sqrt(template2.reduce((sum, val) => sum + val * val, 0));
-  
+
   return dotProduct / (magnitude1 * magnitude2);
 }
 ```
