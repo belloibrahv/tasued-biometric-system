@@ -13,7 +13,7 @@ export interface ValidationResult {
  */
 export function validateEmail(email: string): ValidationResult {
   const errors: string[] = [];
-  
+
   if (!email || !email.trim()) {
     errors.push('Email is required');
     return { valid: false, errors };
@@ -27,13 +27,13 @@ export function validateEmail(email: string): ValidationResult {
   // Check for common typos
   const commonDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'tasued.edu.ng'];
   const domain = email.split('@')[1]?.toLowerCase();
-  
+
   if (domain && !commonDomains.includes(domain)) {
     const suggestions = commonDomains.filter(d => {
       const similarity = calculateStringSimilarity(domain, d);
       return similarity > 0.7;
     });
-    
+
     if (suggestions.length > 0) {
       errors.push(`Did you mean @${suggestions[0]}?`);
     }
@@ -47,7 +47,7 @@ export function validateEmail(email: string): ValidationResult {
  */
 export function validateMatricNumber(matricNumber: string): ValidationResult {
   const errors: string[] = [];
-  
+
   if (!matricNumber || !matricNumber.trim()) {
     errors.push('Matric number is required');
     return { valid: false, errors };
@@ -55,14 +55,14 @@ export function validateMatricNumber(matricNumber: string): ValidationResult {
 
   // Format: DEP/YEAR/NUMBER (e.g., CSC/2020/001, CSC/2020/0001)
   const matricRegex = /^[A-Z]{2,4}\/\d{4}\/\d{3,4}$/i;
-  
+
   if (!matricRegex.test(matricNumber)) {
     errors.push('Invalid matric number format. Use: DEP/YEAR/NUMBER (e.g., CSC/2020/001)');
   } else {
     // Validate year is reasonable
     const year = parseInt(matricNumber.split('/')[1]);
     const currentYear = new Date().getFullYear();
-    
+
     if (year < 1980 || year > currentYear + 1) {
       errors.push(`Invalid year in matric number. Must be between 1980 and ${currentYear + 1}`);
     }
@@ -77,7 +77,7 @@ export function validateMatricNumber(matricNumber: string): ValidationResult {
 export function validatePassword(password: string): ValidationResult & { strength: 'weak' | 'medium' | 'strong' } {
   const errors: string[] = [];
   let strength: 'weak' | 'medium' | 'strong' = 'weak';
-  
+
   if (!password) {
     errors.push('Password is required');
     return { valid: false, errors, strength };
@@ -123,7 +123,7 @@ export function validatePassword(password: string): ValidationResult & { strengt
  */
 export function validatePhoneNumber(phone: string): ValidationResult {
   const errors: string[] = [];
-  
+
   if (!phone || !phone.trim()) {
     errors.push('Phone number is required');
     return { valid: false, errors };
@@ -139,7 +139,7 @@ export function validatePhoneNumber(phone: string): ValidationResult {
                            '0802', '0803', '0804', '0805', '0806', '0807', '0808', '0809',
                            '0810', '0811', '0812', '0813', '0814', '0815', '0816', '0817', '0818',
                            '0901', '0902', '0903', '0904', '0905', '0906', '0907', '0908', '0909'];
-    
+
     const prefix = digits.substring(0, 4);
     if (!validPrefixes.some(p => prefix.startsWith(p.substring(0, 3)))) {
       errors.push('Invalid Nigerian phone number prefix');
@@ -158,7 +158,7 @@ export function validatePhoneNumber(phone: string): ValidationResult {
  */
 export function validateDateOfBirth(dob: string): ValidationResult {
   const errors: string[] = [];
-  
+
   if (!dob) {
     errors.push('Date of birth is required');
     return { valid: false, errors };
@@ -215,7 +215,7 @@ export function validateFileUpload(
  */
 export function sanitizeInput(input: string): string {
   if (!input) return '';
-  
+
   return input
     .trim()
     .replace(/[<>]/g, '') // Remove < and >
@@ -229,9 +229,9 @@ export function sanitizeInput(input: string): string {
 function calculateStringSimilarity(str1: string, str2: string): number {
   const longer = str1.length > str2.length ? str1 : str2;
   const shorter = str1.length > str2.length ? str2 : str1;
-  
+
   if (longer.length === 0) return 1.0;
-  
+
   const editDistance = levenshteinDistance(longer, shorter);
   return (longer.length - editDistance) / longer.length;
 }

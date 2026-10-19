@@ -35,9 +35,9 @@ export async function POST(
 
     // Check capacity
     if (service.maxCapacity && service.currentOccupancy >= service.maxCapacity) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Service is at maximum capacity' 
+      return NextResponse.json({
+        success: false,
+        message: 'Service is at maximum capacity'
       }, { status: 400 });
     }
 
@@ -113,9 +113,9 @@ export async function POST(
       });
 
       if (existingAccess) {
-        return NextResponse.json({ 
-          success: false, 
-          message: 'Student is already inside. Please exit first.' 
+        return NextResponse.json({
+          success: false,
+          message: 'Student is already inside. Please exit first.'
         }, { status: 400 });
       }
     }
@@ -182,9 +182,9 @@ export async function POST(
     });
   } catch (error: any) {
     console.error('Service entry error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      message: error.message || 'Internal server error' 
+    return NextResponse.json({
+      success: false,
+      message: error.message || 'Internal server error'
     }, { status: 500 });
   }
 }

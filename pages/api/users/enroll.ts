@@ -13,21 +13,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { 
-      matricNumber, 
+    const {
+      matricNumber,
       firstName,
       lastName,
-      email, 
-      phoneNumber, 
-      department, 
-      level, 
-      biometricData 
+      email,
+      phoneNumber,
+      department,
+      level,
+      biometricData
     } = req.body;
 
     // Validate required fields
     if (!matricNumber || !firstName || !lastName || !email || !biometricData) {
-      return res.status(400).json({ 
-        message: 'Missing required fields: matricNumber, firstName, lastName, email, or biometricData' 
+      return res.status(400).json({
+        message: 'Missing required fields: matricNumber, firstName, lastName, email, or biometricData'
       });
     }
 
@@ -42,8 +42,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     if (existingUser) {
-      return res.status(409).json({ 
-        message: 'User with this matric number or email already exists' 
+      return res.status(409).json({
+        message: 'User with this matric number or email already exists'
       });
     }
 
@@ -64,19 +64,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Process biometric data to create embedding for enrollment
     const biometricService = BiometricVerificationService.getInstance();
     const { embedding, isValid } = await biometricService.processFacialImageForEnrollment(biometricData);
-    
+
     if (!isValid) {
       // If biometric data is invalid, delete the user we just created
       await prisma.user.delete({ where: { id: user.id } });
-      return res.status(400).json({ 
-        message: 'Invalid biometric data provided' 
+      return res.status(400).json({
+        message: 'Invalid biometric data provided'
       });
     }
-    
+
     // Convert embedding to string and encrypt
     const templateString = JSON.stringify(embedding);
     const encryptedTemplate = templateString; // Using simple string for now, should use encryption in production
-    
+
     // Create biometric data record
     await prisma.biometricData.create({
       data: {
@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         facialPhotos: [] // No photos stored yet
       }
     });
-    
+
     // Update user to mark as biometric enrolled
     await prisma.user.update({
       where: { id: user.id },
@@ -111,17 +111,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
 
-    res.status(201).json({ 
-      message: 'User enrolled successfully', 
+    res.status(201).json({
+      message: 'User enrolled successfully',
       userId: user.id,
-      matricNumber: user.matricNumber 
+      matricNumber: user.matricNumber
     });
 
   } catch (error: any) {
     console.error('User enrollment error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Internal server error during enrollment',
-      error: error.message 
+      error: error.message
     });
   } finally {
     await prisma.$disconnect();

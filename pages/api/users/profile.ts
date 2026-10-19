@@ -65,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         recentVerifications: recentVerifications,
         message: 'Profile retrieved successfully'
       });
-    } 
+    }
     else if (req.method === 'PUT') {
       // Update user profile
       const { fullName, email, phone, department } = req.body;
@@ -144,9 +144,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
   } catch (error: any) {
     console.error('User profile error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Internal server error during profile operation',
-      error: error.message 
+      error: error.message
     });
   } finally {
     await prisma.$disconnect();

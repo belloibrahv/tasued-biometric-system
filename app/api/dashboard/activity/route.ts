@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       serviceIcon: log.service?.icon || null,
       action: log.method === 'QR_CODE' ? 'QR Scan' :
               log.method === 'FINGERPRINT' ? 'Fingerprint' :
-              log.method === 'FACIAL' ? 'Face ID' : 
+              log.method === 'FACIAL' ? 'Face ID' :
               log.action || 'Manual',
       status: log.status,
       location: log.location || 'Unknown',
