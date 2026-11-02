@@ -59,18 +59,18 @@ self.addEventListener('fetch', (event) => {
       try {
         // Try network first
         const networkResponse = await fetch(request);
-        
+
         // Cache successful responses
         if (networkResponse.ok) {
           const cache = await caches.open(CACHE_NAME);
           cache.put(request, networkResponse.clone());
         }
-        
+
         return networkResponse;
       } catch (error) {
         // Network failed, try cache
         const cachedResponse = await caches.match(request);
-        
+
         if (cachedResponse) {
           return cachedResponse;
         }
@@ -148,7 +148,7 @@ async function syncPendingVerifications() {
   try {
     const cache = await caches.open('biovault-pending');
     const requests = await cache.keys();
-    
+
     for (const request of requests) {
       try {
         const response = await fetch(request.clone());

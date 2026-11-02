@@ -31,7 +31,7 @@ export default function OnboardingPage() {
         }
         const data = await res.json();
         const userData = data.user;
-        
+
         if (!userData) {
           router.push('/login');
           return;

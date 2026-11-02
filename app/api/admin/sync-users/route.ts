@@ -34,9 +34,9 @@ export async function POST(request: NextRequest) {
     const { data: { users: authUsers }, error: authError } = await supabase.auth.admin.listUsers();
 
     if (authError) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Failed to fetch users from Supabase Auth',
-        details: authError.message 
+        details: authError.message
       }, { status: 500 });
     }
 
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Sync users error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Sync status error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });

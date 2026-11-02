@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { format } from 'date-fns';
-import { 
-  QrCode, Users, CheckCircle, XCircle, Clock, RefreshCw, 
-  Loader2, ChevronDown, Search, UserCheck, Calendar, MapPin 
+import {
+  QrCode, Users, CheckCircle, XCircle, Clock, RefreshCw,
+  Loader2, ChevronDown, Search, UserCheck, Calendar, MapPin
 } from 'lucide-react';
 
 const QRScanner = dynamic(() => import('@/components/QRScanner'), { ssr: false });
@@ -68,11 +68,11 @@ export default function OperatorAttendancePage() {
       const now = new Date();
       const from = new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(); // 2 hours ago
       const to = new Date(now.getTime() + 4 * 60 * 60 * 1000).toISOString(); // 4 hours from now
-      
+
       const res = await fetch(`/api/lectures?from=${from}&to=${to}`);
       const data = await res.json();
       setSessions(data.items || []);
-      
+
       // Auto-select first active session
       if (data.items?.length > 0 && !selectedSession) {
         const activeSession = data.items.find((s: LectureSession) => {
@@ -102,7 +102,7 @@ export default function OperatorAttendancePage() {
 
   const handleQRScan = useCallback(async (code: string) => {
     if (!selectedSession || checkingIn) return;
-    
+
     setCheckingIn(true);
     setScanResult(null);
 
@@ -322,7 +322,7 @@ export default function OperatorAttendancePage() {
                 <QrCode size={20} className="text-blue-600" />
                 QR Code Scanner
               </h2>
-              
+
               <div className="flex justify-center">
                 <QRScanner
                   onScan={handleQRScan}
@@ -396,7 +396,7 @@ export default function OperatorAttendancePage() {
                 />
               </div>
             </div>
-            
+
             <div className="max-h-[500px] overflow-y-auto divide-y divide-gray-100">
               {filteredAttendance.length > 0 ? (
                 filteredAttendance.map((record) => (

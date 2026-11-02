@@ -87,7 +87,7 @@ const Header = () => {
           <nav className="hidden lg:flex items-center gap-1">
             {isLoggedIn && user && (
               // Show different navigation based on enrollment status
-              user.biometricEnrolled !== false ? 
+              user.biometricEnrolled !== false ?
                 navigation.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
@@ -102,7 +102,7 @@ const Header = () => {
                     </Link>
                   );
                 })
-              : 
+              :
                 preEnrollmentNavigation.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
@@ -186,7 +186,7 @@ const Header = () => {
                   </div>
                   {
                     // Show different navigation based on enrollment status
-                    user.biometricEnrolled !== false ? 
+                    user.biometricEnrolled !== false ?
                       navigation.map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href;
@@ -203,7 +203,7 @@ const Header = () => {
                           </Link>
                         );
                       })
-                    : 
+                    :
                       preEnrollmentNavigation.map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname === item.href;

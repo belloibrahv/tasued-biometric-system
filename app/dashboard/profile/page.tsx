@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
+import {
   Mail, Phone, Building2, GraduationCap, Calendar,
   Shield, Save, Loader2, CheckCircle, AlertCircle
 } from 'lucide-react';
@@ -352,7 +352,7 @@ export default function ProfilePage() {
               {profile.biometricEnrolled ? 'Biometric Enrolled' : 'Biometric Not Enrolled'}
             </p>
             <p className="text-sm text-gray-500">
-              {profile.biometricEnrolled 
+              {profile.biometricEnrolled
                 ? 'Your facial biometric is registered for verification'
                 : 'Enroll your biometric for enhanced security'}
             </p>

@@ -85,31 +85,31 @@
 \begin{titlepage}
     \centering
     \vspace*{1cm}
-    
+
     {\Large\bfseries BIOVAULT: A BIOMETRIC-BASED IDENTITY MANAGEMENT SYSTEM FOR EDUCATIONAL INSTITUTIONS - A CASE STUDY OF TAI SOLARIN UNIVERSITY OF EDUCATION\par}
-    
+
     \vspace{2cm}
-    
+
     {\large BY\par}
-    
+
     \vspace{0.5cm}
-    
+
     {\large\bfseries [STUDENT NAME]\par}
     {\normalsize [MATRIC NUMBER]\par}
-    
+
     \vspace{2cm}
-    
+
     {\normalsize A PROJECT SUBMITTED TO THE DEPARTMENT OF COMPUTER SCIENCE,\par}
     {\normalsize SCHOOL OF SCIENCE,\par}
     {\normalsize TAI SOLARIN UNIVERSITY OF EDUCATION, IJAGUN,\par}
     {\normalsize IN PARTIAL FULFILLMENT OF THE REQUIREMENTS FOR THE AWARD OF\par}
     {\normalsize BACHELOR OF SCIENCE (B.Sc.) DEGREE\par}
     {\normalsize IN COMPUTER SCIENCE\par}
-    
+
     \vspace{2cm}
-    
+
     {\normalsize DECEMBER, 2024\par}
-    
+
     \vfill
 \end{titlepage}
 
@@ -237,19 +237,19 @@ Despite technological advancements in security systems globally, many educationa
 
 \begin{enumerate}
     \item \textbf{ID Card Forgery and Fraud:} Physical ID cards can be easily counterfeited using readily available printing technologies, enabling unauthorized individuals to gain access to campus facilities and services. Reports indicate recurring incidents of fake ID cards being used for examination impersonation and unauthorized facility access.
-    
+
     \item \textbf{Proxy Attendance:} The inability to definitively verify student identity enables proxy attendance in lectures and examinations, compromising academic integrity and assessment validity. Students can share or lend ID cards to non-registered individuals, undermining the educational process.
-    
+
     \item \textbf{Lost and Stolen ID Cards:} Students frequently lose or have their ID cards stolen, necessitating time-consuming and costly replacement processes. The administrative burden of processing replacement requests diverts resources from core educational activities.
-    
+
     \item \textbf{Manual Verification Inefficiency:} Security personnel and service operators spend considerable time manually verifying student identities by visually comparing photographs on ID cards with the bearer's appearance. This process is slow, error-prone, and creates bottlenecks during peak periods such as examination times.
-    
+
     \item \textbf{Inadequate Audit Trails:} The current system lacks comprehensive logging mechanisms for tracking facility access and service usage. This absence of audit trails complicates incident investigation and makes it difficult to identify patterns of unauthorized access.
-    
+
     \item \textbf{Multiple Verification Points:} Students must present physical ID cards at numerous verification points across campus, leading to inconvenience and potential delays. The fragmented verification process lacks centralized monitoring and control.
-    
+
     \item \textbf{Data Privacy Concerns:} Physical ID cards displaying personal information including photographs, names, and identification numbers pose privacy risks if lost or stolen. The information can be misused for identity theft or unauthorized purposes.
-    
+
     \item \textbf{Limited Integration:} The existing ID card system operates independently without integration with other campus management systems, preventing holistic student data management and analytics.
 \end{enumerate}
 
@@ -267,23 +267,23 @@ The specific objectives of this research are:
 
 \begin{enumerate}
     \item To conduct a comprehensive analysis of existing identity management systems in educational institutions and identify their limitations and security vulnerabilities.
-    
+
     \item To design a robust system architecture integrating facial recognition technology, dynamic QR code generation, and multi-layered security protocols for biometric identity management.
-    
+
     \item To develop a web-based biometric identity management system using modern technologies including Next.js, React, TypeScript, TensorFlow.js, and PostgreSQL database.
-    
+
     \item To implement advanced facial recognition algorithms with feature extraction, template generation, and matching capabilities achieving high accuracy rates.
-    
+
     \item To integrate dynamic QR code generation with time-based expiration and automatic refresh mechanisms for contactless verification.
-    
+
     \item To implement comprehensive security measures including AES-256 encryption for biometric templates, JWT-based authentication, role-based access controls, and audit logging.
-    
+
     \item To develop multiple user interfaces catering to different stakeholders: students (enrollment and profile management), operators (verification and attendance), and administrators (system management and analytics).
-    
+
     \item To evaluate system performance through quantitative metrics including verification time, facial recognition accuracy, system response time, and concurrent user handling capacity.
-    
+
     \item To assess user acceptance and satisfaction through surveys and feedback mechanisms involving diverse student populations.
-    
+
     \item To provide recommendations for system deployment, maintenance, and future enhancements based on evaluation findings.
 \end{enumerate}
 
@@ -334,19 +334,19 @@ The study acknowledges the following limitations:
 
 \begin{enumerate}
     \item \textbf{Sample Size:} The system evaluation was conducted with a sample of 100 students from TASUED, which may not fully represent the entire student population diversity in terms of demographics and usage patterns.
-    
+
     \item \textbf{Biometric Modality:} The current implementation focuses exclusively on facial recognition. Other biometric modalities such as fingerprint and iris recognition are not included in this version.
-    
+
     \item \textbf{Environmental Conditions:} Testing was primarily conducted in controlled indoor environments. Performance under extreme outdoor lighting conditions or adverse weather has limited evaluation.
-    
+
     \item \textbf{Duration:} The evaluation period spanned three months, which may not capture long-term system performance issues or seasonal variations in usage patterns.
-    
+
     \item \textbf{Network Dependency:} The system requires stable internet connectivity for optimal performance. Offline verification capabilities are limited in the current implementation.
-    
+
     \item \textbf{Hardware Constraints:} System performance is influenced by device specifications, particularly camera quality for biometric capture. Testing was conducted with standard laptop and smartphone cameras.
-    
+
     \item \textbf{Integration Scope:} While the system provides APIs for integration, full integration with existing TASUED management systems (student information system, library management, etc.) was not implemented in this phase.
-    
+
     \item \textbf{Advanced Liveness Detection:} While basic image quality checks are implemented, advanced liveness detection mechanisms requiring multiple frames or 3D depth sensing are beyond this research scope.
 \end{enumerate}
 
@@ -354,41 +354,41 @@ The study acknowledges the following limitations:
 
 \begin{description}
     \item[Biometric Authentication:] The process of verifying an individual's identity based on unique physiological or behavioral characteristics such as facial features, fingerprints, or voice patterns.
-    
+
     \item[Facial Recognition:] A biometric technology that identifies or verifies individuals by analyzing and comparing distinctive facial features extracted from digital images.
-    
+
     \item[Biometric Template:] A mathematical representation of biometric features extracted from raw biometric data (e.g., facial image) and stored in encrypted form for identity verification.
-    
+
     \item[Feature Extraction:] The process of identifying and quantifying distinctive characteristics from biometric data that can be used for identity matching.
-    
+
     \item[QR Code (Quick Response Code):] A two-dimensional matrix barcode capable of storing substantial information that can be rapidly scanned and decoded using camera-equipped devices.
-    
+
     \item[Dynamic QR Code:] A QR code that changes periodically or has time-based expiration, enhancing security by preventing unauthorized reuse.
-    
+
     \item[Encryption:] The process of converting readable data (plaintext) into an unreadable format (ciphertext) using cryptographic algorithms to protect confidentiality.
-    
+
     \item[AES-256:] Advanced Encryption Standard with 256-bit key length, representing a highly secure symmetric encryption algorithm widely used for data protection.
-    
+
     \item[JWT (JSON Web Token):] A compact, URL-safe means of representing claims to be transferred between parties, commonly used for authentication and authorization.
-    
+
     \item[Role-Based Access Control (RBAC):] A security model that restricts system access based on user roles, with permissions assigned to roles rather than individual users.
-    
+
     \item[TensorFlow.js:] An open-source JavaScript library for machine learning that enables training and deployment of machine learning models in web browsers and Node.js.
-    
+
     \item[Next.js:] A React-based web development framework that provides server-side rendering, static site generation, and API routes for building full-stack web applications.
-    
+
     \item[PostgreSQL:] An advanced open-source relational database management system known for reliability, robustness, and compliance with SQL standards.
-    
+
     \item[Prisma ORM:] An object-relational mapping (ORM) tool that simplifies database access by providing a type-safe query builder for Node.js and TypeScript.
-    
+
     \item[Cosine Similarity:] A mathematical measure of similarity between two vectors calculated as the cosine of the angle between them, commonly used in biometric template matching.
-    
+
     \item[Liveness Detection:] Security mechanism to verify that biometric samples are captured from a live person rather than photographs, videos, or masks.
-    
+
     \item[Audit Trail:] A chronological record of system activities that provides documentary evidence of operational procedures and can be used for security monitoring and compliance.
-    
+
     \item[API (Application Programming Interface):] A set of protocols and tools that allows different software applications to communicate and exchange data.
-    
+
     \item[WebAuthn:] A web standard for secure, passwordless authentication using public key cryptography and biometric authentication methods.
 \end{description}
 
@@ -407,4 +407,3 @@ This research report is organized into six chapters:
 \textbf{Chapter Five} presents implementation results and evaluation findings including system performance metrics, facial recognition accuracy, user acceptance surveys, security assessment, comparative analysis with existing systems, and discussion of findings.
 
 \textbf{Chapter Six} concludes the research with summary of findings, contributions to knowledge, recommendations for deployment and future enhancements, and final remarks on the research implications for educational institutions.
-

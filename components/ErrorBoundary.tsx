@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error to console in development
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+
     // Update state with error details
     this.setState({
       error,
@@ -77,9 +77,9 @@ export class ErrorBoundary extends Component<Props, State> {
               <h1 className="text-3xl font-bold text-surface-950 mb-3">
                 Oops! Something went wrong
               </h1>
-              
+
               <p className="text-surface-600 mb-6 max-w-md mx-auto">
-                We encountered an unexpected error. Don't worry, your data is safe. 
+                We encountered an unexpected error. Don't worry, your data is safe.
                 Please try refreshing the page or return to the homepage.
               </p>
 
@@ -105,7 +105,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   <RefreshCcw size={18} />
                   Try Again
                 </button>
-                
+
                 <Link href="/" className="btn-primary flex items-center justify-center gap-2">
                   <Home size={18} />
                   Go to Homepage
