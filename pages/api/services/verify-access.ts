@@ -171,9 +171,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   } catch (error: any) {
     console.error('Service access verification error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       message: 'Internal server error during service access verification',
-      error: error.message 
+      error: error.message
     });
   } finally {
     await prisma.$disconnect();

@@ -37,8 +37,8 @@ export async function middleware(request: NextRequest) {
   ];
 
   const isPublicRoute = publicRoutes.some(route =>
-    pathname === route || 
-    pathname.startsWith('/_next') || 
+    pathname === route ||
+    pathname.startsWith('/_next') ||
     pathname.startsWith('/static') ||
     pathname.startsWith('/verify/') ||
     pathname.startsWith('/api/verify-qr/')
@@ -50,12 +50,12 @@ export async function middleware(request: NextRequest) {
   if (user && (pathname === '/login' || pathname === '/register')) {
     const userType = user.user_metadata?.type || 'student';
     const role = user.user_metadata?.role || 'STUDENT';
-    const isAdmin = userType === 'admin' || 
-                    role === 'ADMIN' || 
-                    role === 'SUPER_ADMIN' || 
+    const isAdmin = userType === 'admin' ||
+                    role === 'ADMIN' ||
+                    role === 'SUPER_ADMIN' ||
                     role === 'OPERATOR';
     const isLecturer = userType === 'lecturer';
-    
+
     if (isAdmin) {
       return NextResponse.redirect(new URL('/admin', request.url));
     } else if (isLecturer) {
@@ -63,7 +63,7 @@ export async function middleware(request: NextRequest) {
     } else {
       // For students, check biometric enrollment from session metadata
       const biometricEnrolled = user.user_metadata?.biometricEnrolled === true;
-      
+
       if (!biometricEnrolled) {
         return NextResponse.redirect(new URL('/enroll-biometric', request.url));
       }
@@ -92,11 +92,11 @@ export async function middleware(request: NextRequest) {
   const biometricEnrolled = user.user_metadata?.biometricEnrolled === true;
 
   // Check if user is admin/staff - admins don't need biometric enrollment
-  const isAdmin = userType === 'admin' || 
-                  role === 'ADMIN' || 
-                  role === 'SUPER_ADMIN' || 
+  const isAdmin = userType === 'admin' ||
+                  role === 'ADMIN' ||
+                  role === 'SUPER_ADMIN' ||
                   role === 'OPERATOR';
-  
+
   const isLecturer = userType === 'lecturer';
 
   // If admin tries to access dashboard, redirect to admin panel
@@ -122,7 +122,7 @@ export async function middleware(request: NextRequest) {
     response.headers.set('x-user-id', user?.id || '');
     response.headers.set('x-user-role', role);
     response.headers.set('x-user-type', userType);
-    
+
     if (supabaseResponse && typeof supabaseResponse.cookies?.getAll === 'function') {
       supabaseResponse.cookies.getAll().forEach(cookie => {
         response.cookies.set(cookie.name, cookie.value, cookie);

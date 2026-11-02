@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
 
       headers = ['Date', 'Entry Time', 'Exit Time', 'Duration (min)', 'Student Name', 'Matric Number', 'Service', 'Method'];
       data = access.map(a => {
-        const duration = a.exitTime 
+        const duration = a.exitTime
           ? Math.round((a.exitTime.getTime() - a.entryTime.getTime()) / 60000)
           : 'Still Inside';
         return [

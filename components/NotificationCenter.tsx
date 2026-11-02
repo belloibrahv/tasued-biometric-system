@@ -21,7 +21,7 @@ export default function NotificationCenter({ enabled = true }: NotificationCente
     onEvent: (event) => {
       setUnreadCount(prev => prev + 1);
       playSound('notification');
-      
+
       if (permission === 'granted') {
         const titles: Record<string, string> = {
           verification: 'New Verification',

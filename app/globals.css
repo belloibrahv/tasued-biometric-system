@@ -442,27 +442,27 @@
   .grid-cols-4 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
-  
+
   /* Responsive card padding */
   .stat-card,
   .card {
     @apply p-4;
   }
-  
+
   /* Better text sizing on mobile */
   .text-2xl {
     @apply text-xl;
   }
-  
+
   .text-lg {
     @apply text-base;
   }
-  
+
   /* Adjust sidebar for mobile */
   .sidebar-item {
     @apply py-3;
   }
-  
+
   /* Mobile-friendly dashboard layout */
   .dashboard-grid {
     @apply grid-cols-1 gap-4;
@@ -474,7 +474,7 @@
   .grid-cols-4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  
+
   .grid-cols-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -502,7 +502,7 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   /* Better focus indicators on mobile */
   *:focus-visible {
     @apply ring-4 ring-offset-2;

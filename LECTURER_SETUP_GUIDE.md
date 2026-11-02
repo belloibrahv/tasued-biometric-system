@@ -101,7 +101,7 @@ AND NOT EXISTS (
 );
 
 -- Verify the lecturers were added
-SELECT 
+SELECT
   id,
   email,
   "firstName",
