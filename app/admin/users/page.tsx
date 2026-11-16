@@ -32,7 +32,7 @@ export default function UsersPage() {
         setUsers(data.users || []);
         setTotal(data.total || 0);
         // Count unknown users
-        const unknown = (data.users || []).filter((u: any) => 
+        const unknown = (data.users || []).filter((u: any) =>
           u.firstName === 'Unknown' || u.lastName === 'User'
         ).length;
         setUnknownCount(unknown);
@@ -123,8 +123,8 @@ export default function UsersPage() {
               </span>
             </>
           )}
-          <button 
-            onClick={() => setFixResult(null)} 
+          <button
+            onClick={() => setFixResult(null)}
             className="ml-auto text-gray-500 hover:text-gray-700"
           >
             ×

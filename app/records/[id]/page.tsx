@@ -75,7 +75,7 @@ const RecordDetailPage = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Main Content */}
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -84,7 +84,7 @@ const RecordDetailPage = () => {
                 {/* Record Overview */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Record Overview</h3>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-sm text-gray-500">Record ID</p>
@@ -107,8 +107,8 @@ const RecordDetailPage = () => {
                       <div className="flex items-center">
                         <span className="font-medium">{record.confidenceScore}%</span>
                         <div className="ml-2 w-24 bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-indigo-600 h-2 rounded-full" 
+                          <div
+                            className="bg-indigo-600 h-2 rounded-full"
                             style={{ width: `${record.confidenceScore}%` }}
                           ></div>
                         </div>
@@ -128,7 +128,7 @@ const RecordDetailPage = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Biometric Preview */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Biometric Preview</h3>
@@ -144,14 +144,14 @@ const RecordDetailPage = () => {
                     </div>
                   </div>
                   <div className="mt-4 text-center">
-                    <button 
+                    <button
                       onClick={() => setShowRawData(!showRawData)}
                       className="text-sm text-indigo-600 hover:text-indigo-900"
                     >
                       {showRawData ? 'Hide' : 'Show'} Encrypted Data
                     </button>
                   </div>
-                  
+
                   {showRawData && (
                     <div className="mt-4">
                       <div className="text-xs font-mono bg-gray-800 text-green-400 p-4 rounded overflow-x-auto">
@@ -162,7 +162,7 @@ const RecordDetailPage = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Notes and Additional Information */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Notes and Additional Information</h3>
@@ -186,7 +186,7 @@ const RecordDetailPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Right Column - Metadata and Actions */}
               <div className="space-y-6">
                 {/* Metadata */}
@@ -201,7 +201,7 @@ const RecordDetailPage = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 {/* Actions */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Actions</h3>
@@ -226,7 +226,7 @@ const RecordDetailPage = () => {
                     </button>
                   </div>
                 </div>
-                
+
                 {/* Related Records */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Related Records</h3>
@@ -254,7 +254,7 @@ const RecordDetailPage = () => {
                     </Link>
                   </div>
                 </div>
-                
+
                 {/* Compliance */}
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Compliance</h3>

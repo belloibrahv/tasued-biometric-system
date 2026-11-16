@@ -33,14 +33,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
         const data = await res.json();
         console.log('Dashboard layout - auth response:', data);
-        
+
         // Handle both success and partial success (sync failed but user data available)
         const userData = data.user;
         if (!userData) {
           console.error('No user data in response');
           return;
         }
-        
+
         // Check if user is admin - redirect to admin dashboard
         if (userData.type === 'admin') {
           router.push('/admin');
@@ -54,7 +54,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           router.push('/enroll-biometric');
           return;
         }
-        
+
         setUser(userData);
       } catch (error) {
         console.error('Auth error:', error);
@@ -134,7 +134,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 text-sm truncate">
-                    {user.firstName && user.firstName !== 'Unknown' 
+                    {user.firstName && user.firstName !== 'Unknown'
                       ? `${user.firstName} ${user.lastName || ''}`.trim()
                       : user.email?.split('@')[0] || 'User'}
                   </p>
@@ -154,8 +154,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors ${
-                    isActive 
-                      ? 'bg-brand-50 text-brand-600' 
+                    isActive
+                      ? 'bg-brand-50 text-brand-600'
                       : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
@@ -168,8 +168,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Logout */}
           <div className="p-3 border-t border-gray-100">
-            <button 
-              onClick={handleLogout} 
+            <button
+              onClick={handleLogout}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors"
             >
               <LogOut size={20} />
@@ -187,9 +187,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-gray-100">
               <Menu size={20} className="text-gray-600" />
             </button>
-            
+
             <div className="flex-1 lg:flex-none" />
-            
+
             <div className="flex items-center gap-2">
               <button className="p-2 rounded-lg hover:bg-gray-100 relative">
                 <Bell size={20} className="text-gray-600" />
@@ -221,8 +221,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   key={item.name}
                   href={item.href}
                   className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-                    isActive 
-                      ? 'text-blue-600' 
+                    isActive
+                      ? 'text-blue-600'
                       : 'text-gray-500'
                   }`}
                 >
@@ -234,8 +234,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Link
               href="/dashboard/profile"
               className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
-                pathname === '/dashboard/profile' 
-                  ? 'text-blue-600' 
+                pathname === '/dashboard/profile'
+                  ? 'text-blue-600'
                   : 'text-gray-500'
               }`}
             >

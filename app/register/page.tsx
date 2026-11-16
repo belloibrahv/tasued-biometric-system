@@ -16,7 +16,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState(1);
-  
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -91,9 +91,9 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateStep2()) return;
-    
+
     setLoading(true);
     setError('');
 
@@ -129,7 +129,7 @@ export default function RegisterPage() {
 
       if (result.success) {
         toast.success('Registration successful! Redirecting...');
-        
+
         if (result.autoLogin) {
           // User is auto-logged in, redirect to dashboard
           setTimeout(() => {

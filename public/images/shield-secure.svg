@@ -6,9 +6,9 @@
     </linearGradient>
   </defs>
   <!-- Shield shape -->
-  <path d="M100 20 L170 50 L170 100 C170 140 140 170 100 185 C60 170 30 140 30 100 L30 50 L100 20Z" 
+  <path d="M100 20 L170 50 L170 100 C170 140 140 170 100 185 C60 170 30 140 30 100 L30 50 L100 20Z"
         fill="url(#shieldGrad)" opacity="0.1"/>
-  <path d="M100 20 L170 50 L170 100 C170 140 140 170 100 185 C60 170 30 140 30 100 L30 50 L100 20Z" 
+  <path d="M100 20 L170 50 L170 100 C170 140 140 170 100 185 C60 170 30 140 30 100 L30 50 L100 20Z"
         stroke="url(#shieldGrad)" stroke-width="3" fill="none"/>
   <!-- Checkmark -->
   <path d="M70 100 L90 120 L130 80" stroke="url(#shieldGrad)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>

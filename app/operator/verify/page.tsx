@@ -37,9 +37,9 @@ export default function VerifyPage() {
       if (res.ok && data.verification) {
         // Find the student from the current results
         const student = result.students?.find((s: any) => s.id === userId);
-        setResult({ 
-          ...result, 
-          verified: true, 
+        setResult({
+          ...result,
+          verified: true,
           verifiedStudent: student || {
             firstName: data.verification.student?.name?.split(' ')[0],
             lastName: data.verification.student?.name?.split(' ').slice(1).join(' '),
@@ -246,7 +246,7 @@ export default function VerifyPage() {
           <div>
             <h4 className="font-medium text-blue-900 mb-1">How to verify</h4>
             <p className="text-sm text-blue-700">
-              Enter the student's name, email, or matric number to search. 
+              Enter the student's name, email, or matric number to search.
               Once found, click the Verify button to confirm their identity.
             </p>
           </div>

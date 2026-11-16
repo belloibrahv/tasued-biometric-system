@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ profile });
   } catch (error) {
     console.error('Profile fetch error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to fetch profile',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
@@ -116,7 +116,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ profile: updatedUser, message: 'Profile updated successfully' });
   } catch (error) {
     console.error('Profile update error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Failed to update profile',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });

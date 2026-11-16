@@ -42,11 +42,11 @@ export class PerformanceMonitor {
 
     const endTime = performance.now();
     const duration = endTime - metric.startTime;
-    
+
     // Update metrics
     const currentCount = metric.count + 1;
     const currentTotal = metric.totalTime + duration;
-    
+
     this.metrics.set(operation, {
       startTime: 0, // Reset start time
       count: currentCount,
@@ -91,7 +91,7 @@ export class PerformanceMonitor {
     if (!metric) {
       return { count: 0, totalTime: 0, average: 0 };
     }
-    
+
     const average = metric.count > 0 ? metric.totalTime / metric.count : 0;
     return {
       count: metric.count,

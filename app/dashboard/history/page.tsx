@@ -124,16 +124,16 @@ export default function HistoryPage() {
                         )}
                         <span className="flex items-center gap-1 text-xs text-gray-500">
                           <Clock size={12} />
-                          {new Date(activity.timestamp).toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
+                          {new Date(activity.timestamp).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
                           })}
                         </span>
                       </div>
                     </div>
                     <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                      activity.status === 'SUCCESS' 
-                        ? 'bg-green-50 text-green-700' 
+                      activity.status === 'SUCCESS'
+                        ? 'bg-green-50 text-green-700'
                         : 'bg-red-50 text-red-700'
                     }`}>
                       {activity.status === 'SUCCESS' ? 'Success' : 'Failed'}

@@ -42,7 +42,7 @@ const nextConfig = {
         tls: false,
       };
     }
-    
+
     return config;
   },
   // Enable gzip compression and other performance optimizations

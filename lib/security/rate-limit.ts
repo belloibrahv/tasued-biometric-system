@@ -77,15 +77,15 @@ export function withRateLimit(
 ): { allowed: boolean; message?: string } {
   // Use IP address as identifier if not provided
   const id = identifier || req.ip || req.headers.get('x-forwarded-for') || 'unknown';
-  
+
   const result = limiter.checkLimit(id);
-  
+
   if (!result.allowed) {
     return {
       allowed: false,
       message: result.message || 'Rate limit exceeded',
     };
   }
-  
+
   return { allowed: true };
 }

@@ -41,9 +41,9 @@ export async function POST(request: NextRequest) {
     const { data: { users: authUsers }, error: authError } = await adminClient.auth.admin.listUsers();
 
     if (authError) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Failed to fetch users from Supabase Auth',
-        details: authError.message 
+        details: authError.message
       }, { status: 500 });
     }
 
@@ -62,11 +62,11 @@ export async function POST(request: NextRequest) {
 
     for (const authUser of authUsers) {
       const metadata = authUser.user_metadata || {};
-      
+
       // Handle both firstName/lastName and full_name formats
       let firstName = metadata.firstName || metadata.first_name;
       let lastName = metadata.lastName || metadata.last_name;
-      
+
       // Parse full_name if firstName/lastName not available
       const fullNameValue = metadata.full_name || metadata.fullName;
       if (!firstName && !lastName && fullNameValue) {
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Fix user names error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
@@ -175,7 +175,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Check user names error:', error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
