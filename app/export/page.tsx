@@ -57,7 +57,7 @@ const ExportPage = () => {
     }
 
     setExportStatus('processing');
-    
+
     // Simulate export processing
     setTimeout(() => {
       setExportStatus('completed');
@@ -84,7 +84,7 @@ const ExportPage = () => {
               Export your biometric records in various formats for use in other systems
             </p>
           </div>
-          
+
           <div className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left Column - Format Selection */}
@@ -94,10 +94,10 @@ const ExportPage = () => {
                   <p className="text-sm text-gray-500 mb-6">
                     Select the format in which you want to export your biometric data
                   </p>
-                  
+
                   <div className="space-y-4">
                     {exportFormats.map((format) => (
-                      <div 
+                      <div
                         key={format.id}
                         className={`p-4 border rounded-lg cursor-pointer transition-all ${
                           selectedFormat === format.id
@@ -124,10 +124,10 @@ const ExportPage = () => {
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="mt-8">
                     <h3 className="text-lg font-medium text-gray-900 mb-4">Export Options</h3>
-                    
+
                     <div className="space-y-4">
                       <div className="flex items-start">
                         <div className="flex items-center h-5">
@@ -145,7 +145,7 @@ const ExportPage = () => {
                           <p className="text-gray-500">Include the actual encrypted biometric data in the export</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-start">
                         <div className="flex items-center h-5">
                           <input
@@ -163,7 +163,7 @@ const ExportPage = () => {
                           <p className="text-gray-500">Include additional information like timestamps and quality scores</p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-start">
                         <div className="flex items-center h-5">
                           <input
@@ -184,7 +184,7 @@ const ExportPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Right Column - Record Selection and Export */}
               <div className="lg:col-span-2">
                 <div className="bg-white rounded-lg border border-gray-200">
@@ -194,7 +194,7 @@ const ExportPage = () => {
                       Choose which biometric records to include in the export
                     </p>
                   </div>
-                  
+
                   <div className="overflow-hidden">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
@@ -226,8 +226,8 @@ const ExportPage = () => {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {biometricRecords.map((record) => (
-                          <tr 
-                            key={record.id} 
+                          <tr
+                            key={record.id}
                             className={`${
                               selectedRecords.includes(record.id) ? 'bg-indigo-50' : ''
                             } hover:bg-gray-50 cursor-pointer`}
@@ -256,8 +256,8 @@ const ExportPage = () => {
                               <div className="flex items-center">
                                 <span>{record.confidenceScore}%</span>
                                 <div className="ml-2 w-16 bg-gray-200 rounded-full h-2">
-                                  <div 
-                                    className="bg-indigo-600 h-2 rounded-full" 
+                                  <div
+                                    className="bg-indigo-600 h-2 rounded-full"
                                     style={{ width: `${record.confidenceScore}%` }}
                                   ></div>
                                 </div>
@@ -271,14 +271,14 @@ const ExportPage = () => {
                       </tbody>
                     </table>
                   </div>
-                  
+
                   <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 sm:px-6">
                     <div className="flex items-center justify-between">
                       <div className="text-sm text-gray-700">
                         Selected <span className="font-medium">{selectedRecords.length}</span> of{' '}
                         <span className="font-medium">{biometricRecords.length}</span> records
                       </div>
-                      
+
                       <button
                         onClick={handleExport}
                         disabled={exportStatus === 'processing'}
@@ -308,7 +308,7 @@ const ExportPage = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Export Status */}
                 {exportStatus === 'completed' && exportUrl && (
                   <div className="mt-6 bg-white rounded-lg border border-gray-200">
@@ -316,7 +316,7 @@ const ExportPage = () => {
                       <h3 className="text-lg font-medium leading-6 text-gray-900">Export Completed</h3>
                       <p className="mt-1 text-sm text-gray-500">Your biometric data has been successfully exported</p>
                     </div>
-                    
+
                     <div className="p-6">
                       <div className="flex items-start">
                         <div className="flex-shrink-0">
@@ -334,7 +334,7 @@ const ExportPage = () => {
                           <p className="mt-2 text-sm text-gray-500">
                             Exported using format: {exportFormats.find(f => f.id === selectedFormat)?.name}
                           </p>
-                          
+
                           <div className="mt-4 flex space-x-3">
                             <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none">
                               <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -342,7 +342,7 @@ const ExportPage = () => {
                               </svg>
                               Download File
                             </button>
-                            
+
                             <button className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
                               <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -352,7 +352,7 @@ const ExportPage = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="mt-6">
                         <h4 className="text-sm font-medium text-gray-900 mb-2">Export Details</h4>
                         <ul className="text-sm text-gray-500 space-y-1">

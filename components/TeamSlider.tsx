@@ -50,10 +50,10 @@ function formatName(name: string): string {
 export default function TeamSlider({ members }: TeamSliderProps) {
   // Triple the members for seamless infinite scroll
   const tripleMembers = useMemo(() => [...members, ...members, ...members], [members]);
-  
+
   // Very slow duration for professional feel (240 seconds for full cycle)
   const duration = 240;
-  
+
   // State to control animation on hover
   const [isHovered, setIsHovered] = useState(false);
 
@@ -77,7 +77,7 @@ export default function TeamSlider({ members }: TeamSliderProps) {
         {/* Gradient Overlays for smooth fade effect */}
         <div className="absolute left-0 top-0 bottom-0 w-40 bg-gradient-to-r from-white via-white/80 to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-40 bg-gradient-to-l from-white via-white/80 to-transparent z-10 pointer-events-none" />
-        
+
         {/* Row 1 - Slow Left to Right */}
         <div className="mb-8">
           <motion.div

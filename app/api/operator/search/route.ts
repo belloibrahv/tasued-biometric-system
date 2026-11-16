@@ -17,9 +17,9 @@ export async function GET(request: NextRequest) {
     // Check if user is admin/operator
     const userType = user.user_metadata?.type;
     const role = user.user_metadata?.role;
-    const isAuthorized = userType === 'admin' || 
-                         role === 'ADMIN' || 
-                         role === 'SUPER_ADMIN' || 
+    const isAuthorized = userType === 'admin' ||
+                         role === 'ADMIN' ||
+                         role === 'SUPER_ADMIN' ||
                          role === 'OPERATOR';
 
     if (!isAuthorized) {
@@ -62,9 +62,9 @@ export async function GET(request: NextRequest) {
     });
 
     if (users.length === 0) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         students: [],
-        message: 'No students found matching your search' 
+        message: 'No students found matching your search'
       });
     }
 

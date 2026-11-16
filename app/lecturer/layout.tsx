@@ -25,14 +25,14 @@ export default function LecturerLayout({
           return;
         }
         const data = await res.json();
-        
+
         // Check if user is a lecturer
         const userType = data.user?.type || 'student';
         if (userType !== 'lecturer') {
           router.push('/dashboard');
           return;
         }
-        
+
         setUser(data.user);
       } catch (error) {
         console.error('Auth check failed:', error);
